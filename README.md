@@ -1,0 +1,1 @@
+# mina-helm-charts-private
