@@ -12,7 +12,7 @@ deployment:
     - /dns4/seed-2.berkeley-v2.o1test.net/tcp/10001/p2p/12D3KooWLjs54xHzVmMmGYb7W5RVibqbwD1co7M2ZMfPgPm7iAag
     - /dns4/seed-3.berkeley-v2.o1test.net/tcp/10002/p2p/12D3KooWEiGVAFC7curXWXiGZyMWnZK9h8BKr88U8D5PKV3dXciv
 
-daemon:
+node:
   name: "berkeley-node"
   class: "seed"
   role: "staging"
@@ -39,10 +39,10 @@ daemon:
   secrets:
     keyPassword: ""
     libp2pPassword: ""
-    seed-1-key: ""
-    seed-1-key.pub: ""
-    seed-1-libp2p: ""
-    seed-1-libp2p.peerid: ""
+    nodeKey: ""
+    nodeKeyPub: ""
+    nodeLibp2p: ""
+    nodeLibp2pPeerid: ""
 
 requests:
   memory: "16.0Gi"
