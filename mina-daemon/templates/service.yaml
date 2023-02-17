@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.deployment.name }}-{{ .Values.daemon.name }}
+spec:
+  {{- if .Values.daemon.ip }}
+  type: LoadBalancer
+  loadBalancerIP: {{ .Values.daemon.ip }}
+  {{- else }}
+  type: ClusterIP
+  {{- end }}
+  # We want all pods to have their addresses published for the sake of the
+  # other testnet pods even before they're ready, since they
+  # have to be able to talk to each other in order to become ready.
+  publishNotReadyAddresses: true
+  selector:
+    app: {{ .Values.deployment.name }}-{{ .Values.daemon.name }}
+  ports:
+  - name: tcp-p2p
+    port: {{ .Values.daemon.ports.p2p }}
+    targetPort: external-port
+{{- if .Values.daemon.exposeGraphql }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.deployment.name }}-{{ .Values.daemon.name }}-graphql
+spec:
+  type: ClusterIP
+  publishNotReadyAddresses: true
+  selector:
+    app: {{ .Values.deployment.name }}-{{ .Values.daemon.name }}
+  ports:
+  - name: http-graphql
+    protocol: TCP
+    port: 80
+    targetPort: {{ .Values.daemon.ports.graphql }}
+{{- end }}

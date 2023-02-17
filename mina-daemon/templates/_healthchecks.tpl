@@ -18,9 +18,6 @@ seed-node liveness settings
 seed-node readiness settings
 */}}
 
-{{/*
-ALL seed-node healthchecks - TODO: readd startupProbes once GKE clusters have been updated to 1.16
-*/}}
 {{- define "healthcheck.seed.allChecks" }}
 {{- if .healthcheck.enabled }}
 {{- include "healthcheck.seed.livenessCheck" . }}
