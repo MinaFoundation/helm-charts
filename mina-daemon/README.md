@@ -1,8 +1,6 @@
 ## Introduction
 
-This chart bootstraps a Mina protocol Berkeley seed node.
-
-This readme needs to change
+This chart bootstraps a Mina protocol daemon node.
 
 ## Add Mina Helm chart repository:
 

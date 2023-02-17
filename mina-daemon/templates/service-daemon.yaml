@@ -20,20 +20,3 @@ spec:
   - name: tcp-p2p
     port: {{ .Values.daemon.ports.p2p }}
     targetPort: external-port
-{{- if .Values.daemon.exposeGraphql }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ .Values.deployment.name }}-{{ .Values.daemon.name }}-graphql
-spec:
-  type: ClusterIP
-  publishNotReadyAddresses: true
-  selector:
-    app: {{ .Values.deployment.name }}-{{ .Values.daemon.name }}
-  ports:
-  - name: http-graphql
-    protocol: TCP
-    port: 80
-    targetPort: {{ .Values.daemon.ports.graphql }}
-{{- end }}
