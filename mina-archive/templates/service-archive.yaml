@@ -2,21 +2,23 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.deployment.name }}-{{ .Values.node.name }}
+  name: {{ template "archive.fullname" . }}
 spec:
-  {{- if .Values.node.ip }}
-  type: LoadBalancer
-  loadBalancerIP: {{ .Values.node.ip }}
-  {{- else }}
   type: ClusterIP
-  {{- end }}
   # We want all pods to have their addresses published for the sake of the
   # other testnet pods even before they're ready, since they
   # have to be able to talk to each other in order to become ready.
   publishNotReadyAddresses: true
   selector:
-    app: {{ .Values.deployment.name }}-{{ .Values.node.name }}
+    app: {{ template "archive.fullname" . }}
   ports:
+{{- if .Values.archive.enableLocalDaemon }}
   - name: tcp-p2p
-    port: {{ .Values.node.ports.p2p }}
+{{- with .Values.daemon.node }}
+    port: {{ .ports.p2p }}
+{{- end }}
     targetPort: external-port
+{{- end }}
+  - name: tcp-archive
+    port: {{ .Values.archive.ports.server }}
+    targetPort: archive-port

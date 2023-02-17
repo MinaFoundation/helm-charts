@@ -1,0 +1,102 @@
+testnetName: "berkeley"
+archive:
+  replicas: 1
+  hostPort: 10909
+  image: minaprotocol/mina-archive:1.3.2beta2-release-2.0.0-05c2f73-focal
+  # remoteSchemaFile needs to be just the script name, not a url.  remoteSchemaAuxFiles needs to be a list of urls of scripts, one of these urls needs to be the url of the main sql script that invokes the other ones.  sorry it's confusing
+  remoteSchemaFile: "create_schema.sql"
+  remoteSchemaAuxFiles:
+    - "https://raw.githubusercontent.com/MinaProtocol/mina/05c2f73d0f6e4f1341286843814ce02dcb3919e0/src/app/archive/create_schema.sql"
+    - "https://raw.githubusercontent.com/MinaProtocol/mina/05c2f73d0f6e4f1341286843814ce02dcb3919e0/src/app/archive/zkapp_tables.sql"
+  postgresHost:  '{{ .Release.Name }}-postgresql'
+  postgresUri: postgres://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password }}@{{ tpl .Values.archive.postgresHost . }}:{{ .Values.archive.ports.postgres }}/{{ .Values.postgresql.auth.database }}
+  ports:
+    server: 3086
+    postgres: 5432
+    metrics: 10002
+  enableLocalDaemon: true
+  enablePostgresDB: true
+  enableDumpCronjob: false
+  initFromDump: false
+
+postgresql:
+  primary:
+    name: "archive"
+    persistence:
+      enabled: false
+      size: 8Gi
+      storageClass: ssd-delete
+    initdb:
+      user: "mina"
+      password: "zo3moong7moog4Iep7eNgo3iecaesahH"
+  auth:
+    username: "mina"
+    password: "zo3moong7moog4Iep7eNgo3iecaesahH"
+    database: "archive"
+    enablePostgresUser: false
+
+nodeSelector:
+  preemptible: true
+
+healthcheck:
+  enabled: true
+  failureThreshold: 60
+  periodSeconds: 5
+  initialDelaySeconds: 30
+
+daemon:
+  deployment:
+    testnet: "berkeley"
+    name: "staging"
+    image: minaprotocol/mina-daemon:1.3.2beta2-release-2.0.0-05c2f73-focal-berkeley
+    runtimeConfig:
+    customEntrypoint:
+      enabled: true
+      entrypoint: "mina"
+    peerListURL: "https://storage.googleapis.com/seed-lists/berkeley_seeds.txt"
+    seedPeers:
+      - /dns4/seed-1.berkeley-v2.o1test.net/tcp/10000/p2p/12D3KooWAdgYL6hv18M3iDBdaK1dRygPivSfAfBNDzie6YqydVbs
+      - /dns4/seed-2.berkeley-v2.o1test.net/tcp/10001/p2p/12D3KooWLjs54xHzVmMmGYb7W5RVibqbwD1co7M2ZMfPgPm7iAag
+      - /dns4/seed-3.berkeley-v2.o1test.net/tcp/10002/p2p/12D3KooWEiGVAFC7curXWXiGZyMWnZK9h8BKr88U8D5PKV3dXciv
+
+  node:
+    name: "seed-1"
+    class: "seed"
+    role: "staging"
+    replicas: 1
+    fullname: "seed-1"
+    exposeGraphql: false
+    seedFlags: true
+    logLevel: Info
+    fileLogLevel: Error
+    maxConnections: 200
+    ports:
+      client: "8301"
+      graphql: "3085"
+      metrics: "10001"
+      p2p: "10801"
+    archive:
+      enabled: false
+      address: staging-mainnet-archive:3086
+    libp2pKeys:
+      enabled: true
+    minaKeys:
+      enabled: false
+      produceBlocks: true
+    secrets:
+      keyPassword: ""
+      libp2pPassword: ""
+      nodeKey: ""
+      nodeKeyPub: ""
+      nodeLibp2p: ""
+      nodeLibp2pPeerid: ""
+
+  requests:
+    memory: "16.0Gi"
+    cpu: "4"
+
+  healthcheck:
+    enabled: true
+    failureThreshold: 60
+    periodSeconds: 5
+    initialDelaySeconds: 30

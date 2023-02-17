@@ -1,0 +1,9 @@
+dependencies:
+- name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: 12.2.0
+- name: mina-daemon
+  repository: file://../mina-daemon
+  version: 2.0.0
+digest: sha256:154b9ddbe1a99573e6b7ce9cd22c4e4ed652e522b6583f1906e1a45891834fd4
+generated: "2023-02-17T17:21:25.572943955+02:00"
