@@ -176,7 +176,7 @@ spec:
       {{- if .Values.deployment.runtimeConfig }}
       - name: daemon-config
         configMap:
-          name: {{ .Release.Name }}-daemon-config
+          name: {{ .Values.deployment.name }}-daemon-config
       {{- end }}
       {{- if .Values.node.minaKeys.enabled }}
       - name: mounted-mina-keys
