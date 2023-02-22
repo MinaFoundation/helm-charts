@@ -16,9 +16,6 @@ spec:
         app: {{ template "archive.fullname" . }}
         testnet: {{ .Values.testnetName }}
         role: archive
-        {{- if .Values.archive.enableLocalDaemon }}
-        syncStatus: INIT
-        {{- end }}
       annotations:
         prometheus.io/scrape: 'true'
         prometheus.io/port: {{ .Values.archive.ports.metrics | quote }}
@@ -33,14 +30,14 @@ spec:
           "run",
           "-metrics-port", "{{ .Values.archive.ports.metrics }}",
           "-postgres-uri", "{{ tpl .Values.archive.postgresUri . }}",
-          {{- if .Values.daemon.deployment.runtimeConfig }}
+          {{- if .Values.archive.runtimeConfig }}
           "-config-file", "/config/daemon.json",
           {{- end }}
           "-server-port", "{{ .Values.archive.ports.server }}"
         ]
         env:
         imagePullPolicy: Always
-        {{- if .Values.daemon.deployment.runtimeConfig }}
+        {{- if .Values.archive.runtimeConfig }}
         volumeMounts:
         - name: daemon-config
           mountPath: "/config/"
@@ -58,8 +55,8 @@ spec:
       volumes:
       - name: config-dir
         emptyDir: {}
-      {{- if .Values.daemon.deployment.runtimeConfig }}
+      {{- if .Values.archive.runtimeConfig }}
       - name: daemon-config
         configMap:
-          name: {{ template "archive.fullname" . }}-daemon-config
+          name: {{ .Values.archive.runtimeConfigName }}-runtime-config
       {{- end }}

@@ -12,13 +12,6 @@ spec:
   selector:
     app: {{ template "archive.fullname" . }}
   ports:
-{{- if .Values.archive.enableLocalDaemon }}
-  - name: tcp-p2p
-{{- with .Values.daemon.node }}
-    port: {{ .ports.p2p }}
-{{- end }}
-    targetPort: external-port
-{{- end }}
   - name: tcp-archive
     port: {{ .Values.archive.ports.server }}
     targetPort: archive-port

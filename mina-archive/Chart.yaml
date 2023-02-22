@@ -9,9 +9,6 @@ dependencies:
     version: "*"
     repository: "https://charts.bitnami.com/bitnami"
     condition: archive.enablePostgresDB
-  - name: mina-daemon
-    version: "*"
-    repository: "file://../mina-daemon"
 keywords:
 - archive
 - postgres
