@@ -39,10 +39,10 @@ node:
   secrets:
     keyPassword: ""
     libp2pPassword: ""
-    nodeKey: ""
-    nodeKeyPub: ""
-    nodeLibp2p: ""
-    nodeLibp2pPeerid: ""
+    produceBlocksKey: ""
+    produceBlocksKeyPub: ""
+    discoveryLibp2p: ""
+    discoveryLibp2pPeerid: ""
 
 requests:
   memory: "16.0Gi"
