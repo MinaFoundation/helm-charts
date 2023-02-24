@@ -17,6 +17,6 @@ spec:
   selector:
     app: {{ .Values.deployment.name }}-{{ .Values.node.name }}
   ports:
-  - name: tcp-p2p
-    port: {{ .Values.node.ports.p2p }}
-    targetPort: external-port
+    - name: tcp-p2p
+      port: {{ .Values.node.ports.p2p }}
+      targetPort: external-port

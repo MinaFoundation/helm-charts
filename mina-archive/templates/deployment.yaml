@@ -22,41 +22,41 @@ spec:
         prometheus.io/path: '/metrics'
     spec:
       containers:
-      # Archive Process
-      - name: archive
-        image: {{ .Values.archive.image }}
-        args: [
-          "mina-archive",
-          "run",
-          "-metrics-port", "{{ .Values.archive.ports.metrics }}",
-          "-postgres-uri", "{{ tpl .Values.archive.postgresUri . }}",
+        # Archive Process
+        - name: archive
+          image: {{ .Values.archive.image }}
+          args: [
+            "mina-archive",
+            "run",
+            "-metrics-port", "{{ .Values.archive.ports.metrics }}",
+            "-postgres-uri", "{{ tpl .Values.archive.postgresUri . }}",
+            {{- if .Values.archive.runtimeConfig }}
+            "-config-file", "/config/daemon.json",
+            {{- end }}
+            "-server-port", "{{ .Values.archive.ports.server }}"
+          ]
+          env:
+          imagePullPolicy: Always
           {{- if .Values.archive.runtimeConfig }}
-          "-config-file", "/config/daemon.json",
+          volumeMounts:
+            - name: daemon-config
+              mountPath: "/config/"
           {{- end }}
-          "-server-port", "{{ .Values.archive.ports.server }}"
-        ]
-        env:
-        imagePullPolicy: Always
-        {{- if .Values.archive.runtimeConfig }}
-        volumeMounts:
-        - name: daemon-config
-          mountPath: "/config/"
-        {{- end }}
-        ports:
-        - name: archive-port
-          protocol: TCP
-          containerPort: {{ .Values.archive.ports.server }}
-        - name: postgres-port
-          protocol: TCP
-          containerPort: {{ .Values.archive.ports.postgres }}
-        - name: metrics-port
-          protocol: TCP
-          containerPort: {{ .Values.archive.ports.metrics }}
+          ports:
+            - name: archive-port
+              protocol: TCP
+              containerPort: {{ .Values.archive.ports.server }}
+            - name: postgres-port
+              protocol: TCP
+              containerPort: {{ .Values.archive.ports.postgres }}
+            - name: metrics-port
+              protocol: TCP
+              containerPort: {{ .Values.archive.ports.metrics }}
       volumes:
-      - name: config-dir
-        emptyDir: {}
-      {{- if .Values.archive.runtimeConfig }}
-      - name: daemon-config
-        configMap:
-          name: {{ .Values.archive.runtimeConfigName }}-runtime-config
-      {{- end }}
+        - name: config-dir
+          emptyDir: {}
+        {{- if .Values.archive.runtimeConfig }}
+        - name: daemon-config
+          configMap:
+            name: {{ .Values.archive.runtimeConfigName }}-runtime-config
+        {{- end }}
