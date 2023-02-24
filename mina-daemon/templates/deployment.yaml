@@ -25,191 +25,191 @@ spec:
         prometheus.io/path: '/metrics'
     spec:
       initContainers:
-      {{ if .Values.node.libp2pKeys.enabled -}}
-      - name: fix-libp2p-perms
-        image: busybox:latest
-        command:
-        - sh
-        - -c
-        - cp /libp2p-keys/* /root/libp2p-keys && chmod -R 0700 /root/libp2p-keys/
-        volumeMounts:
-        - name: mounted-libp2p-keys
-          mountPath: /libp2p-keys
-        - name: fixed-libp2p-keys
-          mountPath: /root/libp2p-keys
-      {{- end }}
-      {{ if .Values.node.minaKeys.enabled -}}
-      - name: fix-mina-perms
-        image: busybox:latest
-        command:
-        - sh
-        - -c
-        - cp /mina-keys/* /root/mina-keys/ && chmod -R 0700 /root/mina-keys/
-        volumeMounts:
-        - name: mounted-mina-keys
-          mountPath: /mina-keys
-        - name: fixed-mina-keys
-          mountPath: /root/mina-keys
-      {{- end }}
+        {{ if .Values.node.libp2pKeys.enabled -}}
+        - name: fix-libp2p-perms
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - cp /libp2p-keys/* /root/libp2p-keys && chmod -R 0700 /root/libp2p-keys/
+          volumeMounts:
+            - name: mounted-libp2p-keys
+              mountPath: /libp2p-keys
+            - name: fixed-libp2p-keys
+              mountPath: /root/libp2p-keys
+        {{- end }}
+        {{ if .Values.node.minaKeys.enabled -}}
+        - name: fix-mina-perms
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - cp /mina-keys/* /root/mina-keys/ && chmod -R 0700 /root/mina-keys/
+          volumeMounts:
+            - name: mounted-mina-keys
+              mountPath: /mina-keys
+            - name: fixed-mina-keys
+              mountPath: /root/mina-keys
+        {{- end }}
       containers:
-      - name: mina
-        resources:
-          limits:
-          requests:
-            memory: {{ .Values.requests.memory }}
-            cpu: {{ .Values.requests.cpu }}
-        image: {{ .Values.deployment.image }}
-        {{ if .Values.deployment.customEntrypoint.enabled -}}
-        command: [{{ .Values.deployment.customEntrypoint.entrypoint }}]
-        {{- end }}
-        args: [ "daemon",
-          {{- if .Values.node.fileLogLevel }}
-          "--file-log-level", {{ .Values.node.fileLogLevel | quote }},
-          {{- end -}}
-          {{- if .Values.node.logLevel }}
-          "--log-level", {{ .Values.node.logLevel | quote }},
-          {{- end -}}
-          "--client-port", "$(DAEMON_CLIENT_PORT)",
-          "--rest-port", "$(MINA_GRAPHQL_PORT)",
-          "--external-port", "$(DAEMON_EXTERNAL_PORT)",
-          "--metrics-port", "$(DAEMON_METRICS_PORT)",
-          {{- if .Values.node.exposeGraphql }}
-          "--insecure-rest-server",
-          {{- end -}}
-          {{- if .Values.node.maxConnections }}
-          "--max-connections", {{ .Values.node.maxConnections | quote }},
-          {{- end -}}
-          {{- if .Values.deployment.peerListURL }}
-          "--peer-list-url", {{ .Values.deployment.peerListURL | quote }},
-          {{- end -}}
-          {{- if .Values.deployment.runtimeConfig }}
-          "--config-file", "/config/daemon.json",
+        - name: mina
+          resources:
+            limits:
+            requests:
+              memory: {{ .Values.requests.memory }}
+              cpu: {{ .Values.requests.cpu }}
+          image: {{ .Values.deployment.image }}
+          {{ if .Values.deployment.customEntrypoint.enabled -}}
+          command: [{{ .Values.deployment.customEntrypoint.entrypoint }}]
           {{- end }}
-          {{- if .Values.node.libp2pKeys.enabled }}
-          "--libp2p-keypair", "/root/libp2p-keys/{{ .Values.node.name }}-libp2p",
-          {{- end -}}
-          {{- if and .Values.node.minaKeys.enabled .Values.node.minaKeys.produceBlocks }}
-          "--block-producer-key", "/root/mina-keys/{{ .Values.node.name }}-key",
-          {{- end -}}
-          {{- range .Values.deployment.seedPeers }}
-          "--peer", {{ . | quote }},
-          {{- end }}
-          {{- if .Values.deployment.uploadBlocksToGCloud }}
-          "--upload-blocks-to-gcloud", "true",
-          {{- end }}
-          {{- if .Values.node.archive.enabled }}
-          "--archive-address", {{ .Values.node.archive.address }},
-          {{- end }}
-          {{- if .Values.node.seedFlags }}
-          "--enable-peer-exchange", "true", "-seed",
-          {{- end}}
-          "--log-json"
-        ]
-        env:
-        - name: MINA_NETWORK
-          value: {{ .Values.deployment.testnet }}
-        - name: MINA_GRAPHQL_PORT
-          value: {{ .Values.node.ports.graphql | quote }}
-        - name: DAEMON_CLIENT_PORT
-          value: {{ .Values.node.ports.client | quote }}
-        - name: DAEMON_METRICS_PORT
-          value: {{ .Values.node.ports.metrics | quote }}
-        - name: MINA_CLIENT_TRUSTLIST
-          value: "10.0.0.0/8"
-        {{- if .Values.deployment.uploadBlocksToGCloud }}
-        - name: GCLOUD_KEYFILE
-          value: "/gcloud/keyfile.json"
-        - name: GCLOUD_BLOCK_UPLOAD_BUCKET
-          value: "mina_network_block_data"
-        {{- end }}
-        - name: DAEMON_EXTERNAL_PORT
-          value: {{ .Values.node.ports.p2p | quote }}
-        {{- if .Values.node.libp2pKeys.enabled }}
-        - name: MINA_LIBP2P_PASS
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.node.name }}
-              key: "libp2p-password"
-        {{- end }}
-        {{- if .Values.node.minaKeys.enabled }}
-        - name: MINA_PRIVKEY_PASS
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.node.name }}
-              key: "key-password"
-        {{- end }}
-        ports:
-        - name: client-port
-          protocol: TCP
-          containerPort: {{ .Values.node.ports.client }}
-        - name: graphql-port
-          protocol: TCP
-          containerPort: {{ .Values.node.ports.graphql }}
-        - name: metrics-port
-          protocol: TCP
-          containerPort: {{ .Values.node.ports.metrics }}
-        - name: external-port
-          protocol: TCP
-          containerPort: {{ .Values.node.ports.p2p }}
-          hostPort: {{ .Values.node.ports.external }}
+          args: [ "daemon",
+            {{- if .Values.node.fileLogLevel }}
+            "--file-log-level", {{ .Values.node.fileLogLevel | quote }},
+            {{- end -}}
+            {{- if .Values.node.logLevel }}
+            "--log-level", {{ .Values.node.logLevel | quote }},
+            {{- end -}}
+            "--client-port", "$(DAEMON_CLIENT_PORT)",
+            "--rest-port", "$(MINA_GRAPHQL_PORT)",
+            "--external-port", "$(DAEMON_EXTERNAL_PORT)",
+            "--metrics-port", "$(DAEMON_METRICS_PORT)",
+            {{- if .Values.node.exposeGraphql }}
+            "--insecure-rest-server",
+            {{- end -}}
+            {{- if .Values.node.maxConnections }}
+            "--max-connections", {{ .Values.node.maxConnections | quote }},
+            {{- end -}}
+            {{- if .Values.deployment.peerListURL }}
+            "--peer-list-url", {{ .Values.deployment.peerListURL | quote }},
+            {{- end -}}
+            {{- if .Values.deployment.runtimeConfig }}
+            "--config-file", "/config/daemon.json",
+            {{- end }}
+            {{- if .Values.node.libp2pKeys.enabled }}
+            "--libp2p-keypair", "/root/libp2p-keys/{{ .Values.node.name }}-libp2p",
+            {{- end -}}
+            {{- if and .Values.node.minaKeys.enabled .Values.node.minaKeys.produceBlocks }}
+            "--block-producer-key", "/root/mina-keys/{{ .Values.node.name }}-key",
+            {{- end -}}
+            {{- range .Values.deployment.seedPeers }}
+            "--peer", {{ . | quote }},
+            {{- end }}
+            {{- if .Values.deployment.uploadBlocksToGCloud }}
+            "--upload-blocks-to-gcloud", "true",
+            {{- end }}
+            {{- if .Values.node.archive.enabled }}
+            "--archive-address", {{ .Values.node.archive.address }},
+            {{- end }}
+            {{- if .Values.node.seedFlags }}
+            "--enable-peer-exchange", "true", "-seed",
+            {{- end}}
+            "--log-json"
+          ]
+          env:
+            - name: MINA_NETWORK
+              value: {{ .Values.deployment.testnet }}
+            - name: MINA_GRAPHQL_PORT
+              value: {{ .Values.node.ports.graphql | quote }}
+            - name: DAEMON_CLIENT_PORT
+              value: {{ .Values.node.ports.client | quote }}
+            - name: DAEMON_METRICS_PORT
+              value: {{ .Values.node.ports.metrics | quote }}
+            - name: MINA_CLIENT_TRUSTLIST
+              value: "10.0.0.0/8"
+            {{- if .Values.deployment.uploadBlocksToGCloud }}
+            - name: GCLOUD_KEYFILE
+              value: "/gcloud/keyfile.json"
+            - name: GCLOUD_BLOCK_UPLOAD_BUCKET
+              value: "mina_network_block_data"
+            {{- end }}
+            - name: DAEMON_EXTERNAL_PORT
+              value: {{ .Values.node.ports.p2p | quote }}
+            {{- if .Values.node.libp2pKeys.enabled }}
+            - name: MINA_LIBP2P_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.node.name }}
+                  key: "libp2p-password"
+            {{- end }}
+            {{- if .Values.node.minaKeys.enabled }}
+            - name: MINA_PRIVKEY_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.node.name }}
+                  key: "key-password"
+            {{- end }}
+          ports:
+            - name: client-port
+              protocol: TCP
+              containerPort: {{ .Values.node.ports.client }}
+            - name: graphql-port
+              protocol: TCP
+              containerPort: {{ .Values.node.ports.graphql }}
+            - name: metrics-port
+              protocol: TCP
+              containerPort: {{ .Values.node.ports.metrics }}
+            - name: external-port
+              protocol: TCP
+              containerPort: {{ .Values.node.ports.p2p }}
+              hostPort: {{ .Values.node.ports.external }}
 {{$data := dict "name" .Values.node.name "healthcheck" .Values.healthcheck }}
-{{- include "healthcheck.seed.allChecks" $data | indent 8 }}
-        imagePullPolicy: Always
-        volumeMounts:
-        {{- if .Values.node.libp2pKeys.enabled }}
-        - name: fixed-libp2p-keys
-          mountPath: /root/libp2p-keys
-        {{- end }}
-        {{- if .Values.node.minaKeys.enabled }}
-        - name: fixed-mina-keys
-          mountPath: /root/mina-keys
-        {{- end }}
-        {{- if .Values.deployment.uploadBlocksToGCloud }}
-        - name: gcloud-keyfile
-          mountPath: "/gcloud/"
-        {{- end }}
+{{- include "healthcheck.seed.allChecks" $data | indent 10 }}
+          imagePullPolicy: Always
+          volumeMounts:
+            {{- if .Values.node.libp2pKeys.enabled }}
+            - name: fixed-libp2p-keys
+              mountPath: /root/libp2p-keys
+            {{- end }}
+            {{- if .Values.node.minaKeys.enabled }}
+            - name: fixed-mina-keys
+              mountPath: /root/mina-keys
+            {{- end }}
+            {{- if .Values.deployment.uploadBlocksToGCloud }}
+            - name: gcloud-keyfile
+              mountPath: "/gcloud/"
+            {{- end }}
+            {{- if .Values.deployment.runtimeConfig }}
+            - name: daemon-config
+              mountPath: "/config/"
+            {{- end }}
+      volumes:
         {{- if .Values.deployment.runtimeConfig }}
         - name: daemon-config
-          mountPath: "/config/"
+          configMap:
+            name: {{ .Values.deployment.name }}-daemon-config
         {{- end }}
-      volumes:
-      {{- if .Values.deployment.runtimeConfig }}
-      - name: daemon-config
-        configMap:
-          name: {{ .Values.deployment.name }}-daemon-config
-      {{- end }}
-      {{- if .Values.node.minaKeys.enabled }}
-      - name: mounted-mina-keys
-        secret:
-          secretName: {{ .Values.node.name }}
-          defaultMode: 0600
-          items:
-          - key: {{ .Values.node.name }}-key
-            path: {{ .Values.node.name }}-key
-          - key: {{ .Values.node.name }}-key.pub
-            path: {{ .Values.node.name }}-key.pub
-      - name: fixed-mina-keys
-        emptyDir: {}
-      {{- end }}
-      {{- if .Values.node.libp2pKeys.enabled }}
-      - name: mounted-libp2p-keys
-        secret:
-          secretName: {{ .Values.node.name }}
-          defaultMode: 0600
-          items:
-          - key: {{ .Values.node.name }}-libp2p
-            path: {{ .Values.node.name }}-libp2p
-          - key: {{ .Values.node.name }}-libp2p.peerid
-            path: {{ .Values.node.name }}-libp2p.peerid
-      - name: fixed-libp2p-keys
-        emptyDir: {}
-      {{- end }}
-      {{- if .Values.node.uploadBlocksToGCloud }}
-      - name: gcloud-keyfile
-        secret:
-          secretName: gcloud-keyfile
-          defaultMode: 0400
-          items:
-          - key: keyfile
-            path: keyfile.json
-      {{- end }}
+        {{- if .Values.node.minaKeys.enabled }}
+        - name: mounted-mina-keys
+          secret:
+            secretName: {{ .Values.node.name }}
+            defaultMode: 0600
+            items:
+              - key: {{ .Values.node.name }}-key
+                path: {{ .Values.node.name }}-key
+              - key: {{ .Values.node.name }}-key.pub
+                path: {{ .Values.node.name }}-key.pub
+        - name: fixed-mina-keys
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.node.libp2pKeys.enabled }}
+        - name: mounted-libp2p-keys
+          secret:
+            secretName: {{ .Values.node.name }}
+            defaultMode: 0600
+            items:
+              - key: {{ .Values.node.name }}-libp2p
+                path: {{ .Values.node.name }}-libp2p
+              - key: {{ .Values.node.name }}-libp2p.peerid
+                path: {{ .Values.node.name }}-libp2p.peerid
+        - name: fixed-libp2p-keys
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.node.uploadBlocksToGCloud }}
+        - name: gcloud-keyfile
+          secret:
+            secretName: gcloud-keyfile
+            defaultMode: 0400
+            items:
+              - key: keyfile
+                path: keyfile.json
+        {{- end }}
