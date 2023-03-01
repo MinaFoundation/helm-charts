@@ -33,9 +33,9 @@ spec:
             - -c
             - cp /libp2p-keys/* /root/libp2p-keys && chmod -R 0700 /root/libp2p-keys/
           volumeMounts:
-            - name: mounted-libp2p-keys
+            - name: {{ .Release.Name }}-mounted-libp2p-keys
               mountPath: /libp2p-keys
-            - name: fixed-libp2p-keys
+            - name: {{ .Release.Name }}-fixed-libp2p-keys
               mountPath: /root/libp2p-keys
         {{- end }}
         {{ if .Values.node.minaKeys.enabled -}}
@@ -46,9 +46,9 @@ spec:
             - -c
             - cp /mina-keys/* /root/mina-keys/ && chmod -R 0700 /root/mina-keys/
           volumeMounts:
-            - name: mounted-mina-keys
+            - name: {{ .Release.Name }}-mounted-mina-keys
               mountPath: /mina-keys
-            - name: fixed-mina-keys
+            - name: {{ .Release.Name }}-fixed-mina-keys
               mountPath: /root/mina-keys
         {{- end }}
       containers:
@@ -86,7 +86,7 @@ spec:
             "--config-file", "/config/daemon.json",
             {{- end }}
             {{- if .Values.node.libp2pKeys.enabled }}
-            "--libp2p-keypair", "/root/libp2p-keys/{{ .Values.node.name }}-libp2p",
+            {{ (eq .Values.deployment.testnet "berkeley") |ternary "--libp2p-keypair" "--discovery-keypair" |quote }}, "/root/libp2p-keys/{{ .Values.node.name }}-libp2p",
             {{- end -}}
             {{- if and .Values.node.minaKeys.enabled .Values.node.minaKeys.produceBlocks }}
             "--block-producer-key", "/root/mina-keys/{{ .Values.node.name }}-key",
@@ -128,14 +128,14 @@ spec:
             - name: MINA_LIBP2P_PASS
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.node.name }}
+                  name: {{ .Values.deployment.name }}-{{ .Values.node.name }}
                   key: "libp2p-password"
             {{- end }}
             {{- if .Values.node.minaKeys.enabled }}
             - name: MINA_PRIVKEY_PASS
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.node.name }}
+                  name: {{ .Values.deployment.name }}-{{ .Values.node.name }}
                   key: "key-password"
             {{- end }}
           ports:
@@ -157,51 +157,51 @@ spec:
           imagePullPolicy: Always
           volumeMounts:
             {{- if .Values.node.libp2pKeys.enabled }}
-            - name: fixed-libp2p-keys
+            - name: {{ .Release.Name }}-fixed-libp2p-keys
               mountPath: /root/libp2p-keys
             {{- end }}
             {{- if .Values.node.minaKeys.enabled }}
-            - name: fixed-mina-keys
+            - name: {{ .Release.Name }}-fixed-mina-keys
               mountPath: /root/mina-keys
             {{- end }}
             {{- if .Values.deployment.uploadBlocksToGCloud }}
-            - name: gcloud-keyfile
+            - name: {{ .Release.Name }}-gcloud-keyfile
               mountPath: "/gcloud/"
             {{- end }}
             {{- if .Values.deployment.runtimeConfig }}
-            - name: daemon-config
+            - name: {{ .Release.Name }}-daemon-config
               mountPath: "/config/"
             {{- end }}
       volumes:
         {{- if .Values.deployment.runtimeConfig }}
-        - name: daemon-config
+        - name: {{ .Release.Name }}-daemon-config
           configMap:
             name: {{ .Values.deployment.name }}-daemon-config
         {{- end }}
         {{- if .Values.node.minaKeys.enabled }}
-        - name: mounted-mina-keys
+        - name: {{ .Release.Name }}-mounted-mina-keys
           secret:
-            secretName: {{ .Values.node.name }}
+            secretName: {{ .Values.deployment.name }}-{{ .Values.node.name }}
             defaultMode: 0600
             items:
               - key: {{ .Values.node.name }}-key
                 path: {{ .Values.node.name }}-key
               - key: {{ .Values.node.name }}-key.pub
                 path: {{ .Values.node.name }}-key.pub
-        - name: fixed-mina-keys
+        - name: {{ .Release.Name }}-fixed-mina-keys
           emptyDir: {}
         {{- end }}
         {{- if .Values.node.libp2pKeys.enabled }}
-        - name: mounted-libp2p-keys
+        - name: {{ .Release.Name }}-mounted-libp2p-keys
           secret:
-            secretName: {{ .Values.node.name }}
+            secretName: {{ .Values.deployment.name }}-{{ .Values.node.name }}
             defaultMode: 0600
             items:
               - key: {{ .Values.node.name }}-libp2p
                 path: {{ .Values.node.name }}-libp2p
               - key: {{ .Values.node.name }}-libp2p.peerid
                 path: {{ .Values.node.name }}-libp2p.peerid
-        - name: fixed-libp2p-keys
+        - name: {{ .Release.Name }}-fixed-libp2p-keys
           emptyDir: {}
         {{- end }}
         {{- if .Values.node.uploadBlocksToGCloud }}
