@@ -39,7 +39,7 @@ spec:
           imagePullPolicy: Always
           {{- if .Values.archive.runtimeConfig }}
           volumeMounts:
-            - name: daemon-config
+            - name: {{ .Release.Name }}-daemon-config
               mountPath: "/config/"
           {{- end }}
           ports:
@@ -53,10 +53,10 @@ spec:
               protocol: TCP
               containerPort: {{ .Values.archive.ports.metrics }}
       volumes:
-        - name: config-dir
+        - name: {{ .Release.Name }}-config-dir
           emptyDir: {}
         {{- if .Values.archive.runtimeConfig }}
-        - name: daemon-config
+        - name: {{ .Release.Name }}-daemon-config
           configMap:
             name: {{ .Values.archive.runtimeConfigName }}-runtime-config
         {{- end }}

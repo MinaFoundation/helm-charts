@@ -8,8 +8,8 @@ archive:
   # remoteSchemaFile needs to be just the script name, not a url.  remoteSchemaAuxFiles needs to be a list of urls of scripts, one of these urls needs to be the url of the main sql script that invokes the other ones.  sorry it's confusing
   remoteSchemaFile: "create_schema.sql"
   remoteSchemaAuxFiles:
-    - "https://raw.githubusercontent.com/MinaProtocol/mina/05c2f73d0f6e4f1341286843814ce02dcb3919e0/src/app/archive/create_schema.sql"
-    - "https://raw.githubusercontent.com/MinaProtocol/mina/05c2f73d0f6e4f1341286843814ce02dcb3919e0/src/app/archive/zkapp_tables.sql"
+    - "https://raw.githubusercontent.com/MinaProtocol/mina/2884275e6d4e18be6fd2d3afb19ae465d194e268/src/app/archive/create_schema.sql"
+    - "https://raw.githubusercontent.com/MinaProtocol/mina/2884275e6d4e18be6fd2d3afb19ae465d194e268/src/app/archive/zkapp_tables.sql"
   postgresHost:  '{{ .Release.Name }}-postgresql'
   postgresUri: postgres://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password }}@{{ tpl .Values.archive.postgresHost . }}:{{ .Values.archive.ports.postgres }}/{{ .Values.postgresql.auth.database }}
   ports:
