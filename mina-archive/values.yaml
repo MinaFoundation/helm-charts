@@ -38,19 +38,3 @@ postgresql:
 
 nodeSelector:
   preemptible: true
-
-healthcheck:
-  enabled: true
-  failureThreshold: 60
-  periodSeconds: 5
-  initialDelaySeconds: 30
-
-  requests:
-    memory: "16.0Gi"
-    cpu: "4"
-
-  healthcheck:
-    enabled: true
-    failureThreshold: 60
-    periodSeconds: 5
-    initialDelaySeconds: 30
