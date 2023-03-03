@@ -14,7 +14,7 @@ spec:
     metadata:
       labels:
         app: {{ template "archive.fullname" . }}
-        testnet: {{ .Values.testnetName }}
+        testnet: {{ .Values.archive.testnet }}
         role: archive
       annotations:
         prometheus.io/scrape: 'true'
@@ -39,7 +39,7 @@ spec:
           imagePullPolicy: Always
           {{- if .Values.archive.runtimeConfig }}
           volumeMounts:
-            - name: {{ .Release.Name }}-daemon-config
+            - name: {{ template "archive.fullname" . }}-daemon-config
               mountPath: "/config/"
           {{- end }}
           ports:
@@ -56,7 +56,7 @@ spec:
         - name: {{ .Release.Name }}-config-dir
           emptyDir: {}
         {{- if .Values.archive.runtimeConfig }}
-        - name: {{ .Release.Name }}-daemon-config
+        - name: {{ template "archive.fullname" . }}-daemon-config
           configMap:
-            name: {{ .Values.archive.runtimeConfigName }}-runtime-config
+            name: {{ template "archive.fullname" . }}-runtime-config
         {{- end }}

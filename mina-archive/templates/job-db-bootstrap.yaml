@@ -21,15 +21,15 @@ spec:
           args:
             - 'sleep 30
             && cd /tmp
-            && curl https://storage.googleapis.com/mina-archive-dumps/{{ .Values.testnetName }}-archive-dump-$(date -Idate)_0000.sql.tar.gz -o {{ .Values.testnetName }}-archive-dump.tar.gz
-            && tar -xvf {{ .Values.testnetName }}-archive-dump.tar.gz
+            && curl https://storage.googleapis.com/mina-archive-dumps/{{ .Values.archive.testnet }}-archive-dump-$(date -Idate)_0000.sql.tar.gz -o {{ .Values.archive.testnet }}-archive-dump.tar.gz
+            && tar -xvf {{ .Values.archive.testnet }}-archive-dump.tar.gz
             && psql
             --username {{ .Values.postgresql.auth.username }}
             --host {{ tpl .Values.archive.postgresHost . }}
             --port {{ .Values.archive.ports.postgres }}
             --dbname {{ .Values.postgresql.auth.database }}
-            -f {{ .Values.testnetName }}-archive-dump-$(date -Idate)_0000.sql
-            && rm -f {{ .Values.testnetName }}-archive-dump-$(date -Idate)_0000.sql
+            -f {{ .Values.archive.testnet }}-archive-dump-$(date -Idate)_0000.sql
+            && rm -f {{ .Values.archive.testnet }}-archive-dump-$(date -Idate)_0000.sql
             && psql
             --username {{ .Values.postgresql.auth.username }}
             --host {{ tpl .Values.archive.postgresHost . }}
