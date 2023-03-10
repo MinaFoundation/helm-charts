@@ -1,0 +1,62 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "archive.fullname" . }}
+  labels:
+    app: {{ template "archive.fullname" . }}
+spec:
+  replicas: {{ .Values.archive.replicas }}
+  selector:
+    matchLabels:
+      app: {{ template "archive.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "archive.fullname" . }}
+        testnet: {{ .Values.archive.testnet }}
+        role: archive
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: {{ .Values.archive.ports.metrics | quote }}
+        prometheus.io/path: '/metrics'
+    spec:
+      containers:
+        # Archive Process
+        - name: archive
+          image: {{ .Values.archive.image }}
+          args: [
+            "mina-archive",
+            "run",
+            "-metrics-port", "{{ .Values.archive.ports.metrics }}",
+            "-postgres-uri", "{{ tpl .Values.archive.postgresUri . }}",
+            {{- if .Values.archive.runtimeConfig }}
+            "-config-file", "/config/daemon.json",
+            {{- end }}
+            "-server-port", "{{ .Values.archive.ports.server }}"
+          ]
+          env:
+          imagePullPolicy: Always
+          {{- if .Values.archive.runtimeConfig }}
+          volumeMounts:
+            - name: {{ template "archive.fullname" . }}-daemon-config
+              mountPath: "/config/"
+          {{- end }}
+          ports:
+            - name: archive-port
+              protocol: TCP
+              containerPort: {{ .Values.archive.ports.server }}
+            - name: postgres-port
+              protocol: TCP
+              containerPort: {{ .Values.archive.ports.postgres }}
+            - name: metrics-port
+              protocol: TCP
+              containerPort: {{ .Values.archive.ports.metrics }}
+      volumes:
+        - name: {{ .Release.Name }}-config-dir
+          emptyDir: {}
+        {{- if .Values.archive.runtimeConfig }}
+        - name: {{ template "archive.fullname" . }}-daemon-config
+          configMap:
+            name: {{ template "archive.fullname" . }}-runtime-config
+        {{- end }}
