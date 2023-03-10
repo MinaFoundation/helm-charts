@@ -5,7 +5,7 @@ kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-daemon-config
   labels:
-    app: {{ .Values.deployment.name }}
+    app: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
 data:

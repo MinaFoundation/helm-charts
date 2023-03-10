@@ -1,17 +1,17 @@
-{{- if .Values.daemon.exposeGraphql }}
+{{- if .Values.node.exposeGraphql }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.deployment.name }}-{{ .Values.daemon.name }}-graphql
+  name: {{ .Release.Name }}-graphql
 spec:
   type: ClusterIP
   publishNotReadyAddresses: true
   selector:
-    app: {{ .Values.deployment.name }}-{{ .Values.daemon.name }}
+    app: {{ .Release.Name }}
   ports:
   - name: http-graphql
     protocol: TCP
     port: 80
-    targetPort: {{ .Values.daemon.ports.graphql }}
+    targetPort: {{ .Values.node.ports.graphql }}
 {{- end }}
