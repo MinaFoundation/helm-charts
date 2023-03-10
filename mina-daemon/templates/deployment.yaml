@@ -169,14 +169,14 @@ spec:
               mountPath: "/gcloud/"
             {{- end }}
             {{- if .Values.deployment.runtimeConfig }}
-            - name: {{ .Release.Name }}-daemon-config
+            - name: {{ .Release.Name }}-runtime-config
               mountPath: "/config/"
             {{- end }}
       volumes:
         {{- if .Values.deployment.runtimeConfig }}
-        - name: {{ .Release.Name }}-daemon-config
+        - name: {{ .Release.Name }}-runtime-config
           configMap:
-            name: {{ .Release.Name }}-daemon-config
+            name: {{ .Release.Name }}-runtime-config
         {{- end }}
         {{- if .Values.node.minaKeys.enabled }}
         - name: {{ .Release.Name }}-mounted-mina-keys

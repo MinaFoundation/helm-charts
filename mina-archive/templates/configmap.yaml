@@ -1,4 +1,4 @@
-{{- if .Values.deployment.runtimeConfig }}
+{{- if .Values.archive.runtimeConfig }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -9,5 +9,5 @@ metadata:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
 data:
-  daemon.json: {{ .Values.deployment.runtimeConfig | quote }}
+  daemon.json: {{ .Values.archive.runtimeConfig | quote }}
 {{- end }}
