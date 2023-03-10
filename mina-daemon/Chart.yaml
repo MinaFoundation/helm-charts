@@ -1,5 +1,5 @@
 apiVersion: v2
-name: daemon
+name: mina-daemon
 description: A Helm chart for Mina Protocol's daemons
 type: application
 version: 2.0.0
@@ -18,5 +18,3 @@ keywords:
 - testnet
 - berkeley
 home: https://minaprotocol.com/
-sources:
-- https://github.com/MinaProtocol/mina-helm-charts-private/tree/main/daemon

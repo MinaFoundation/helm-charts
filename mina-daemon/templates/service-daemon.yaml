@@ -2,11 +2,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.deployment.name }}-{{ .Values.daemon.name }}
+  name: {{ .Release.Name }}
 spec:
-  {{- if .Values.daemon.ip }}
+  {{- if .Values.node.ip }}
   type: LoadBalancer
-  loadBalancerIP: {{ .Values.daemon.ip }}
+  loadBalancerIP: {{ .Values.node.ip }}
   {{- else }}
   type: ClusterIP
   {{- end }}
@@ -15,8 +15,8 @@ spec:
   # have to be able to talk to each other in order to become ready.
   publishNotReadyAddresses: true
   selector:
-    app: {{ .Values.deployment.name }}-{{ .Values.daemon.name }}
+    app: {{ .Release.Name }}
   ports:
-  - name: tcp-p2p
-    port: {{ .Values.daemon.ports.p2p }}
-    targetPort: external-port
+    - name: tcp-p2p
+      port: {{ .Values.node.ports.p2p }}
+      targetPort: external-port
