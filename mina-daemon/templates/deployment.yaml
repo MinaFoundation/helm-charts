@@ -181,7 +181,7 @@ spec:
         {{- if .Values.node.minaKeys.enabled }}
         - name: {{ .Release.Name }}-mounted-mina-keys
           secret:
-            secretName: {{ .Release.Name }}-{{ .Values.node.name }}
+            secretName: {{ .Release.Name }}
             defaultMode: 0600
             items:
               - key: {{ .Values.node.name }}-key
