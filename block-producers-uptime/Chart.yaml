@@ -1,6 +1,6 @@
 apiVersion: v2
-name: block-producer-uptime
-description: A Helm chart for block-producer-uptime AKA Delegation Program Backend
+name: block-producers-uptime
+description: A Helm chart for block-producers-uptime AKA Delegation Program Backend
 type: application
 version: 0.1.0
 appVersion: "0.1.0"

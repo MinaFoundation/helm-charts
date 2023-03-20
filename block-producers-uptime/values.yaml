@@ -1,9 +1,13 @@
 deployment:
   image:
-    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/block-producer-uptime
+    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/block-producers-uptime
     pullPolicy: IfNotPresent
     tag: "1.2.0-test-1"
   replicaCount: 1
+  secrets:
+    credentialFileName: "block-producers-uptime-gcp-sa-credential"
+    credentialFilePath: "test"
+    credentialFileContent: "test"
 
 service:
   type: LoadBalancer
@@ -16,7 +20,7 @@ ingress:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/preserve-client-ip: 'true'
+    alb.ingress.kubernetes.io/preserve-client-ip: "true"
   rules:
     paths:
       - path: /testpath

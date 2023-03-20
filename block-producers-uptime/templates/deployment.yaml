@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-deployment
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Release.Name }}
+          image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
+          imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          env:
+            {{- if .Values.deployment.secrets.credentialFilePath }}
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: {{ .Values.deployment.secrets.credentialFilePath }}
+            {{- end }}
+          volumeMounts:
+            {{- if .Values.deployment.secrets.credentialFilePath  }}
+            - name:  {{ .Release.Name }}-credential-file
+              mountPath: {{ .Values.deployment.secrets.credentialFilePath }}
+            {{- end }}
+      volumes:
+        {{- if .Values.deployment.secrets.credentialFileContent }}
+        - name: {{ .Release.Name }}-credential-file
+          secret:
+            secretName: {{ .Release.Name }}
+            defaultMode: 0600
+            items:
+              - key: {{ .Values.deployment.secrets.credentialFileName }}
+                path: {{ .Values.deployment.secrets.credentialFileName }}.json
+        {{- end }}
