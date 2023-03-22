@@ -17,6 +17,8 @@ archive:
   initFromDump: false
 
 postgresql:
+  global:
+    storageClass: ebs-gp3-encrypted
   primary:
     name: "archive"
     persistence:
