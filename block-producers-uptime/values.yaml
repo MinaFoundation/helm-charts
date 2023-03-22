@@ -6,8 +6,9 @@ deployment:
   replicaCount: 1
   secrets:
     credentialFileName: "block-producers-uptime-gcp-sa-credential"
-    credentialFilePath: "test"
-    credentialFileContent: "test"
+    credentialFileDir:
+    credentialFilePath:
+    credentialFileContent:
 
 service:
   type: LoadBalancer

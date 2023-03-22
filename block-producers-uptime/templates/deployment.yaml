@@ -27,9 +27,9 @@ spec:
               value: {{ .Values.deployment.secrets.credentialFilePath }}
             {{- end }}
           volumeMounts:
-            {{- if .Values.deployment.secrets.credentialFilePath  }}
+            {{- if .Values.deployment.secrets.credentialFileDir  }}
             - name:  {{ .Release.Name }}-credential-file
-              mountPath: {{ .Values.deployment.secrets.credentialFilePath }}
+              mountPath: {{ .Values.deployment.secrets.credentialFileDir }}
             {{- end }}
       volumes:
         {{- if .Values.deployment.secrets.credentialFileContent }}
