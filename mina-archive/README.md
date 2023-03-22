@@ -43,9 +43,3 @@ Parameter | Description | Default
 `archive.postgresHost` | Postgres database host to store archival data | `see [default] values.yaml`
 `archive.postgresUri` | Postgres [connection URI](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING) to access postgres datastore instance | `see [default] values.yaml`
 `archive.remoteSchemaFile` | archive database schema during initialization | `see [default] values.yaml`
-`postgresql.primary.persistence.enabled` | whether to enable persistent storage for database data | `false`
-`postgresql.primary.persistence.size` | PV size. | `8Gi`
-`postgresql.primary.persistence.storageClass` | PV name postgresql should create PVC in. | `see [default] values.yaml`
-`postgresql.auth.username` | Postgress database access username | `see [default] values.yaml`
-`postgresql.auth.password` | Postgres database access password | `see [default] values.yaml`
-`postgresql.auth.database` | Postgres database name | `see [default] values.yaml`

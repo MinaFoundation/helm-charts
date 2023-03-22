@@ -22,7 +22,6 @@ postgresql:
     persistence:
       enabled: false
       size: 8Gi
-      storageClass: release-name-postgresql-pv
     initdb:
       user: "mina"
       password: "zo3moong7moog4Iep7eNgo3iecaesahH"
