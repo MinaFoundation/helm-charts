@@ -19,12 +19,22 @@ spec:
         - name: {{ .Release.Name }}
           image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
           imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 30
           ports:
             - containerPort: {{ .Values.service.port }}
           env:
             {{- if .Values.deployment.secrets.credentialFilePath }}
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: {{ .Values.deployment.secrets.credentialFilePath }}
+            {{- end }}
+            {{- if .Values.deployment.test.enabled }}
+            - name: TEST
+              value: {{ .Values.deployment.test.enabled | quote }}
             {{- end }}
           volumeMounts:
             {{- if .Values.deployment.secrets.credentialFileDir  }}

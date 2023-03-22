@@ -7,16 +7,3 @@ metadata:
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-spec:
-  rules:
-  - http:
-      paths:
-        {{- range $value := .Values.ingress.rules.paths }}
-        - path: {{ $value.path }}
-          pathType: {{ $value.pathType }}
-          backend:
-            service:
-              name: {{ $value.backend.service.name }}
-              port:
-                number: {{ $value.backend.service.port.number }}
-        {{- end }}

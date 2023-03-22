@@ -9,6 +9,8 @@ deployment:
     credentialFileDir:
     credentialFilePath:
     credentialFileContent:
+  test:
+    enabled:
 
 service:
   type: LoadBalancer
@@ -22,12 +24,6 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/preserve-client-ip: "true"
-  rules:
-    paths:
-      - path: /testpath
-        pathType: Prefix
-        backend:
-          service:
-            name: test
-            port:
-              number: 8080
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
+    external-dns.alpha.kubernetes.io/hostname: block-producers-uptime.minaprotocol.tools
+    external-dns.alpha.kubernetes.io/ttl: "5"
