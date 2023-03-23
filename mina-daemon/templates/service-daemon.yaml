@@ -10,10 +10,10 @@ metadata:
     service.beta.kubernetes.io/aws-loadbalancer-scheme: internet-facing
   {{- end }}
 spec:
-  {{- if .Values.node.loadBalancerIP }}
+  {{- if .Values.node.loadBalancer.enabled }}
   type: LoadBalancer
-  {{- if not (eq .Values.node.loadBalancerIP "auto") }}
-  loadBalancerIP: {{ .Values.node.loadBalancerIP }}
+  {{- if not (eq .Values.node.loadBalancer.ip "auto") }}
+  loadBalancerIP: {{ .Values.node.loadBalancer.ip }}
   {{- end }}
   {{- else }}
   type: ClusterIP
