@@ -17,7 +17,9 @@ node:
   role: "staging"
   replicas: 1
   fullname: "berkeley-node"
-  loadBalancerIP: "auto"
+  loadBalancer:
+    enabled: false
+    ip: "auto"
   exposeGraphql: false
   exposeP2P:
   seedFlags: true
