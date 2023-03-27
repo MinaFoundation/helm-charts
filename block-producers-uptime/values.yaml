@@ -1,0 +1,24 @@
+deployment:
+  image:
+    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/block-producers-uptime
+    pullPolicy: IfNotPresent
+    tag: "1.2.0-test-1"
+  replicaCount: 1
+  secrets:
+    credentialFile:
+      name: "block-producers-uptime-gcp-sa-credential"
+      dir:
+      path:
+      content:
+  test:
+    enabled:
+
+service:
+  type: LoadBalancer
+  port: 8080
+  externalTrafficPolicy: Local
+
+ingress:
+  class: alb
+  annotations: {}
+  hosts: {}
