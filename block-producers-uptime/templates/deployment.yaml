@@ -28,26 +28,26 @@ spec:
           ports:
             - containerPort: {{ .Values.service.port }}
           env:
-            {{- if .Values.deployment.secrets.credentialFilePath }}
+            {{- if .Values.deployment.secrets.credentialFile.path }}
             - name: GOOGLE_APPLICATION_CREDENTIALS
-              value: {{ .Values.deployment.secrets.credentialFilePath }}
+              value: {{ .Values.deployment.secrets.credentialFile.path }}
             {{- end }}
             {{- if .Values.deployment.test.enabled }}
             - name: TEST
               value: {{ .Values.deployment.test.enabled | quote }}
             {{- end }}
           volumeMounts:
-            {{- if .Values.deployment.secrets.credentialFileDir  }}
+            {{- if .Values.deployment.secrets.credentialFile.dir }}
             - name:  {{ .Release.Name }}-credential-file
-              mountPath: {{ .Values.deployment.secrets.credentialFileDir }}
+              mountPath: {{ .Values.deployment.secrets.credentialFile.dir }}
             {{- end }}
       volumes:
-        {{- if .Values.deployment.secrets.credentialFileContent }}
+        {{- if .Values.deployment.secrets.credentialFile.content }}
         - name: {{ .Release.Name }}-credential-file
           secret:
             secretName: {{ .Release.Name }}
             defaultMode: 0600
             items:
-              - key: {{ .Values.deployment.secrets.credentialFileName }}
-                path: {{ .Values.deployment.secrets.credentialFileName }}.json
+              - key: {{ .Values.deployment.secrets.credentialFile.name }}
+                path: {{ .Values.deployment.secrets.credentialFile.name }}.json
         {{- end }}
