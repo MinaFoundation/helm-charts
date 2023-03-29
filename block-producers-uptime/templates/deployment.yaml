@@ -36,6 +36,10 @@ spec:
             - name: TEST
               value: {{ .Values.deployment.test.enabled | quote }}
             {{- end }}
+            {{- if ne .Values.deployment.network.name "mainnet"  }} # if variable is not set the app assumes it's mainnet and will use mainnet signing byte
+            - name: NETWORK
+              value: {{ .Values.deployment.network.name | quote }}
+            {{- end }}
           volumeMounts:
             {{- if .Values.deployment.secrets.credentialFile.dir }}
             - name:  {{ .Release.Name }}-credential-file
