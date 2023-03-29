@@ -6,6 +6,9 @@ deployment:
     enabled: true
     entrypoint: "mina"
   peerListURL: "https://storage.googleapis.com/seed-lists/berkeley_seeds.txt"
+  uptime:
+    enabled: false
+    url:
   seedPeers:
     - /dns4/seed-1.berkeley.o1test.net/tcp/10000/p2p/12D3KooWAdgYL6hv18M3iDBdaK1dRygPivSfAfBNDzie6YqydVbs
     - /dns4/seed-2.berkeley.o1test.net/tcp/10001/p2p/12D3KooWLjs54xHzVmMmGYb7W5RVibqbwD1co7M2ZMfPgPm7iAag

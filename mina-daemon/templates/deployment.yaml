@@ -63,6 +63,10 @@ spec:
           command: [{{ .Values.deployment.customEntrypoint.entrypoint }}]
           {{- end }}
           args: [ "daemon",
+            {{- if .Values.deployment.uptime.enabled }}
+            "--uptime-url", {{ .Values.deployment.uptime.url | quote }},
+            "--uptime-submitter-key", "/root/mina-keys/{{ .Values.node.name }}-key",
+            {{- end }}
             {{- if .Values.node.fileLogLevel }}
             "--file-log-level", {{ .Values.node.fileLogLevel | quote }},
             {{- end -}}
@@ -133,6 +137,13 @@ spec:
             {{- end }}
             {{- if .Values.node.minaKeys.enabled }}
             - name: MINA_PRIVKEY_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}
+                  key: "key-password"
+            {{- end }}
+            {{- if .Values.deployment.uptime.enabled }}
+            - name: UPTIME_PRIVKEY_PASS
               valueFrom:
                 secretKeyRef:
                   name: {{ .Release.Name }}
