@@ -29,10 +29,12 @@ node:
   logLevel: Info
   fileLogLevel: Error
   maxConnections: 200
+  metrics:
+    enabled: false
+    port: 10001
   ports:
     client: 8301
     graphql: 3085
-    metrics: 10001
     p2p: 10801
   archive:
     enabled: false

@@ -19,10 +19,12 @@ spec:
         class: {{ default "undefined" .Values.node.class }}
         version: {{ trunc 8 (split ":" .Values.deployment.image)._1 | trimSuffix "-" }}
         syncStatus: INIT
+      {{- if .Values.node.metrics.enabled }}
       annotations:
         prometheus.io/scrape: 'true'
-        prometheus.io/port: {{ .Values.node.ports.metrics | quote }}
+        prometheus.io/port: {{ .Values.node.metrics.port | quote }}
         prometheus.io/path: '/metrics'
+      {{- end }}
     spec:
       initContainers:
         {{ if .Values.node.libp2pKeys.enabled -}}
@@ -76,7 +78,9 @@ spec:
             "--client-port", "$(DAEMON_CLIENT_PORT)",
             "--rest-port", "$(MINA_GRAPHQL_PORT)",
             "--external-port", "$(DAEMON_EXTERNAL_PORT)",
+            {{- if .Values.node.metrics.enabled }}
             "--metrics-port", "$(DAEMON_METRICS_PORT)",
+            {{- end -}}
             {{- if .Values.node.exposeGraphql }}
             "--insecure-rest-server",
             {{- end -}}
@@ -116,8 +120,10 @@ spec:
               value: {{ .Values.node.ports.graphql | quote }}
             - name: DAEMON_CLIENT_PORT
               value: {{ .Values.node.ports.client | quote }}
+            {{- if .Values.node.metrics.enabled }}
             - name: DAEMON_METRICS_PORT
-              value: {{ .Values.node.ports.metrics | quote }}
+              value: {{ .Values.node.metrics.port | quote }}
+            {{- end }}
             - name: MINA_CLIENT_TRUSTLIST
               value: "10.0.0.0/8"
             {{- if .Values.deployment.uploadBlocksToGCloud }}
@@ -156,9 +162,11 @@ spec:
             - name: graphql-port
               protocol: TCP
               containerPort: {{ .Values.node.ports.graphql }}
+            {{- if .Values.node.metrics.enabled }}
             - name: metrics-port
               protocol: TCP
-              containerPort: {{ .Values.node.ports.metrics }}
+              containerPort: {{ .Values.node.metrics.port }}
+            {{- end }}
             - name: external-port
               protocol: TCP
               containerPort: {{ .Values.node.ports.p2p }}

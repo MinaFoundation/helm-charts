@@ -25,8 +25,11 @@ However a working mina-archive setup also needs `mina-daemon` helm chart install
 
 ## Configuration
 
-The following table lists the configurable parameters of the `mina-archive` chart and its default values.
-
+The following table lists the configurable parameters of the `mina-archive` chart and its common default values.
+To get all available values do:
+```console
+helm show values mina-archive`
+```
 ### Required Settings
 
 Parameter | Description
@@ -43,7 +46,8 @@ Parameter | Description | Default
 `archive.postgresHost` | Postgres database host to store archival data | `see [default] values.yaml`
 `archive.postgresUri` | Postgres [connection URI](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING) to access postgres datastore instance | `see [default] values.yaml`
 `archive.remoteSchemaFile` | archive database schema during initialization | `see [default] values.yaml`
-
+`archive.metrics.enabled` | Whether to enable prometheus exporter for mina-archive | `false`
+`archive.metrics.port` | Prometheus exporter port for mina-archive | `10002`
 ### Postgresql Configuration
 
 Please refer to official Postgresql by Bitnami [Documentation](https://github.com/bitnami/charts/blob/main/bitnami/postgresql/README.md#parameters)

@@ -1,0 +1,19 @@
+{{- if .Values.archive.metrics.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ template "archive.fullname" . }}
+  labels:
+    app: {{ template "archive.fullname" . }}
+spec:
+  endpoints:
+    - interval: 30s
+      port: metrics-port
+  selector:
+    matchLabels:
+      app: {{ template "archive.fullname" . }}
+  namespaceSelector:
+    matchNames:
+    - {{ .Values.archive.testnet }}
+{{- end }}
