@@ -28,3 +28,8 @@ spec:
     - name: tcp-p2p
       port: {{ .Values.node.ports.p2p }}
       targetPort: external-port
+    {{- if .Values.node.metrics.enabled }}
+    - name: metrics-port
+      port: {{ .Values.node.metrics.port }}
+      targetPort: metrics-port
+    {{- end }}

@@ -16,10 +16,12 @@ spec:
         app: {{ template "archive.fullname" . }}
         testnet: {{ .Values.archive.testnet }}
         role: archive
+      {{- if .Values.archive.metrics.enabled }}
       annotations:
         prometheus.io/scrape: 'true'
-        prometheus.io/port: {{ .Values.archive.ports.metrics | quote }}
+        prometheus.io/port: {{ .Values.archive.metrics.port | quote }}
         prometheus.io/path: '/metrics'
+      {{- end }}
     spec:
       containers:
         # Archive Process
@@ -28,7 +30,9 @@ spec:
           args: [
             "mina-archive",
             "run",
-            "-metrics-port", "{{ .Values.archive.ports.metrics }}",
+            {{- if .Values.archive.metrics.enabled }}
+            "-metrics-port", "{{ .Values.archive.metrics.port }}",
+            {{- end }}
             "-postgres-uri", "{{ tpl .Values.archive.postgresUri . }}",
             {{- if .Values.archive.runtimeConfig }}
             "-config-file", "/config/daemon.json",
@@ -49,9 +53,11 @@ spec:
             - name: postgres-port
               protocol: TCP
               containerPort: {{ .Values.archive.ports.postgres }}
+            {{- if .Values.archive.metrics.enabled }}
             - name: metrics-port
               protocol: TCP
-              containerPort: {{ .Values.archive.ports.metrics }}
+              containerPort: {{ .Values.archive.metrics.port }}
+            {{- end }}
       volumes:
         - name: {{ .Release.Name }}-config-dir
           emptyDir: {}
