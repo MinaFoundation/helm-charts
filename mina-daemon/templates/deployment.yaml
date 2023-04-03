@@ -170,9 +170,8 @@ spec:
             - name: external-port
               protocol: TCP
               containerPort: {{ .Values.node.ports.p2p }}
-              hostPort: {{ .Values.node.ports.external }}
 {{$data := dict "name" .Values.node.name "healthcheck" .Values.healthcheck }}
-{{- include "healthcheck.seed.allChecks" $data | indent 10 }}
+{{- include "healthcheck.node.allChecks" $data | indent 10 }}
           imagePullPolicy: Always
           volumeMounts:
             {{- if .Values.node.libp2pKeys.enabled }}
