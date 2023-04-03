@@ -50,14 +50,14 @@ spec:
             - name: archive-port
               protocol: TCP
               containerPort: {{ .Values.archive.ports.server }}
-            - name: postgres-port
-              protocol: TCP
-              containerPort: {{ .Values.archive.ports.postgres }}
             {{- if .Values.archive.metrics.enabled }}
             - name: metrics-port
               protocol: TCP
               containerPort: {{ .Values.archive.metrics.port }}
             {{- end }}
+{{$name := include "archive.fullname" . }}
+{{$data := dict "name" $name "healthcheck" $.Values.healthcheck }}
+{{- include "healthcheck.archive.allChecks" $data | indent 10 }}
       volumes:
         - name: {{ .Release.Name }}-config-dir
           emptyDir: {}

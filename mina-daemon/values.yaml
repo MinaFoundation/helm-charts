@@ -58,6 +58,9 @@ requests:
 
 healthcheck:
   enabled: true
+  startup:
+    periodSeconds: 30
+    failureThreshold: 5
   failureThreshold: 60
   periodSeconds: 5
   initialDelaySeconds: 30
