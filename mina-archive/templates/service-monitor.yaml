@@ -3,16 +3,16 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ template "archive.fullname" . }}
+  name: {{ .Release.Name }}
   labels:
-    app: {{ template "archive.fullname" . }}
+    app: {{ .Release.Name }}
 spec:
   endpoints:
     - interval: 30s
       port: metrics-port
   selector:
     matchLabels:
-      app: {{ template "archive.fullname" . }}
+      app: {{ .Release.Name }}
   namespaceSelector:
     matchNames:
     - {{ .Values.archive.testnet }}

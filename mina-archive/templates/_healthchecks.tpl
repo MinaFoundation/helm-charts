@@ -3,7 +3,7 @@
 {{/*
 mina-archive node startup probe settings
 */}}
-{{- define "healthcheck.archive.startupCheck" -}}
+{{- define "healthcheck.archive.startupCheck" }}
 startupProbe:
   tcpSocket:
     port: archive-port
@@ -39,7 +39,7 @@ readinessProbe:
     command: [
       "/bin/bash",
       "-c",
-      "source /healthcheck/utilities.sh && isArchiveSynced --db-host {{ tpl .Values.archive.postgresHost . }}"
+      "source /healthcheck/utilities.sh && isArchiveSynced --db-host {{ .postgresHost }}"
     ]
 {{- include "healthcheck.common.settings" . | indent 2 }}
 {{- end }}
@@ -47,13 +47,10 @@ readinessProbe:
 {{/*
 ALL mina-archive node healthchecks
 */}}
-{{/*
-{{- include "healthcheck.archive.readinessCheck" . }}
-*/}}
-
 {{- define "healthcheck.archive.allChecks" }}
 {{- if .healthcheck.enabled }}
 {{- include "healthcheck.archive.startupCheck" . }}
 {{- include "healthcheck.archive.livenessCheck" . }}
+{{- include "healthcheck.archive.readinessCheck" . }}
 {{- end }}
 {{- end }}

@@ -3,7 +3,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ template "archive.fullname" . }}-db-bootstrap
+  name: {{ .Release.Name }}-db-bootstrap
 spec:
   template:
     spec:
@@ -44,7 +44,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   key: password
-                  name: "{{ template "archive.fullname" . }}-postgresql"
+                  name: "{{ .Release.Name }}-postgresql"
           command: ["bash", "-c"]
           args:
             - 'sleep 30

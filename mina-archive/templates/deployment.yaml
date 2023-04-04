@@ -2,18 +2,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "archive.fullname" . }}
+  name: {{ .Release.Name }}
   labels:
-    app: {{ template "archive.fullname" . }}
+    app: {{ .Release.Name }}
 spec:
   replicas: {{ .Values.archive.replicas }}
   selector:
     matchLabels:
-      app: {{ template "archive.fullname" . }}
+      app: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: {{ template "archive.fullname" . }}
+        app: {{ .Release.Name }}
         testnet: {{ .Values.archive.testnet }}
         role: archive
       {{- if .Values.archive.metrics.enabled }}
@@ -55,8 +55,8 @@ spec:
               protocol: TCP
               containerPort: {{ .Values.archive.metrics.port }}
             {{- end }}
-{{$name := include "archive.fullname" . }}
-{{$data := dict "name" $name "healthcheck" $.Values.healthcheck }}
+{{- $postgresHost := tpl .Values.archive.postgresHost . }}
+{{- $data := dict "postgresHost" $postgresHost "healthcheck" $.Values.healthcheck }}
 {{- include "healthcheck.archive.allChecks" $data | indent 10 }}
       volumes:
         - name: {{ .Release.Name }}-config-dir
