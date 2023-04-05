@@ -18,6 +18,7 @@ mina-daemon node liveness/readiness check common settings
 initialDelaySeconds: {{ default .healthcheck.initialDelaySeconds 5 }}
 periodSeconds: {{ default .healthcheck.periodSeconds 5 }}
 failureThreshold: {{ default .healthcheck.failureThreshold 30 }}
+timeoutSeconds: {{ default .healthcheck.timeoutSeconds 60 }}
 {{- end }}
 
 {{/*
@@ -29,9 +30,7 @@ livenessProbe:
     command: [
       "/bin/bash",
       "-c",
-      "mina",
-      "client",
-      "status"
+      "source /healthcheck/utilities.sh && isDaemonSynced"
     ]
 {{- include "healthcheck.common.settings" . | indent 2 }}
 {{- end -}}
@@ -45,7 +44,7 @@ readinessProbe:
     command: [
       "/bin/bash",
       "-c",
-      "source /healthcheck/utilities.sh && isDaemonSynced && peerCountGreaterThan 0"
+      "source /healthcheck/utilities.sh && isDaemonSynced"
     ]
 {{- include "healthcheck.common.settings" . | indent 2 }}
 {{- end }}
