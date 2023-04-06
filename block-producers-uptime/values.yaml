@@ -25,3 +25,6 @@ ingress:
   class: alb
   annotations: {}
   hosts: {}
+
+serviceaccount:
+  annotations: {}
