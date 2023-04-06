@@ -60,8 +60,8 @@ healthcheck:
   enabled: true
   startup:
     periodSeconds: 30
-    failureThreshold: 5
-  failureThreshold: 60
+    failureThreshold: 30
+  failureThreshold: 10
   periodSeconds: 5
-  initialDelaySeconds: 30
+  initialDelaySeconds: 10
   timeoutSeconds: 60

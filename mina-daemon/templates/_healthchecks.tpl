@@ -3,22 +3,22 @@
 {{/*
 mina-daemon node startup probe settings
 */}}
-{{- define "healthcheck.node.startupCheck" -}}
+{{- define "healthcheck.node.startupCheck" }}
 startupProbe:
   tcpSocket:
     port: external-port
-  periodSeconds: {{ default .healthcheck.startup.periodSeconds 30 }}
-  failureThreshold: {{ default .healthcheck.startup.failureThreshold 30 }}
-{{- end -}}
+  periodSeconds: {{ default 30 .healthcheck.startup.periodSeconds }}
+  failureThreshold: {{ default 30 .healthcheck.startup.failureThreshold }}
+{{- end }}
 
 {{/*
 mina-daemon node liveness/readiness check common settings
 */}}
 {{- define "healthcheck.common.settings" }}
-initialDelaySeconds: {{ default .healthcheck.initialDelaySeconds 5 }}
-periodSeconds: {{ default .healthcheck.periodSeconds 5 }}
-failureThreshold: {{ default .healthcheck.failureThreshold 30 }}
-timeoutSeconds: {{ default .healthcheck.timeoutSeconds 60 }}
+initialDelaySeconds: {{ default 10 .healthcheck.initialDelaySeconds }}
+periodSeconds: {{ default 5 .healthcheck.periodSeconds }}
+failureThreshold: {{ default 10 .healthcheck.failureThreshold }}
+timeoutSeconds: {{ default 60 .healthcheck.timeoutSeconds }}
 {{- end }}
 
 {{/*
@@ -33,7 +33,7 @@ livenessProbe:
       "source /healthcheck/utilities.sh && isDaemonSynced"
     ]
 {{- include "healthcheck.common.settings" . | indent 2 }}
-{{- end -}}
+{{- end }}
 
 {{/*
 mina-daemon node readiness settings
