@@ -7,17 +7,18 @@ mina-archive node startup probe settings
 startupProbe:
   tcpSocket:
     port: archive-port
-  periodSeconds: {{ default .healthcheck.startup.periodSeconds 30 }}
-  failureThreshold: {{ default .healthcheck.startup.failureThreshold 10 }}
+  periodSeconds: {{ default 30 .healthcheck.startup.periodSeconds }}
+  failureThreshold: {{ default 10 .healthcheck.startup.failureThreshold }}
 {{- end }}
 
 {{/*
 mina-archive node liveness/readiness check common settings
 */}}
 {{- define "healthcheck.common.settings" }}
-initialDelaySeconds: {{ default .healthcheck.initialDelaySeconds 30 }}
-periodSeconds: {{ default .healthcheck.periodSeconds 5 }}
-failureThreshold: {{ default .healthcheck.failureThreshold 5 }}
+initialDelaySeconds: {{ default 10 .healthcheck.initialDelaySeconds }}
+periodSeconds: {{ default 5 .healthcheck.periodSeconds }}
+failureThreshold: {{ default 5 .healthcheck.failureThreshold }}
+timeoutSeconds: {{ default 10 .healthcheck.timeoutSeconds }}
 {{- end }}
 
 {{/*

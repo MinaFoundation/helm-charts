@@ -45,4 +45,5 @@ healthcheck:
     failureThreshold: 10
   failureThreshold: 5
   periodSeconds: 5
-  initialDelaySeconds: 30
+  initialDelaySeconds: 10
+  timeoutSeconds: 10

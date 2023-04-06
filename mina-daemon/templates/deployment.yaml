@@ -170,7 +170,7 @@ spec:
             - name: external-port
               protocol: TCP
               containerPort: {{ .Values.node.ports.p2p }}
-{{$data := dict "name" .Values.node.name "healthcheck" .Values.healthcheck }}
+{{- $data := dict "name" .Values.node.name "healthcheck" .Values.healthcheck }}
 {{- include "healthcheck.node.allChecks" $data | indent 10 }}
           imagePullPolicy: Always
           volumeMounts:
