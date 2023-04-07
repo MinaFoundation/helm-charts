@@ -8,10 +8,12 @@ archive:
   remoteSchemaAuxFiles: []
   postgresHost:  '{{ .Release.Name }}-postgresql'
   postgresUri: postgres://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password }}@{{ tpl .Values.archive.postgresHost . }}:{{ .Values.archive.ports.postgres }}/{{ .Values.postgresql.auth.database }}
+  metrics:
+    enabled: false
+    port: 10002
   ports:
     server: 3086
     postgres: 5432
-    metrics: 10002
   enablePostgresDB: true
   enableDumpCronjob: false
   initFromDump: false
@@ -35,3 +37,13 @@ postgresql:
 
 nodeSelector:
   preemptible: true
+
+healthcheck:
+  enabled: true
+  startup:
+    periodSeconds: 30
+    failureThreshold: 10
+  failureThreshold: 5
+  periodSeconds: 5
+  initialDelaySeconds: 10
+  timeoutSeconds: 10

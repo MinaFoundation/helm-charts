@@ -29,10 +29,12 @@ node:
   logLevel: Info
   fileLogLevel: Error
   maxConnections: 200
+  metrics:
+    enabled: false
+    port: 10001
   ports:
     client: 8301
     graphql: 3085
-    metrics: 10001
     p2p: 10801
   archive:
     enabled: false
@@ -56,6 +58,10 @@ requests:
 
 healthcheck:
   enabled: true
-  failureThreshold: 60
+  startup:
+    periodSeconds: 30
+    failureThreshold: 30
+  failureThreshold: 10
   periodSeconds: 5
-  initialDelaySeconds: 30
+  initialDelaySeconds: 10
+  timeoutSeconds: 60

@@ -25,8 +25,11 @@ However a working mina-archive setup also needs `mina-daemon` helm chart install
 
 ## Configuration
 
-The following table lists the configurable parameters of the `mina-archive` chart and its default values.
-
+The following table lists the configurable parameters of the `mina-archive` chart and its common default values.
+To get all available values do:
+```console
+helm show values mina-archive`
+```
 ### Required Settings
 
 Parameter | Description
@@ -39,10 +42,23 @@ Parameter | Description
 
 Parameter | Description | Default
 --- | --- | ---
-`fullnameOverride` | Used to override release name. | `""`
 `archive.postgresHost` | Postgres database host to store archival data | `see [default] values.yaml`
 `archive.postgresUri` | Postgres [connection URI](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING) to access postgres datastore instance | `see [default] values.yaml`
 `archive.remoteSchemaFile` | archive database schema during initialization | `see [default] values.yaml`
+`archive.metrics.enabled` | Whether to enable prometheus exporter for mina-archive | `false`
+`archive.metrics.port` | Prometheus exporter port for mina-archive | `10002`
+
+### Health probes
+
+`mina-archive` health is determined checking it's rpc port liveness.
+
+Parameter | Description | Default
+--- | --- | ---
+healthcheck.startup.periodSeconds | How often startupProbe is checked | `30`
+healthcheck.startup.failureThreshold | # times startupProbe is allowed to fail | `5`
+healthcheck.failureThreshold | # times liveness/readiness is allowed to fail | `5`
+healthcheck.periodSeconds | How often liveness/readiness probes are checked | `5`
+healthcheck.initialDelaySeconds | Time to wait before start checking liveness/readiness status | 30
 
 ### Postgresql Configuration
 
