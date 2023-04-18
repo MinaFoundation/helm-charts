@@ -1,0 +1,74 @@
+repositories:
+- name: mina
+  url: https://coda-charts.storage.googleapis.com
+- name: bitnami
+  url: https://charts.bitnami.com/bitnami
+
+environments: 
+  default: 
+    values:
+      - seed:
+          keyPassword: ref+awssecrets://seed-1?region=us-west-2&mode=singleparam#/key-password
+          libp2pPassword: ref+awssecrets://seed-1?region=us-west-2&mode=singleparam#/libp2p-password
+          produceBlocksKey: ref+awssecrets://seed-1?region=us-west-2&mode=singleparam#/seed-1-key
+          produceBlocksKeyPub: ref+awssecrets://seed-1?region=us-west-2&mode=singleparam#/seed-1-key.pub
+          discoveryLibp2p: ref+awssecrets://seed-1?region=us-west-2&mode=singleparam#/seed-1-libp2p
+          discoveryLibp2pPeerid: ref+awssecrets://seed-1?region=us-west-2&mode=singleparam#/seed-1-libp2p.peerid
+      - releases:
+          berkeleyDaemon:
+            testnet: berkeley
+            platform: sandbox
+            image: gcr.io/o1labs-192920/mina-daemon:d105e9f-buster-berkeley
+---
+releases:
+- name: {{ .Values.releases.berkeleyDaemon.platform }}-{{ .Values.releases.berkeleyDaemon.testnet }}-mina-daemon
+  namespace: {{ .Values.releases.berkeleyDaemon.testnet }}
+  chart: ./mina-daemon
+    #chart: git::ssh://git@github.com/MinaProtocol/mina-helm-charts-private.git@mina-daemon?ref=main
+  version: 2.0.0
+  values:
+    - deployment:
+        testnet: {{ .Values.releases.berkeleyDaemon.testnet }}
+        image: {{ .Values.releases.berkeleyDaemon.image }}
+        customEntrypoint:
+          enabled: true
+          entrypoint: "mina"
+        peerListURL: https://storage.googleapis.com/seed-lists/{{ .Values.releases.berkeleyDaemon.testnet }}_seeds.txt
+        seedPeers:
+          - /dns4/seed-1.berkeley.o1test.net/tcp/10000/p2p/12D3KooWAdgYL6hv18M3iDBdaK1dRygPivSfAfBNDzie6YqydVbs
+          - /dns4/seed-2.berkeley.o1test.net/tcp/10001/p2p/12D3KooWLjs54xHzVmMmGYb7W5RVibqbwD1co7M2ZMfPgPm7iAag
+          - /dns4/seed-3.berkeley.o1test.net/tcp/10002/p2p/12D3KooWEiGVAFC7curXWXiGZyMWnZK9h8BKr88U8D5PKV3dXciv
+    - node:
+        name: "node"
+        class: "seed"
+        role: "staging"
+        replicas: 1
+        fullname: "node"
+        exposeGraphql: true
+        seedFlags: false
+        logLevel: Info
+        fileLogLevel: Error
+        maxConnections: 200
+        ports:
+          client: 8301
+          graphql: 3085
+          metrics: 10001
+          p2p: 10801
+        archive:
+          enabled: false
+        libp2pKeys:
+          enabled: true
+        minaKeys:
+          enabled: false
+          produceBlocks: true
+        secrets:
+          keyPassword: {{ .Values.seed.keyPassword | fetchSecretValue | quote }}
+          libp2pPassword: {{ .Values.seed.libp2pPassword | fetchSecretValue | quote }}
+          produceBlocksKey: {{ .Values.seed.produceBlocksKey | fetchSecretValue | quote }}
+          produceBlocksKeyPub: {{ .Values.seed.produceBlocksKeyPub | fetchSecretValue | quote }}
+          discoveryLibp2p: {{ .Values.seed.discoveryLibp2p | fetchSecretValue | quote }}
+          discoveryLibp2pPeerid: {{ .Values.seed.discoveryLibp2pPeerid | fetchSecretValue | quote }}
+
+    - requests:
+        memory: "16.0Gi"
+        cpu: "4"
