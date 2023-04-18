@@ -1,0 +1,116 @@
+repositories:
+- name: mina
+  url: https://coda-charts.storage.googleapis.com
+- name: bitnami
+  url: https://charts.bitnami.com/bitnami
+
+environments: 
+  default: 
+    values:
+      - releases:
+          blockProducers:
+            name: bp
+            numHosts: 3
+            testnet: berkeley
+            platform: sandbox
+            image: gcr.io/o1labs-192920/mina-daemon:2.0.0rampup1-rampup-b1facec-bullseye-berkeley
+          archive:
+            name: mina-archive
+            testnet: berkeley
+            platform: sandbox
+            image: gcr.io/o1labs-192920/mina-archive:2.0.0rampup1-rampup-b1facec-bullseye
+      - postgresPassword: ref+awssecrets://berkeley.archive.postgres?region=us-west-2&mode=singleparam#/password
+
+releases:
+{{- $bp := $.Values.releases.blockProducers }}
+{{- $archive := $.Values.releases.archive }}
+{{- range $i, $ := until (int $bp.numHosts) }}
+- name: {{ $bp.platform }}-{{ $bp.testnet }}-{{ $bp.name }}-{{ $i }}
+  namespace: {{ $bp.testnet }}
+  chart: ./mina-daemon
+    #chart: git::ssh://git@github.com/MinaProtocol/mina-helm-charts-private.git@mina-daemon?ref=main
+  version: 2.0.0
+  needs:
+    - {{ $archive.platform }}-{{ $archive.testnet }}-{{ $archive.name }}
+  values:
+    - deployment:
+        testnet: {{ $bp.testnet }}
+        image: {{ $bp.image }}
+        customEntrypoint:
+          enabled: true
+          entrypoint: "mina"
+        peerListURL: https://storage.googleapis.com/seed-lists/{{ $bp.testnet }}_seeds.txt
+        seedPeers:
+          - /dns4/seed-1.berkeley.o1test.net/tcp/10000/p2p/12D3KooWAdgYL6hv18M3iDBdaK1dRygPivSfAfBNDzie6YqydVbs
+          - /dns4/seed-2.berkeley.o1test.net/tcp/10001/p2p/12D3KooWLjs54xHzVmMmGYb7W5RVibqbwD1co7M2ZMfPgPm7iAag
+          - /dns4/seed-3.berkeley.o1test.net/tcp/10002/p2p/12D3KooWEiGVAFC7curXWXiGZyMWnZK9h8BKr88U8D5PKV3dXciv
+    - node:
+        name: {{ $bp.name }}-{{ $i }}
+        class: "bp"
+        role: "staging"
+        replicas: 1
+        fullname: {{ $bp.platform }}-{{ $bp.testnet }}-{{ $bp.name }}-{{ $i }}
+        metrics:
+          enabled: true
+        exposeGraphql: false
+        seedFlags: false
+        logLevel: Info
+        fileLogLevel: Error
+        maxConnections: 200
+        ports:
+          client: 8301
+          graphql: 3085
+          metrics: 10001
+          p2p: 10801
+        archive:
+          enabled: true
+          address: {{ $archive.platform }}-{{ $archive.testnet }}-{{ $archive.name }}:3086
+        libp2pKeys:
+          enabled: true
+        minaKeys:
+          enabled: true
+          produceBlocks: true
+        secrets:
+          keyPassword: ref+awssecrets://{{ $bp.testnet }}/{{ $bp.name }}-{{ $i }}?region=us-west-2&mode=singleparam#/key-password
+          libp2pPassword: ref+awssecrets://{{ $bp.testnet }}/{{ $bp.name }}-{{ $i }}?region=us-west-2&mode=singleparam#/libp2p-password
+          produceBlocksKey: ref+awssecrets://{{ $bp.testnet }}/{{ $bp.name }}-{{ $i }}?region=us-west-2&mode=singleparam#/key
+          produceBlocksKeyPub: ref+awssecrets://{{ $bp.testnet }}/{{ $bp.name }}-{{ $i }}?region=us-west-2&mode=singleparam#/key.pub
+          discoveryLibp2p: ref+awssecrets://{{ $bp.testnet }}/{{ $bp.name }}-{{ $i }}?region=us-west-2&mode=singleparam#/libp2p
+          discoveryLibp2pPeerid: ref+awssecrets://{{ $bp.testnet }}/{{ $bp.name }}-{{ $i }}?region=us-west-2&mode=singleparam#/libp2p.peerid
+
+    - requests:
+        memory: "20.0Gi"
+        cpu: "4"
+
+    - healthcheck:
+        enabled: true
+        failureThreshold: 60
+        periodSeconds: 5
+        initialDelaySeconds: 30
+{{- end }}
+- name: {{ $archive.platform }}-{{ $archive.testnet }}-{{ $archive.name }}
+  namespace: {{ $archive.testnet }}
+  chart: ./mina-archive
+  version: 2.0.0
+  values:
+    - archive:
+        global:
+          storageClass: ebs-gp3-encrypted
+        testnet: {{ $archive.testnet }}
+        metrics:
+          enabled: true
+        initFromDump: false
+        image: {{ $archive.image }}
+        runtimeConfig:
+        remoteSchemaAuxFiles:
+          - https://raw.githubusercontent.com/MinaProtocol/mina/b1facecde934ce3969771c34962b878d75321ca7/src/app/archive/create_schema.sql
+          - https://raw.githubusercontent.com/MinaProtocol/mina/b1facecde934ce3969771c34962b878d75321ca7/src/app/archive/zkapp_tables.sql
+    - postgresql:
+        primary:
+          initdb:
+            password: {{ .Values.postgresPassword | fetchSecretValue }}
+          persistence:
+            enabled: true
+            size: 5Gi
+        auth:
+          password: {{ .Values.postgresPassword | fetchSecretValue }}

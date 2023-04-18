@@ -1,42 +1,102 @@
-## Introduction
+# `mina-daemon` helm chart
 
-This chart bootstraps a Mina protocol daemon node.
+A Helm chart to deploy Mina protocol daemon node.
 
-## Add Mina Helm chart repository:
-
+NOTE: Currently MF does not have chart repository. To install this chart i.e. with helmfile you need to reffer to it following ways:
  ```console
- helm repo add mina https://coda-charts.storage.googleapis.com
- helm repo update
+ # helmfile.yaml
+ <..>
+ releases:
+   - name: mina-daemon
+     chart: git::https://git:accesstoken@github.com/MinaProtocol/mina-helm-charts-private.git@mina-daemon?ref=main
+ <..>
  ```
+
+## Prerequisites
+
+Before installing this Helm chart, you should have the following prerequisites:
+
+    Access to AWS EKS Kubernetes cluster
+    Helm installed on your local machine
+    Basic knowledge of Kubernetes and Helm
+    Keypair for p2p network
+    Keypair for block producing
+    Access to https://github.com/minaProtocol/mina-helm-charts-private
+    Optional: helmfile to install this chart
+
+## Installation
+
+To install this Helm chart, easiest is create a helmfile.yaml with needed values and run:
+
+    ```bash
+    $ helmfile template
+    $ helmfile apply
+    ```
+
+You can get some inspiration from helmfiles in `examples` folder.
+
+Verify that the chart is deployed successfully:
+
+    ```bash
+    helmfile status #although kubectl probably would give better insights.
+    ```
 
 ## Configuration
 
-The following table lists the configurable parameters of the `seed-node` chart and its default values.
+To get all available values in cloned `mina-helm-charts-private` do:
+
+    ```bash
+    helm show values ./mina-daemon
+    ```
+The following table lists the configurable parameters of the `mina-daemon` chart and its common default values.
 
 ### Required Settings
 
 Parameter | Description
 --- | ---
-`testnetName` | Mina protocol testnet name to deploy to
-`seed.discoveryKeyPair` | Key pair used for identifying and connecting to the seed by external clients 
+`deployment.testnet` | "berkeley|devnet|mainnet"
+`deployment.image` | image to use for mina daemon node.
+`deployment.peerListURL` | a url for txt file containing seed peers.
+`deployment.seedPeers` | a list of additional seed peers.
+`node.libp2pKeys.enabled` | This is mandatory for mina-daemon to start.
+`node.secrets.libp2pPassword` | Password for libp2p keypair | ` `
+`node.secrets.discoveryLibp2p` | Private libp2p keypair key | ` `
+`node.secrets.discoveryLibp2pPeerid` | Public libp2p keypair key | ` `
 
 ### Optional Settings
 
+NOTE: This is only more notable list of values. 
 Parameter | Description | Default
 --- | --- | ---
-`seed.active` | Whether to activate client as a Mina protocol seed node | `true`
-`seed.fullname` | k8s pod name of seed node to deploy | `seed-node`
-`seed.hostPort` | Mina client external port | `10001`
-`seed.rpcPort` | Mina client peer communication port | `8301`
-`seed.discoveryKeyPair` | Key pair used for identifying and connecting to the seed by external clients 
-`coda.image` | container image to use for operating the archive node's Mina daemon | `codaprotocol/coda-daemon:0.0.12-beta-develop-589b507`
-`coda.seedPeers` | peers to bootstrap the the archive node's Mina daemon
-`coda.runtimeConfig` | Mina daemon configuration to use at runtime | `undefined`
+`deployment.uptime.enabled` | Whether to use [Block Producer uptime](https://github.com/MinaProtocol/mina/tree/develop/src/app/delegation_backend) service | `false`
+`deployment.uptime.url` | BPU service url | ` `
+`node.exposeGraphql` | expose graphql to public on aws eks clusters | `false`
+`node.metrics.enabled` | expose prometheus metrics endpoint | `false`
+`node.metrics.port` | port to scrape prometheus metrics | `10001`
+`node.ports.graphql` |  | `3085`
+`node.archive.enabled` | Whether mina-daemon should connect to archive. | `false`
+`node.archive.address` | mina-archive url | `staging-berkeley-archive:3086`
+`node.minaKeys.enabled` | Used when building Block Producer | `false`
+`node.minaKeys.produceBlocks` | Used when building Block Producer | `true`
+`node.secrets.keyPassword` | Password for BP keypair | ` `
+`node.secrets.produceBlocksKey` | Private BP keypair key | ` `
+`node.secrets.produceBlocksKeyPub` | Public BP keypair key | ` `
+`requests.memory` | RAM allocated to mina-daemon container | "16.0Gi"
+`requests.cpu` | # of CPUs allocated to mina-daemon container | "4"
+`healthcheck.enabled` | Whether to use startup/liveness/readiness probes | true
+`healthcheck.startup.periodSeconds` | startup probe specific | 30
+`healthcheck.startup.failureThreshold` | startup probe specific | 30
+`healthcheck.failureThreshold` | liveness/readiness probe specific | 10
+`healthcheck.periodSeconds` | liveness/readiness probe specific | 5
+`healthcheck.initialDelaySeconds` | liveness/readiness probe specific | 10
+`healthcheck.timeoutSeconds` | liveness/readiness probe specific | 60
 
-## seed-node launch examples
 
-```console
-helm install seed-node \
-    --set testnetName=pickles \
-    --set seed.discoveryKeyPair=<key-pair>
-```
+## Uninstallation
+
+To uninstall the Helm chart using helmfile, follow these steps:
+
+    ```bash
+    helmfile destroy
+    ```
+
