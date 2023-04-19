@@ -68,7 +68,6 @@ releases:
           produceBlocksKeyPub: {{ .Values.seed.produceBlocksKeyPub | fetchSecretValue | quote }}
           discoveryLibp2p: {{ .Values.seed.discoveryLibp2p | fetchSecretValue | quote }}
           discoveryLibp2pPeerid: {{ .Values.seed.discoveryLibp2pPeerid | fetchSecretValue | quote }}
-
     - requests:
         memory: "16.0Gi"
         cpu: "4"
