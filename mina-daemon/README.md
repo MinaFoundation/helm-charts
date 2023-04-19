@@ -16,7 +16,7 @@ NOTE: Currently MF does not have chart repository. To install this chart i.e. wi
 
 Before installing this Helm chart, you should have the following prerequisites:
 
-    Access to AWS EKS Kubernetes cluster
+    Access to Kubernetes cluster
     Helm installed on your local machine
     Basic knowledge of Kubernetes and Helm
     Keypair for p2p network
@@ -70,7 +70,7 @@ Parameter | Description | Default
 --- | --- | ---
 `deployment.uptime.enabled` | Whether to use [Block Producer uptime](https://github.com/MinaProtocol/mina/tree/develop/src/app/delegation_backend) service | `false`
 `deployment.uptime.url` | BPU service url | ` `
-`node.exposeGraphql` | expose graphql to public on aws eks clusters | `false`
+`node.exposeGraphql` | expose graphql to public | `false`
 `node.metrics.enabled` | expose prometheus metrics endpoint | `false`
 `node.metrics.port` | port to scrape prometheus metrics | `10001`
 `node.ports.graphql` |  | `3085`
