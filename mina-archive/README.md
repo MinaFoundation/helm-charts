@@ -2,22 +2,23 @@
 
 A helm chart to deploy Mina protocol archive node and Postgres database subchart.
 
-NOTE: Currently MF does not have chart repository. To install this chart i.e. with helmfile you need to reffer to it following ways:
- ```console
- # helmfile.yaml
- <..>
- releases:
-   - name: mina-archive
-     chart: git::ssh://git@github.com/MinaProtocol/mina-helm-charts-private.git@mina-archive?ref=main
- <..>
- ```
+> **Note** Currently MF does not have chart repository. To install this chart i.e. with helmfile you need to reffer to it following ways:
+
+```console
+# helmfile.yaml
+<..>
+releases:
+  - name: mina-archive
+    chart: git::ssh://git@github.com/MinaProtocol/mina-helm-charts-private.git@mina-archive?ref=main
+<..>
+```
 
 ## Subcharts
 
 `mina-archive` uses only one subchart:
  - `postgresql` from https://charts.bitnami.com/bitnami
 
-NOTE: `mina-archive` is filled by the mina daemon connecting to it. However charts were created separately for wider usability. These dependencies can/should be glued outside of chart using tools like `helmfile`.
+> **Note** `mina-archive` is filled by the mina daemon connecting to it. However charts were created separately for wider usability. These dependencies can/should be glued outside of chart using tools like `helmfile`.
 
 helm chart installed alongside found in https://github.com/minaProtocol/mina-helm-charts-private
 
@@ -25,35 +26,41 @@ helm chart installed alongside found in https://github.com/minaProtocol/mina-hel
 
 Before installing this Helm chart, you should have the following prerequisites:
 
-    Access to Kubernetes cluster
-    Helm installed on your local machine
-    Basic knowledge of Kubernetes and Helm
-    Access to https://github.com/minaProtocol/mina-helm-charts-private
-    Optional: helmfile to install this chart
+ - Access to Kubernetes cluster
+ - Helm installed on your local machine
+ - Basic knowledge of Kubernetes and Helm
+ - Access to https://github.com/minaProtocol/mina-helm-charts-private
+ - Optional: helmfile to install this chart
 
 ## Installation
 
 To install this Helm chart, the easiest is to create a helmfile.yaml with needed values and run:
-    ```bash
-    $ helmfile template
-    $ helmfile apply
-    ```
+```bash
+$ helmfile template
+$ helmfile apply
+ ```
+
+Or use helmfile only to generate resources and apply them with kubectl like so:
+
+```bash
+$ helmfile template | kubectl -f -
+```
 
 You can get some inspiration from helmfiles in `examples` folder.
 
 Verify that the chart is deployed successfully:
 
-    ```bash
-    helmfile status #although kubectl probably would give better insights.
-    ```
+```bash
+helmfile status #although kubectl probably would give better insights.
+```
 
 ## Configuration
 
 To get all available values in cloned `mina-helm-charts-private` do:
 
-    ```bash
-    helm show values ./mina-archive
-    ```
+```bash
+helm show values ./mina-archive
+```
 
 The following table lists the configurable parameters of the `mina-archive` chart and its common default values.
 

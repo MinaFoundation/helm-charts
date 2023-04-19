@@ -2,52 +2,59 @@
 
 A Helm chart to deploy Mina protocol daemon node.
 
-NOTE: Currently MF does not have chart repository. To install this chart i.e. with helmfile you need to reffer to it following ways:
- ```console
- # helmfile.yaml
- <..>
- releases:
-   - name: mina-daemon
-     chart: git::https://git:accesstoken@github.com/MinaProtocol/mina-helm-charts-private.git@mina-daemon?ref=main
- <..>
- ```
+> **Note** Currently MF does not have chart repository. To install this chart i.e. with helmfile you need to reffer to it following ways:
+```console
+# helmfile.yaml
+<..>
+releases:
+  - name: mina-daemon
+    chart: git::https://git:accesstoken@github.com/MinaProtocol/mina-helm-charts-private.git@mina-daemon?ref=main
+<..>
+```
 
 ## Prerequisites
 
 Before installing this Helm chart, you should have the following prerequisites:
 
-    Access to Kubernetes cluster
-    Helm installed on your local machine
-    Basic knowledge of Kubernetes and Helm
-    Keypair for p2p network
-    Keypair for block producing
-    Access to https://github.com/minaProtocol/mina-helm-charts-private
-    Optional: helmfile to install this chart
+ - Access to Kubernetes cluster
+ - Helm installed on your local machine
+ - Basic knowledge of Kubernetes and Helm
+ - Keypair for p2p network
+ - Keypair for block producing
+ - Access to https://github.com/minaProtocol/mina-helm-charts-private
+ - Optional: helmfile to install this chart
 
 ## Installation
 
 To install this Helm chart, easiest is create a helmfile.yaml with needed values and run:
 
-    ```bash
-    $ helmfile template
-    $ helmfile apply
-    ```
+```bash
+$ helmfile template
+$ helmfile apply
+```
+
+Or use helmfile only to generate resources and apply them with kubectl like so:
+
+```bash
+$ helmfile template | kubectl -f -
+```
 
 You can get some inspiration from helmfiles in `examples` folder.
 
 Verify that the chart is deployed successfully:
 
-    ```bash
-    helmfile status #although kubectl probably would give better insights.
-    ```
+```bash
+$ helmfile status #although kubectl probably would give better insights.
+```
 
 ## Configuration
 
 To get all available values in cloned `mina-helm-charts-private` do:
 
-    ```bash
-    helm show values ./mina-daemon
-    ```
+```bash
+$ helm show values ./mina-daemon
+```
+
 The following table lists the configurable parameters of the `mina-daemon` chart and its common default values.
 
 ### Required Settings
@@ -65,7 +72,7 @@ Parameter | Description
 
 ### Optional Settings
 
-NOTE: This is only more notable list of values. 
+> **Note** This is only more notable list of values. 
 Parameter | Description | Default
 --- | --- | ---
 `deployment.uptime.enabled` | Whether to use [Block Producer uptime](https://github.com/MinaProtocol/mina/tree/develop/src/app/delegation_backend) service | `false`
