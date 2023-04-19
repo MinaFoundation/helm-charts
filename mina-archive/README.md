@@ -25,7 +25,7 @@ helm chart installed alongside found in https://github.com/minaProtocol/mina-hel
 
 Before installing this Helm chart, you should have the following prerequisites:
 
-    Access to AWS EKS Kubernetes cluster
+    Access to Kubernetes cluster
     Helm installed on your local machine
     Basic knowledge of Kubernetes and Helm
     Access to https://github.com/minaProtocol/mina-helm-charts-private
