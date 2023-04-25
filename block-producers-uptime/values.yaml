@@ -21,6 +21,9 @@ service:
   port: 8080
   externalTrafficPolicy: Local
 
+analyzer:
+  image:
+
 ingress:
   class: alb
   annotations: {}
