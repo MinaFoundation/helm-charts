@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  schedule: "3 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: {{ .Release.Name }}
+            image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
+            imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
+            command:
+            - itn_uptime_analyzer
+          restartPolicy: OnFailure
