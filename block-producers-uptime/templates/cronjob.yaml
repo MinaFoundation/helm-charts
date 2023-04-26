@@ -31,21 +31,17 @@ spec:
               {{- end }}
             volumeMounts:
               {{- with .Values.deployment.secrets.credentialFile }}
-              {{- if and .dir .content .name }}
-              - name:  {{ .Release.Name }}-credential-file
+              - name:  {{ .releaseName }}-credential-file
                 mountPath: {{ .dir | quote }}
-              {{- end }}
               {{- end }}
           volumes:
             {{- with .Values.deployment.secrets.credentialFile }}
-            {{- if and .dir .content .name }}
-            - name: {{ .Release.Name }}-credential-file
+            - name: {{ .releaseName }}-credential-file
               secret:
-                secretName: {{ .Release.Name }}
+                secretName: {{ .releaseName }}
                 defaultMode: 0600
                 items:
-                  - key: {{ .Values.deployment.secrets.credentialFile.name }}
-                    path: {{ .Values.deployment.secrets.credentialFile.name }}.json
-            {{- end }}
+                  - key: {{ .name }}
+                    path: {{ .name }}.json
             {{- end }}
           restartPolicy: OnFailure
