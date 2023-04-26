@@ -83,6 +83,8 @@ Parameter | Description | Default
 `node.ports.graphql` |  | `3085`
 `node.archive.enabled` | Whether mina-daemon should connect to archive. | `false`
 `node.archive.address` | mina-archive url | `staging-berkeley-archive:3086`
+`node.statsUrl` | URL where to report node stats | ` `
+`node.errorsUrl` | URL where to report node errors | ` `
 `node.minaKeys.enabled` | Used when building Block Producer | `false`
 `node.minaKeys.produceBlocks` | Used when building Block Producer | `true`
 `node.secrets.keyPassword` | Password for BP keypair | ` `
