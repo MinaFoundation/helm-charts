@@ -36,6 +36,8 @@ node:
     client: 8301
     graphql: 3085
     p2p: 10801
+  statsUrl:
+  errorsUrl:
   archive:
     enabled: false
     address: staging-berkeley-archive:3086

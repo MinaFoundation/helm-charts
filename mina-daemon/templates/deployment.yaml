@@ -69,6 +69,12 @@ spec:
             "--uptime-url", {{ .Values.deployment.uptime.url | quote }},
             "--uptime-submitter-key", "/root/mina-keys/{{ .Values.node.name }}-key",
             {{- end }}
+            {{- if .Values.node.statsUrl }}
+            "--node-status-url", {{ .Values.node.statsUrl | quote }},
+            {{- end }}
+            {{- if .Values.node.errorsUrl }}
+            "--node-error-url", {{ .Values.node.errorsUrl | quote }},
+            {{- end }}
             {{- if .Values.node.fileLogLevel }}
             "--file-log-level", {{ .Values.node.fileLogLevel | quote }},
             {{- end -}}
