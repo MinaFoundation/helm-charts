@@ -5,7 +5,7 @@ metadata:
   labels:
     app: {{ .Release.Name }}
 spec:
-  schedule: "0 0,12 * * *"
+  schedule: "59 11,23 * * *"
   jobTemplate:
     spec:
       template:
@@ -30,12 +30,15 @@ spec:
                 value: {{ .Values.deployment.network.name | quote }}
               {{- end }}
             volumeMounts:
-              {{- if .Values.deployment.secrets.credentialFile.dir }}
+              {{- with .Values.deployment.secrets.credentialFile }}
+              {{- if and .dir .content .name }}
               - name:  {{ .Release.Name }}-credential-file
-                mountPath: {{ .Values.deployment.secrets.credentialFile.dir }}
+                mountPath: {{ .dir | quote }}
+              {{- end }}
               {{- end }}
           volumes:
-            {{- if .Values.deployment.secrets.credentialFile.content }}
+            {{- with .Values.deployment.secrets.credentialFile }}
+            {{- if and .dir .content .name }}
             - name: {{ .Release.Name }}-credential-file
               secret:
                 secretName: {{ .Release.Name }}
@@ -43,5 +46,6 @@ spec:
                 items:
                   - key: {{ .Values.deployment.secrets.credentialFile.name }}
                     path: {{ .Values.deployment.secrets.credentialFile.name }}.json
+            {{- end }}
             {{- end }}
           restartPolicy: OnFailure
