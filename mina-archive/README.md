@@ -88,11 +88,11 @@ Parameter | Description | Default
 
 Parameter | Description | Default
 --- | --- | ---
-healthcheck.startup.periodSeconds | How often startupProbe is checked | `30`
-healthcheck.startup.failureThreshold | # times startupProbe is allowed to fail | `5`
-healthcheck.failureThreshold | # times liveness/readiness is allowed to fail | `5`
-healthcheck.periodSeconds | How often liveness/readiness probes are checked | `5`
-healthcheck.initialDelaySeconds | Time to wait before start checking liveness/readiness status | 30
+`healthcheck.startup.periodSeconds` | How often startupProbe is checked | `30`
+`healthcheck.startup.failureThreshold` | # times startupProbe is allowed to fail | `5`
+`healthcheck.failureThreshold` | # times liveness/readiness is allowed to fail | `5`
+`healthcheck.periodSeconds` | How often liveness/readiness probes are checked | `5`
+`healthcheck.initialDelaySeconds` | Time to wait before start checking liveness/readiness status | 30
 
 ### Postgresql Configuration
 
