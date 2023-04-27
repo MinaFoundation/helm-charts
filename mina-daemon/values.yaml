@@ -43,14 +43,17 @@ node:
     address: staging-berkeley-archive:3086
   libp2pKeys:
     enabled: true
-  minaKeys:
+  walletKeys:
     enabled: false
-    produceBlocks: true
+  daemonMode:
+    blockProducer: false
+    snarkWorker: false
+    seed: false
   secrets:
-    keyPassword: ""
+    walletPassword: ""
     libp2pPassword: ""
-    produceBlocksKey: ""
-    produceBlocksKeyPub: ""
+    walletKey: ""
+    walletPub: ""
     discoveryLibp2p: ""
     discoveryLibp2pPeerid: ""
 

@@ -85,11 +85,13 @@ Parameter | Description | Default
 `node.archive.address` | mina-archive url | `staging-berkeley-archive:3086`
 `node.statsUrl` | URL where to report node stats | ` `
 `node.errorsUrl` | URL where to report node errors | ` `
-`node.minaKeys.enabled` | Used when building Block Producer | `false`
-`node.minaKeys.produceBlocks` | Used when building Block Producer | `true`
-`node.secrets.keyPassword` | Password for BP keypair | ` `
-`node.secrets.produceBlocksKey` | Private BP keypair key | ` `
-`node.secrets.produceBlocksKeyPub` | Public BP keypair key | ` `
+`node.walletKeys.enabled` | Setup a wallet on a host | `false`
+`node.daemonMode.blockProducer` | enable Block Producer mode | `false`
+`node.daemonMode.snarkWorker` | enable Snark Worker mode | `false`
+`node.daemonMode.seed` | enable Seed mode | `false`
+`node.secrets.walletPassword` | Password for wallet keypair | ` `
+`node.secrets.walletKey` | Private wallet keypair key | ` `
+`node.secrets.walletPub` | Public wallet keypair key | ` `
 `requests.memory` | RAM allocated to mina-daemon container | "16.0Gi"
 `requests.cpu` | # of CPUs allocated to mina-daemon container | "4"
 `healthcheck.enabled` | Whether to use startup/liveness/readiness probes | true
