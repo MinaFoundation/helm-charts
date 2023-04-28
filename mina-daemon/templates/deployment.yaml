@@ -107,7 +107,7 @@ spec:
             "--block-producer-key", "/root/mina-keys/{{ $.Values.node.name }}-key",
             {{- end }}
             {{- if and .walletKeys.enabled .daemonMode.snarkWorker }}
-            "--run-snark-worker", "/root/mina-keys/{{ $.Values.node.name }}-key",
+            "--run-snark-worker", "{{ $.Values.node.secrets.walletPub }}",
             {{- end }}
             {{- end }}
             {{- if .Values.node.daemonMode.seed }}
