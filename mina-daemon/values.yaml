@@ -57,6 +57,9 @@ node:
     discoveryLibp2p: ""
     discoveryLibp2pPeerid: ""
 
+serviceAccount:
+  annotations: {}
+
 requests:
   memory: "16.0Gi"
   cpu: "4"

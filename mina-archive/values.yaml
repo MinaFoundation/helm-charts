@@ -38,6 +38,9 @@ postgresql:
 nodeSelector:
   preemptible: true
 
+serviceAccount:
+  annotations: {}
+
 healthcheck:
   enabled: true
   startup:
