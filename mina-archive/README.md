@@ -81,6 +81,7 @@ Parameter | Description | Default
 `archive.remoteSchemaFile` | archive database schema during initialization | `see [default] values.yaml`
 `archive.metrics.enabled` | Whether to enable prometheus exporter for mina-archive | `false`
 `archive.metrics.port` | Prometheus exporter port for mina-archive | `10002`
+`serviceAccount.annotations` | Allow role to assume this service account | `{}`
 
 ### Health probes
 

@@ -24,6 +24,9 @@ releases:
         testnet: {{ .Values.releases.berkeleyArchive.testnet }}
         initFromDump: true
         image: {{ .Values.releases.berkeleyArchive.image }}
+    - serviceAccount:
+        annotations:
+          eks.amazonaws.com/role-arn: arn:aws:iam::111122223333:role/s3-archive-node-daily-backups-staging
     - postgresql:
         global:
           storageClass: ebs-gp3-encrypted
