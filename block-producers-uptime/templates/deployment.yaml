@@ -41,17 +41,17 @@ spec:
               value: {{ .Values.deployment.network.name | quote }}
             {{- end }}
           volumeMounts:
-            {{- if .Values.deployment.secrets.credentialFile.dir }}
-            - name:  {{ .Release.Name }}-credential-file
-              mountPath: {{ .Values.deployment.secrets.credentialFile.dir }}
+            {{- with .Values.deployment.secrets.credentialFile }}
+            - name:  {{ .releaseName }}-credential-file
+              mountPath: {{ .dir | quote }}
             {{- end }}
       volumes:
-        {{- if .Values.deployment.secrets.credentialFile.content }}
-        - name: {{ .Release.Name }}-credential-file
+        {{- with .Values.deployment.secrets.credentialFile }}
+        - name: {{ .releaseName }}-credential-file
           secret:
-            secretName: {{ .Release.Name }}
+            secretName: {{ .releaseName }}
             defaultMode: 0600
             items:
-              - key: {{ .Values.deployment.secrets.credentialFile.name }}
-                path: {{ .Values.deployment.secrets.credentialFile.name }}.json
+              - key: {{ .name }}
+                path: {{ .name }}.json
         {{- end }}

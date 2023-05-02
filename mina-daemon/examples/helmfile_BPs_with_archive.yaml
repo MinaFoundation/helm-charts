@@ -29,7 +29,7 @@ releases:
   namespace: {{ $bp.testnet }}
   chart: ./mina-daemon
     #chart: git::ssh://git@github.com/MinaProtocol/mina-helm-charts-private.git@mina-daemon?ref=main
-  version: 2.0.0
+  version: 2.1.0
   needs:
     - {{ $archive.platform }}-{{ $archive.testnet }}-{{ $archive.name }}
   values:
@@ -67,14 +67,15 @@ releases:
           address: {{ $archive.platform }}-{{ $archive.testnet }}-{{ $archive.name }}:3086
         libp2pKeys:
           enabled: true
-        minaKeys:
+        walletKeys:
           enabled: true
-          produceBlocks: true
+        daemonMode:
+          blockProducer: true
         secrets:
-          keyPassword: ref+awssecrets://{{ $bp.testnet }}/{{ $bp.name }}-{{ $i }}?region=us-west-2&mode=singleparam#/key-password
+          walletPassword: ref+awssecrets://{{ $bp.testnet }}/{{ $bp.name }}-{{ $i }}?region=us-west-2&mode=singleparam#/key-password
           libp2pPassword: ref+awssecrets://{{ $bp.testnet }}/{{ $bp.name }}-{{ $i }}?region=us-west-2&mode=singleparam#/libp2p-password
-          produceBlocksKey: ref+awssecrets://{{ $bp.testnet }}/{{ $bp.name }}-{{ $i }}?region=us-west-2&mode=singleparam#/key
-          produceBlocksKeyPub: ref+awssecrets://{{ $bp.testnet }}/{{ $bp.name }}-{{ $i }}?region=us-west-2&mode=singleparam#/key.pub
+          walletKey: ref+awssecrets://{{ $bp.testnet }}/{{ $bp.name }}-{{ $i }}?region=us-west-2&mode=singleparam#/key
+          walletPub: ref+awssecrets://{{ $bp.testnet }}/{{ $bp.name }}-{{ $i }}?region=us-west-2&mode=singleparam#/key.pub
           discoveryLibp2p: ref+awssecrets://{{ $bp.testnet }}/{{ $bp.name }}-{{ $i }}?region=us-west-2&mode=singleparam#/libp2p
           discoveryLibp2pPeerid: ref+awssecrets://{{ $bp.testnet }}/{{ $bp.name }}-{{ $i }}?region=us-west-2&mode=singleparam#/libp2p.peerid
 

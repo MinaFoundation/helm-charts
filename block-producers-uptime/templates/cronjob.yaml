@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  schedule: "59 11,23 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: {{ .Release.Name }}
+            image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
+            imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
+            command:
+            - itn_uptime_analyzer
+            env:
+              {{- if .Values.deployment.secrets.credentialFile.path }}
+              - name: GOOGLE_APPLICATION_CREDENTIALS
+                value: {{ .Values.deployment.secrets.credentialFile.path }}
+              {{- end }}
+              {{- if .Values.deployment.test.enabled }}
+              - name: TEST
+                value: {{ .Values.deployment.test.enabled | quote }}
+              {{- end }}
+              {{- if ne .Values.deployment.network.name "mainnet"  }} # if variable is not set the app assumes it's mainnet and will use mainnet signing byte
+              - name: NETWORK
+                value: {{ .Values.deployment.network.name | quote }}
+              {{- end }}
+            volumeMounts:
+              {{- with .Values.deployment.secrets.credentialFile }}
+              - name:  {{ .releaseName }}-credential-file
+                mountPath: {{ .dir | quote }}
+              {{- end }}
+          volumes:
+            {{- with .Values.deployment.secrets.credentialFile }}
+            - name: {{ .releaseName }}-credential-file
+              secret:
+                secretName: {{ .releaseName }}
+                defaultMode: 0600
+                items:
+                  - key: {{ .name }}
+                    path: {{ .name }}.json
+            {{- end }}
+          restartPolicy: OnFailure
