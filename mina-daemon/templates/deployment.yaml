@@ -26,6 +26,7 @@ spec:
         prometheus.io/path: '/metrics'
       {{- end }}
     spec:
+      serviceAccountName: {{ .Release.Name }}
       initContainers:
         {{ if .Values.node.libp2pKeys.enabled -}}
         - name: fix-libp2p-perms
