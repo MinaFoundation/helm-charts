@@ -15,6 +15,7 @@ spec:
       labels:
         app: {{ .Release.Name }}
     spec:
+      serviceAccountName: {{ .Release.Name }}
       containers:
         - name: {{ .Release.Name }}
           image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
@@ -32,6 +33,10 @@ spec:
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: {{ .Values.deployment.secrets.credentialFile.path }}
             {{- end }}
+            {{- if .Values.deployment.secrets.awsConfig.path }}
+            - name: CONFIG_FILE
+              value: {{ .Values.deployment.secrets.awsConfig.path }}
+            {{- end }}
             {{- if .Values.deployment.test.enabled }}
             - name: TEST
               value: {{ .Values.deployment.test.enabled | quote }}
@@ -45,9 +50,22 @@ spec:
             - name:  {{ .releaseName }}-credential-file
               mountPath: {{ .dir | quote }}
             {{- end }}
+            {{- with .Values.deployment.secrets.awsConfig }}
+            - name:  {{ .releaseName }}-credential-file
+              mountPath: {{ .dir | quote }}
+            {{- end }}
       volumes:
         {{- with .Values.deployment.secrets.credentialFile }}
-        - name: {{ .releaseName }}-credential-file
+        - name: {{ .releaseName }}-aws-config
+          secret:
+            secretName: {{ .releaseName }}
+            defaultMode: 0600
+            items:
+              - key: {{ .name }}
+                path: {{ .name }}.json
+        {{- end }}
+        {{- with .Values.deployment.secrets.awsConfig }}
+        - name: {{ .releaseName }}-aws-config
           secret:
             secretName: {{ .releaseName }}
             defaultMode: 0600
