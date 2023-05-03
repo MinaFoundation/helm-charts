@@ -1,0 +1,37 @@
+name: "🔧 New task"
+description: Maintenance | Enhancement | New feature
+labels: ["planned", "enhancement", "feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Houston, do we have a problem?
+
+        Please please take the time to log all subtasks that complete this issue.
+        If a list of subtasks gets too big or subtasks start having  their own subtasks, consider spliting the issues.
+  - type: textarea
+    attributes:
+      label: Problem
+      description: Summary.
+      placeholder: Brief description of what are we trying to solve.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Acceptance Criteria
+      description: When this issue is closed...
+      placeholder: Describe a beautiful world once this is resolved.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Tasks
+      description: A list of tasks. i.e. code change, documentation, communication.
+      placeholder: Leave no stone unturned. Log it all here.
+      value: |
+        - [ ] 
+        - [ ] 
+        - [ ] 
+        ...
+    validations:
+      required: true
