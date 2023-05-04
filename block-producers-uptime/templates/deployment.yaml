@@ -33,9 +33,15 @@ spec:
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: {{ .Values.deployment.secrets.credentialFile.path }}
             {{- end }}
-            {{- if .Values.deployment.secrets.awsConfig.path }}
-            - name: CONFIG_FILE
-              value: {{ .Values.deployment.secrets.awsConfig.path }}
+            {{- with .Values.deployment.awsConfig }}
+            - name: CONFIG_NETWORK_NAME
+              value: {{ .network | quote }}
+            - name: CONFIG_GSHEET_ID
+              value: {{ .sheetId | quote }}
+            - name: CONFIG_AWS_REGION
+              value: {{ .region | quote }}
+            - name: CONFIG_AWS_ACCOUNT_ID
+              value: {{ .accountId | quote }}
             {{- end }}
             {{- if .Values.deployment.test.enabled }}
             - name: TEST
@@ -50,22 +56,9 @@ spec:
             - name:  {{ .releaseName }}-credential-file
               mountPath: {{ .dir | quote }}
             {{- end }}
-            {{- with .Values.deployment.secrets.awsConfig }}
-            - name:  {{ .releaseName }}-credential-file
-              mountPath: {{ .dir | quote }}
-            {{- end }}
       volumes:
         {{- with .Values.deployment.secrets.credentialFile }}
-        - name: {{ .releaseName }}-aws-config
-          secret:
-            secretName: {{ .releaseName }}
-            defaultMode: 0600
-            items:
-              - key: {{ .name }}
-                path: {{ .name }}.json
-        {{- end }}
-        {{- with .Values.deployment.secrets.awsConfig }}
-        - name: {{ .releaseName }}-aws-config
+        - name: {{ .releaseName }}-credential-file
           secret:
             secretName: {{ .releaseName }}
             defaultMode: 0600
