@@ -73,6 +73,7 @@ Parameter | Description
 ### Optional Settings
 
 > **Note** This is only more notable list of values. 
+
 Parameter | Description | Default
 --- | --- | ---
 `deployment.uptime.enabled` | Whether to use [Block Producer uptime](https://github.com/MinaProtocol/mina/tree/develop/src/app/delegation_backend) service | `false`
