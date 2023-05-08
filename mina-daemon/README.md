@@ -104,6 +104,22 @@ Parameter | Description | Default
 `healthcheck.initialDelaySeconds` | liveness/readiness probe specific | 10
 `healthcheck.timeoutSeconds` | liveness/readiness probe specific | 60
 
+## Mina daemon nodes
+
+Apart from other things, Mina daemon can run in 3 modes. 
+
+- Seed
+- Block Producer
+- Snark Worker
+- Combination of the above
+
+To run start Mina daemon with those modes set the following in values:
+
+> **Note** Make sure you are providing appropriate libp2p and wallet keypairs and their passwords in secrets.
+
+- `node.daemonMode.blockProducer = true`
+- `node.daemonMode.snarkWorker = true`
+- `node.daemonMode.seed = true`
 
 ## Uninstallation
 
