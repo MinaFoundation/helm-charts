@@ -13,6 +13,11 @@ deployment:
       dir:
       path:
       content:
+  awsConfig:
+    network:
+    sheetId:
+    region:
+    accountId:
   test:
     enabled:
 
