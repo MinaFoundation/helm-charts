@@ -36,21 +36,29 @@ node:
     client: 8301
     graphql: 3085
     p2p: 10801
+  statsUrl:
+  errorsUrl:
   archive:
     enabled: false
     address: staging-berkeley-archive:3086
   libp2pKeys:
     enabled: true
-  minaKeys:
+  walletKeys:
     enabled: false
-    produceBlocks: true
+  daemonMode:
+    blockProducer: false
+    snarkWorker: false
+    seed: false
   secrets:
-    keyPassword: ""
+    walletPassword: ""
     libp2pPassword: ""
-    produceBlocksKey: ""
-    produceBlocksKeyPub: ""
+    walletKey: ""
+    walletPub: ""
     discoveryLibp2p: ""
     discoveryLibp2pPeerid: ""
+
+serviceAccount:
+  annotations: {}
 
 requests:
   memory: "16.0Gi"

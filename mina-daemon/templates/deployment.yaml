@@ -26,6 +26,7 @@ spec:
         prometheus.io/path: '/metrics'
       {{- end }}
     spec:
+      serviceAccountName: {{ .Release.Name }}
       initContainers:
         {{ if .Values.node.libp2pKeys.enabled -}}
         - name: fix-libp2p-perms
@@ -40,7 +41,7 @@ spec:
             - name: {{ .Release.Name }}-fixed-libp2p-keys
               mountPath: /root/libp2p-keys
         {{- end }}
-        {{ if .Values.node.minaKeys.enabled -}}
+        {{ if .Values.node.walletKeys.enabled -}}
         - name: fix-mina-perms
           image: busybox:latest
           command:
@@ -69,6 +70,12 @@ spec:
             "--uptime-url", {{ .Values.deployment.uptime.url | quote }},
             "--uptime-submitter-key", "/root/mina-keys/{{ .Values.node.name }}-key",
             {{- end }}
+            {{- if .Values.node.statsUrl }}
+            "--node-status-url", {{ .Values.node.statsUrl | quote }},
+            {{- end }}
+            {{- if .Values.node.errorsUrl }}
+            "--node-error-url", {{ .Values.node.errorsUrl | quote }},
+            {{- end }}
             {{- if .Values.node.fileLogLevel }}
             "--file-log-level", {{ .Values.node.fileLogLevel | quote }},
             {{- end -}}
@@ -96,9 +103,17 @@ spec:
             {{- if .Values.node.libp2pKeys.enabled }}
             {{ (eq .Values.deployment.testnet "berkeley") |ternary "--libp2p-keypair" "--discovery-keypair" |quote }}, "/root/libp2p-keys/{{ .Values.node.name }}-libp2p",
             {{- end -}}
-            {{- if and .Values.node.minaKeys.enabled .Values.node.minaKeys.produceBlocks }}
-            "--block-producer-key", "/root/mina-keys/{{ .Values.node.name }}-key",
-            {{- end -}}
+            {{- with .Values.node }}
+            {{- if and .walletKeys.enabled .daemonMode.blockProducer }}
+            "--block-producer-key", "/root/mina-keys/{{ $.Values.node.name }}-key",
+            {{- end }}
+            {{- if and .walletKeys.enabled .daemonMode.snarkWorker }}
+            "--run-snark-worker", "{{ $.Values.node.secrets.walletPub }}",
+            {{- end }}
+            {{- end }}
+            {{- if .Values.node.daemonMode.seed }}
+            "--seed",
+            {{- end }}
             {{- range .Values.deployment.seedPeers }}
             "--peer", {{ . | quote }},
             {{- end }}
@@ -141,19 +156,19 @@ spec:
                   name: {{ .Release.Name }}
                   key: "libp2p-password"
             {{- end }}
-            {{- if .Values.node.minaKeys.enabled }}
+            {{- if .Values.node.walletKeys.enabled }}
             - name: MINA_PRIVKEY_PASS
               valueFrom:
                 secretKeyRef:
                   name: {{ .Release.Name }}
-                  key: "key-password"
+                  key: "wallet-password"
             {{- end }}
             {{- if .Values.deployment.uptime.enabled }}
             - name: UPTIME_PRIVKEY_PASS
               valueFrom:
                 secretKeyRef:
                   name: {{ .Release.Name }}
-                  key: "key-password"
+                  key: "wallet-password"
             {{- end }}
           ports:
             - name: client-port
@@ -178,7 +193,7 @@ spec:
             - name: {{ .Release.Name }}-fixed-libp2p-keys
               mountPath: /root/libp2p-keys
             {{- end }}
-            {{- if .Values.node.minaKeys.enabled }}
+            {{- if .Values.node.walletKeys.enabled }}
             - name: {{ .Release.Name }}-fixed-mina-keys
               mountPath: /root/mina-keys
             {{- end }}
@@ -196,7 +211,7 @@ spec:
           configMap:
             name: {{ .Release.Name }}-runtime-config
         {{- end }}
-        {{- if .Values.node.minaKeys.enabled }}
+        {{- if .Values.node.walletKeys.enabled }}
         - name: {{ .Release.Name }}-mounted-mina-keys
           secret:
             secretName: {{ .Release.Name }}

@@ -7,31 +7,26 @@ repositories:
 environments: 
   default: 
     values:
-      - seed:
-          keyPassword: ref+awssecrets://seed-1?region=us-west-2&mode=singleparam#/key-password
-          libp2pPassword: ref+awssecrets://seed-1?region=us-west-2&mode=singleparam#/libp2p-password
-          produceBlocksKey: ref+awssecrets://seed-1?region=us-west-2&mode=singleparam#/seed-1-key
-          produceBlocksKeyPub: ref+awssecrets://seed-1?region=us-west-2&mode=singleparam#/seed-1-key.pub
-          discoveryLibp2p: ref+awssecrets://seed-1?region=us-west-2&mode=singleparam#/seed-1-libp2p
-          discoveryLibp2pPeerid: ref+awssecrets://seed-1?region=us-west-2&mode=singleparam#/seed-1-libp2p.peerid
       - releases:
           berkeleyArchive:
             testnet: berkeley
             platform: sandbox
             image: gcr.io/o1labs-192920/mina-archive:2.0.0rampup1-rampup-68fa3fa-bullseye
             postgresPassword: ref+awssecrets://berkeley.archive.postgres?region=us-west-2&mode=singleparam#/password
----
 releases:
 - name: {{ .Values.releases.berkeleyArchive.platform }}-{{ .Values.releases.berkeleyArchive.testnet }}-mina-archive
   namespace: {{ .Values.releases.berkeleyArchive.testnet }}
   chart: ./mina-archive
   #chart: git::ssh://git@github.com/MinaProtocol/mina-helm-charts-private.git@mina-archive?ref=main
-  version: 2.0.0
+  version: 2.1.0
   values:
     - archive:
         testnet: {{ .Values.releases.berkeleyArchive.testnet }}
         initFromDump: true
         image: {{ .Values.releases.berkeleyArchive.image }}
+    - serviceAccount:
+        annotations:
+          eks.amazonaws.com/role-arn: arn:aws:iam::111122223333:role/s3-archive-node-daily-backups-staging
     - postgresql:
         global:
           storageClass: ebs-gp3-encrypted
