@@ -117,6 +117,11 @@ spec:
             {{- range .Values.deployment.seedPeers }}
             "--peer", {{ . | quote }},
             {{- end }}
+            {{- with .Values.deployment.storeBlocks }}
+            {{- if .enabled }}
+            "--precomputed-blocks-file", {{ .directory }}/{{ .filename }},
+            {{- end }}
+            {{- end }}
             {{- if .Values.deployment.uploadBlocksToGCloud }}
             "--upload-blocks-to-gcloud", "true",
             {{- end }}
@@ -205,6 +210,10 @@ spec:
             - name: {{ .Release.Name }}-runtime-config
               mountPath: "/config/"
             {{- end }}
+            {{- if .Values.deployment.storeBlocks.storageClass }}
+            - name: {{ .Release.Name }}-precomputed-blocks
+              mountPath: {{ .Values.deployment.storeBlocks.directory }}
+            {{- end }}
       volumes:
         {{- if .Values.deployment.runtimeConfig }}
         - name: {{ .Release.Name }}-runtime-config
@@ -245,4 +254,9 @@ spec:
             items:
               - key: keyfile
                 path: keyfile.json
+        {{- end }}
+        {{- if .Values.deployment.storeBlocks.storageClass }}
+        - name: {{ .Release.Name }}-precomputed-blocks
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-precomputed-blocks
         {{- end }}

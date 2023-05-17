@@ -1,0 +1,14 @@
+{{- if .Values.deployment.storeBlocks.storageClass }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-precomputed-blocks
+spec:
+  accessModes:
+    - "ReadWriteOnce"
+  resources:
+    requests:
+      storage: {{ .Values.deployment.storeBlocks.sizePVC }}
+  storageClassName: {{ .Values.deployment.storeBlocks.storageClass }}
+{{- end }}
