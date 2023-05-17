@@ -78,6 +78,11 @@ Parameter | Description | Default
 --- | --- | ---
 `deployment.uptime.enabled` | Whether to use [Block Producer uptime](https://github.com/MinaProtocol/mina/tree/develop/src/app/delegation_backend) service | `false`
 `deployment.uptime.url` | BPU service url | ` `
+`deployment.storeBlocks.enabled` | Whether to store precomputed blocks locally | `false`
+`deployment.storeBlocks.storageClass` | Enable persistent volume for storing blocks | ` `
+`deployment.storeBlocks.filename` | file name where to append blocks in `json` format | `precomputed_blocks.json`
+`deployment.storeBlocks.directory` | Path where to store precomputed_blocks file | `/blocks`
+`deployment.storeBlocks.sizePVC` | How much space to claim for volume | `5Gi`
 `node.exposeGraphql` | expose graphql to public | `false`
 `node.metrics.enabled` | expose prometheus metrics endpoint | `false`
 `node.metrics.port` | port to scrape prometheus metrics | `10001`
