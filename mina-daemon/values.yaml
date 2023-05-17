@@ -54,6 +54,7 @@ node:
   daemonMode:
     blockProducer: false
     snarkWorker: false
+    coordinator: false
     seed: false
   secrets:
     walletPassword: ""
