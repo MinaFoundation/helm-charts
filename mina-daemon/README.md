@@ -88,7 +88,8 @@ Parameter | Description | Default
 `node.errorsUrl` | URL where to report node errors | ` `
 `node.walletKeys.enabled` | Setup a wallet on a host | `false`
 `node.daemonMode.blockProducer` | enable Block Producer mode | `false`
-`node.daemonMode.snarkWorker` | enable Snark Worker mode | `false`
+`node.daemonMode.snarkWorker` | enable SNARK Worker mode | `false`
+`node.daemonMode.coordinator` | enable SNARK Coordinator mode | `false`
 `node.daemonMode.seed` | enable Seed mode | `false`
 `node.secrets.walletPassword` | Password for wallet keypair | ` `
 `node.secrets.walletKey` | Private wallet keypair key | ` `
@@ -110,7 +111,8 @@ Apart from other things, Mina daemon can run in 3 modes.
 
 - Seed
 - Block Producer
-- Snark Worker
+- SNARK Worker
+- SNARK Coordinator
 - Combination of the above
 
 To run start Mina daemon with those modes set the following in values:
@@ -119,7 +121,10 @@ To run start Mina daemon with those modes set the following in values:
 
 - `node.daemonMode.blockProducer = true`
 - `node.daemonMode.snarkWorker = true`
+- `node.daemonMode.coordinator = true`
 - `node.daemonMode.seed = true`
+
+> **Note** `snarkWorker` and `coordinator` mode are mutually exclusive. If `snarkWorker` is enabled, both `mina daemon` application as well as this helm chart ignore `coordinator` mode.
 
 ## Uninstallation
 

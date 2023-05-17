@@ -110,6 +110,9 @@ spec:
             {{- if and .walletKeys.enabled .daemonMode.snarkWorker }}
             "--run-snark-worker", "{{ $.Values.node.secrets.walletPub }}",
             {{- end }}
+            {{- if and .walletKeys.enabled .daemonMode.coordinator ( not .daemonMode.snarkWorker ) }}
+            "--run-snark-coordinator", "{{ $.Values.node.secrets.walletPub }}",
+            {{- end }}
             {{- end }}
             {{- if .Values.node.daemonMode.seed }}
             "--seed",
