@@ -46,8 +46,7 @@ releases:
           - /dns4/seed-3.berkeley.o1test.net/tcp/10002/p2p/12D3KooWEiGVAFC7curXWXiGZyMWnZK9h8BKr88U8D5PKV3dXciv
     - node:
         name: {{ $bp.name }}-{{ $i }}
-        class: "bp"
-        role: "staging"
+        role: "bp"
         replicas: 1
         fullname: {{ $bp.platform }}-{{ $bp.testnet }}-{{ $bp.name }}-{{ $i }}
         metrics:

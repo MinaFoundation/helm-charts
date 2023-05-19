@@ -16,7 +16,6 @@ spec:
         app: {{ .Release.Name }}
         testnet: {{ .Values.deployment.testnet }}
         role: {{ default "undefined" .Values.node.role }}
-        class: {{ default "undefined" .Values.node.class }}
         version: {{ trunc 8 (split ":" .Values.deployment.image)._1 | trimSuffix "-" }}
         syncStatus: INIT
       {{- if .Values.node.metrics.enabled }}

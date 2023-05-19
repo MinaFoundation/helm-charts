@@ -22,8 +22,7 @@ deployment:
 
 node:
   name: "berkeley-node"
-  class: "seed"
-  role: "staging"
+  role:
   replicas: 1
   fullname: "berkeley-node"
   loadBalancer:
