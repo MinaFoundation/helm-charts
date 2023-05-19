@@ -16,4 +16,7 @@ spec:
   namespaceSelector:
     matchNames:
     - {{ .Values.deployment.testnet }}
+  targetLabels:
+  - testnet
+  - role
 {{- end }}

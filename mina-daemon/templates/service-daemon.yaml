@@ -5,6 +5,8 @@ metadata:
   name: {{ .Release.Name }}
   labels:
     app: {{ .Release.Name }}
+    testnet: {{ .Values.deployment.testnet }}
+    role: {{ default "undefined" .Values.node.role }}
   {{- if .Values.node.exposeP2P }}
   annotations:
     service.beta.kubernetes.io/aws-loadbalancer-type: external

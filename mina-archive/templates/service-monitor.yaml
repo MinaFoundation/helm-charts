@@ -16,4 +16,6 @@ spec:
   namespaceSelector:
     matchNames:
     - {{ .Values.archive.testnet }}
+  targetLabels:
+  - testnet
 {{- end }}
