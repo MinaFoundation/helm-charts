@@ -68,7 +68,7 @@ serviceAccount:
 
 requests:
   memory: "16.0Gi"
-  cpu: "4"
+  cpu: "8"
 
 healthcheck:
   enabled: true
