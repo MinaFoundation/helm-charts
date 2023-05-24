@@ -18,6 +18,10 @@ archive:
   enableDumpCronjob: false
   initFromDump: false
 
+requests:
+  memory: "8.0Gi"
+  cpu: "4"
+
 postgresql:
   global:
     storageClass: ebs-gp3-encrypted

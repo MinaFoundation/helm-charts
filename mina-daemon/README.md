@@ -101,7 +101,7 @@ Parameter | Description | Default
 `node.secrets.walletPub` | Public wallet keypair key | ` `
 `serviceAccount.annotations` | Allow role to assume this service account | `{}`
 `requests.memory` | RAM allocated to mina-daemon container | "16.0Gi"
-`requests.cpu` | # of CPUs allocated to mina-daemon container | "4"
+`requests.cpu` | # of CPUs allocated to mina-daemon container | "8"
 `healthcheck.enabled` | Whether to use startup/liveness/readiness probes | true
 `healthcheck.startup.periodSeconds` | startup probe specific | 30
 `healthcheck.startup.failureThreshold` | startup probe specific | 30
