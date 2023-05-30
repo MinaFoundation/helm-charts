@@ -1,13 +1,12 @@
 name: "🔧 New task"
-description: Maintenance | Enhancement | New feature
-labels: ["planned", "enhancement", "feature"]
+description: Maintenance | Bug | New feature
 body:
   - type: markdown
     attributes:
       value: |
         # Houston, do we have a problem?
 
-        Please please take the time to log all subtasks that complete this issue.
+        Please **please** take the time to log all subtasks that complete this issue.
         If a list of subtasks gets too big or subtasks start having  their own subtasks, consider spliting the issues.
   - type: textarea
     attributes:
@@ -29,9 +28,7 @@ body:
       description: A list of tasks. i.e. code change, documentation, communication.
       placeholder: Leave no stone unturned. Log it all here.
       value: |
+        - [ ] update Documentation/Readme
         - [ ] 
-        - [ ] 
-        - [ ] 
-        ...
     validations:
       required: true
