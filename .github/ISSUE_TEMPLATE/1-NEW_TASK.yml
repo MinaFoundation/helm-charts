@@ -1,5 +1,5 @@
 name: "🔧 New task"
-description: Maintenance | Enhancement | New feature
+description: Maintenance | Bug | New feature
 body:
   - type: markdown
     attributes:
