@@ -29,11 +29,11 @@ spec:
         - name: archive
           resources:
             limits:
-              memory: {{ .Values.requests.memory }}
-              cpu: {{ .Values.requests.cpu }}
+              memory: {{ .Values.resource.memoryLimit }}
+              cpu: {{ .Values.resource.cpuLimit }}
             requests:
-              memory: {{ .Values.requests.memory }}
-              cpu: {{ .Values.requests.cpu }}
+              memory: {{ .Values.resource.memoryRequest }}
+              cpu: {{ .Values.resource.cpuRequest }}
           image: {{ .Values.archive.image }}
           args: [
             "mina-archive",

@@ -27,6 +27,11 @@ releases:
     - serviceAccount:
         annotations:
           eks.amazonaws.com/role-arn: arn:aws:iam::111122223333:role/s3-archive-node-daily-backups-staging
+    - resource:
+        memoryRequest: "6.0Gi"
+        cpuRequest: "3"
+        memoryLimit: "8.0Gi"
+        cpuLimit: "4"
     - postgresql:
         global:
           storageClass: ebs-gp3-encrypted

@@ -87,8 +87,10 @@ Parameter | Description | Default
 
 Parameter | Description | Default
 --- | --- | ---
-`requests.memory` | RAM allocated to mina-archive container | "8.0Gi"
-`requests.cpu` | # of CPUs allocated to mina-archive container | "4"
+`resources.memoryRequest` | RAM to claim for mina archive container | "6.0Gi"
+`resources.cpuRequest` | # of CPUs to claim for mina archive container | "3"
+`resources.memoryLimit` | RAM limit for mina archive container | "8.0Gi"
+`resources.cpuLimit` | # of CPUs limit for mina archive container | "4"
 
 ### Health probes
 
