@@ -78,9 +78,11 @@ releases:
           discoveryLibp2p: ref+awssecrets://{{ $bp.testnet }}/{{ $bp.name }}-{{ $i }}?region=us-west-2&mode=singleparam#/libp2p
           discoveryLibp2pPeerid: ref+awssecrets://{{ $bp.testnet }}/{{ $bp.name }}-{{ $i }}?region=us-west-2&mode=singleparam#/libp2p.peerid
 
-    - requests:
-        memory: "20.0Gi"
-        cpu: "4"
+    - resources:
+        memoryRequest: "16.0Gi"
+        cpuRequests: "4"
+        memoryLimit: "18.0Gi"
+        cpuLimit: "8"
 
     - healthcheck:
         enabled: true

@@ -66,9 +66,11 @@ node:
 serviceAccount:
   annotations: {}
 
-requests:
-  memory: "16.0Gi"
-  cpu: "8"
+resources:
+  memoryRequest: "16.0Gi"
+  cpuRequest: "4"
+  memoryLimit: "16.0Gi"
+  cpuLimit: "8"
 
 healthcheck:
   enabled: true
