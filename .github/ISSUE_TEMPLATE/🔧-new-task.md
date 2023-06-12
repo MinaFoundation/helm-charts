@@ -1,5 +1,5 @@
 ---
-name: "\U0001F527 New task"
+name: "\U0001F527 New task \U0001F527"
 about: Describe this issue template's purpose here.
 title: ''
 labels: ''
