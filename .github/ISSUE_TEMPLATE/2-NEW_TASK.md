@@ -7,17 +7,10 @@ assignees: ''
 
 ---
 
-<!-- Please **please** take the time to log all subtasks that complete this issue. -->
-<!-- If a list of subtasks gets too big or subtasks start having  their own subtasks, consider spliting the issues. -->
+## Problem
 
-<!-- Brief description of what are we trying to solve. -->
-**Problem**
+## Acceptance Criteria
 
-<!-- Describe a beautiful world once this is resolved. -->
-**Acceptance Criteria**
-
-<!-- A list of tasks. i.e. code change, documentation, communication. -->
-**Tasks**
-
-- [ ] Documentation/Readme to reflect the changes
-- [ ]
+## Tasks
+- [ ] Documentation/README to reflect the changes
+- [ ] implement
