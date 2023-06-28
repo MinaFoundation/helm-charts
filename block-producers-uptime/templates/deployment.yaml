@@ -42,6 +42,8 @@ spec:
               value: {{ .region | quote }}
             - name: CONFIG_AWS_ACCOUNT_ID
               value: {{ .accountId | quote }}
+            - name: CONFIG_ANALYZER_OUTPUT_GSHEET_ID
+              value: {{ .analyzerOutputSheetId | quote }}
             {{- end }}
             {{- if .Values.deployment.test.enabled }}
             - name: TEST
