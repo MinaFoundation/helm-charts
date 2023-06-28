@@ -78,6 +78,11 @@ Parameter | Description | Default
 --- | --- | ---
 `deployment.uptime.enabled` | Whether to use [Block Producer uptime](https://github.com/MinaProtocol/mina/tree/develop/src/app/delegation_backend) service | `false`
 `deployment.uptime.url` | BPU service url | ` `
+`deployment.storeBlocks.enabled` | Whether to store precomputed blocks locally | `false`
+`deployment.storeBlocks.storageClass` | Enable persistent volume for storing blocks | ` `
+`deployment.storeBlocks.filename` | file name where to append blocks in `json` format | `precomputed_blocks.json`
+`deployment.storeBlocks.directory` | Path where to store precomputed_blocks file | `/blocks`
+`deployment.storeBlocks.sizePVC` | How much space to claim for volume | `5Gi`
 `node.exposeGraphql` | expose graphql to public | `false`
 `node.metrics.enabled` | expose prometheus metrics endpoint | `false`
 `node.metrics.port` | port to scrape prometheus metrics | `10001`
@@ -88,14 +93,17 @@ Parameter | Description | Default
 `node.errorsUrl` | URL where to report node errors | ` `
 `node.walletKeys.enabled` | Setup a wallet on a host | `false`
 `node.daemonMode.blockProducer` | enable Block Producer mode | `false`
-`node.daemonMode.snarkWorker` | enable Snark Worker mode | `false`
+`node.daemonMode.snarkWorker` | enable SNARK Worker mode | `false`
+`node.daemonMode.coordinator` | enable SNARK Coordinator mode | `false`
 `node.daemonMode.seed` | enable Seed mode | `false`
 `node.secrets.walletPassword` | Password for wallet keypair | ` `
 `node.secrets.walletKey` | Private wallet keypair key | ` `
 `node.secrets.walletPub` | Public wallet keypair key | ` `
 `serviceAccount.annotations` | Allow role to assume this service account | `{}`
-`requests.memory` | RAM allocated to mina-daemon container | "16.0Gi"
-`requests.cpu` | # of CPUs allocated to mina-daemon container | "4"
+`resources.memoryRequest` | RAM to claim for mina-daemon container | "16.0Gi"
+`resources.cpuRequest` | # of CPUs to claim for mina-daemon container | "4"
+`resources.memoryLimit` | RAM limit for mina-daemon container | "18.0Gi"
+`resources.cpuLimit` | # of CPUs limit for mina-daemon container | "8"
 `healthcheck.enabled` | Whether to use startup/liveness/readiness probes | true
 `healthcheck.startup.periodSeconds` | startup probe specific | 30
 `healthcheck.startup.failureThreshold` | startup probe specific | 30
@@ -110,7 +118,8 @@ Apart from other things, Mina daemon can run in 3 modes.
 
 - Seed
 - Block Producer
-- Snark Worker
+- SNARK Worker
+- SNARK Coordinator
 - Combination of the above
 
 To run start Mina daemon with those modes set the following in values:
@@ -119,7 +128,10 @@ To run start Mina daemon with those modes set the following in values:
 
 - `node.daemonMode.blockProducer = true`
 - `node.daemonMode.snarkWorker = true`
+- `node.daemonMode.coordinator = true`
 - `node.daemonMode.seed = true`
+
+> **Note** `snarkWorker` and `coordinator` mode are mutually exclusive. If `snarkWorker` is enabled, both `mina daemon` application as well as this helm chart ignore `coordinator` mode.
 
 ## Uninstallation
 

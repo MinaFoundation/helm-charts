@@ -13,11 +13,16 @@ deployment:
     - /dns4/seed-1.berkeley.o1test.net/tcp/10000/p2p/12D3KooWAdgYL6hv18M3iDBdaK1dRygPivSfAfBNDzie6YqydVbs
     - /dns4/seed-2.berkeley.o1test.net/tcp/10001/p2p/12D3KooWLjs54xHzVmMmGYb7W5RVibqbwD1co7M2ZMfPgPm7iAag
     - /dns4/seed-3.berkeley.o1test.net/tcp/10002/p2p/12D3KooWEiGVAFC7curXWXiGZyMWnZK9h8BKr88U8D5PKV3dXciv
+  storeBlocks:
+    enabled: false
+    filename: precomputed_blocks.json
+    directory: /blocks
+    storageClass:
+    sizePVC: 5Gi
 
 node:
   name: "berkeley-node"
-  class: "seed"
-  role: "staging"
+  role:
   replicas: 1
   fullname: "berkeley-node"
   loadBalancer:
@@ -48,6 +53,7 @@ node:
   daemonMode:
     blockProducer: false
     snarkWorker: false
+    coordinator: false
     seed: false
   secrets:
     walletPassword: ""
@@ -60,9 +66,11 @@ node:
 serviceAccount:
   annotations: {}
 
-requests:
-  memory: "16.0Gi"
-  cpu: "4"
+resources:
+  memoryRequest: "16.0Gi"
+  cpuRequest: "4"
+  memoryLimit: "16.0Gi"
+  cpuLimit: "8"
 
 healthcheck:
   enabled: true

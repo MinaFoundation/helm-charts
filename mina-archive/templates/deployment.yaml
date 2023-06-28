@@ -27,6 +27,13 @@ spec:
       containers:
         # Archive Process
         - name: archive
+          resources:
+            limits:
+              memory: {{ .Values.resource.memoryLimit }}
+              cpu: {{ .Values.resource.cpuLimit }}
+            requests:
+              memory: {{ .Values.resource.memoryRequest }}
+              cpu: {{ .Values.resource.cpuRequest }}
           image: {{ .Values.archive.image }}
           args: [
             "mina-archive",

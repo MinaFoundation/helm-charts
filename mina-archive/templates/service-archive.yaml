@@ -5,6 +5,7 @@ metadata:
   name: {{ .Release.Name }}
   labels:
     app: {{ .Release.Name }}
+    testnet: {{ .Values.archive.testnet }}
 spec:
   type: ClusterIP
   # We want all pods to have their addresses published for the sake of the

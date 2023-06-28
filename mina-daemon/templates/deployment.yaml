@@ -16,7 +16,6 @@ spec:
         app: {{ .Release.Name }}
         testnet: {{ .Values.deployment.testnet }}
         role: {{ default "undefined" .Values.node.role }}
-        class: {{ default "undefined" .Values.node.class }}
         version: {{ trunc 8 (split ":" .Values.deployment.image)._1 | trimSuffix "-" }}
         syncStatus: INIT
       {{- if .Values.node.metrics.enabled }}
@@ -58,9 +57,11 @@ spec:
         - name: mina
           resources:
             limits:
+              memory: {{ default "18.0Gi" .Values.resources.memoryLimit }}
+              cpu: {{ default "8" .Values.resources.cpuLimit }}
             requests:
-              memory: {{ .Values.requests.memory }}
-              cpu: {{ .Values.requests.cpu }}
+              memory: {{ default "16.0Gi" .Values.resources.memoryRequest }}
+              cpu: {{ default "4" .Values.resources.cpuRequest }}
           image: {{ .Values.deployment.image }}
           {{ if .Values.deployment.customEntrypoint.enabled -}}
           command: [{{ .Values.deployment.customEntrypoint.entrypoint }}]
@@ -110,12 +111,20 @@ spec:
             {{- if and .walletKeys.enabled .daemonMode.snarkWorker }}
             "--run-snark-worker", "{{ $.Values.node.secrets.walletPub }}",
             {{- end }}
+            {{- if and .walletKeys.enabled .daemonMode.coordinator ( not .daemonMode.snarkWorker ) }}
+            "--run-snark-coordinator", "{{ $.Values.node.secrets.walletPub }}",
+            {{- end }}
             {{- end }}
             {{- if .Values.node.daemonMode.seed }}
             "--seed",
             {{- end }}
             {{- range .Values.deployment.seedPeers }}
             "--peer", {{ . | quote }},
+            {{- end }}
+            {{- with .Values.deployment.storeBlocks }}
+            {{- if .enabled }}
+            "--precomputed-blocks-file", {{ .directory }}/{{ .filename }},
+            {{- end }}
             {{- end }}
             {{- if .Values.deployment.uploadBlocksToGCloud }}
             "--upload-blocks-to-gcloud", "true",
@@ -205,6 +214,10 @@ spec:
             - name: {{ .Release.Name }}-runtime-config
               mountPath: "/config/"
             {{- end }}
+            {{- if .Values.deployment.storeBlocks.storageClass }}
+            - name: {{ .Release.Name }}-precomputed-blocks
+              mountPath: {{ .Values.deployment.storeBlocks.directory }}
+            {{- end }}
       volumes:
         {{- if .Values.deployment.runtimeConfig }}
         - name: {{ .Release.Name }}-runtime-config
@@ -245,4 +258,9 @@ spec:
             items:
               - key: keyfile
                 path: keyfile.json
+        {{- end }}
+        {{- if .Values.deployment.storeBlocks.storageClass }}
+        - name: {{ .Release.Name }}-precomputed-blocks
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-precomputed-blocks
         {{- end }}

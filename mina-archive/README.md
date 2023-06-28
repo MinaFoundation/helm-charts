@@ -83,6 +83,15 @@ Parameter | Description | Default
 `archive.metrics.port` | Prometheus exporter port for mina-archive | `10002`
 `serviceAccount.annotations` | Allow role to assume this service account | `{}`
 
+### Resource allocation
+
+Parameter | Description | Default
+--- | --- | ---
+`resources.memoryRequest` | RAM to claim for mina archive container | "6.0Gi"
+`resources.cpuRequest` | # of CPUs to claim for mina archive container | "3"
+`resources.memoryLimit` | RAM limit for mina archive container | "8.0Gi"
+`resources.cpuLimit` | # of CPUs limit for mina archive container | "4"
+
 ### Health probes
 
 `mina-archive` health is determined checking it's rpc port liveness.

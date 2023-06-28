@@ -40,8 +40,7 @@ releases:
           - /dns4/seed-3.berkeley.o1test.net/tcp/10002/p2p/12D3KooWEiGVAFC7curXWXiGZyMWnZK9h8BKr88U8D5PKV3dXciv
     - node:
         name: "node"
-        class: "seed"
-        role: "staging"
+        role: "seed"
         replicas: 1
         fullname: "node"
         exposeGraphql: true
@@ -69,6 +68,8 @@ releases:
           walletPub: {{ .Values.seed.walletPub | fetchSecretValue | quote }}
           discoveryLibp2p: {{ .Values.seed.discoveryLibp2p | fetchSecretValue | quote }}
           discoveryLibp2pPeerid: {{ .Values.seed.discoveryLibp2pPeerid | fetchSecretValue | quote }}
-    - requests:
-        memory: "16.0Gi"
-        cpu: "4"
+    - resources:
+        memoryRequest: "16.0Gi"
+        cpuRequests: "4"
+        memoryLimit: "18.0Gi"
+        cpuLimit: "8"

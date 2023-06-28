@@ -1,0 +1,12 @@
+deployment:
+  image:
+    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/leaderboard
+    pullPolicy: IfNotPresent
+    tag: "1.0.0"
+  secrets:
+    credentialFile:
+      name: "block-producers-uptime-gcp-sa-credential"
+      dir:
+      path:
+      content:
+      releaseName:
