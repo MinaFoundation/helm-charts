@@ -15,6 +15,7 @@ spec:
       labels:
         app: {{ .Release.Name }}
     spec:
+      serviceAccountName: {{ .Release.Name }}
       containers:
         - name: {{ .Release.Name }}
           image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
@@ -31,6 +32,16 @@ spec:
             {{- if .Values.deployment.secrets.credentialFile.path }}
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: {{ .Values.deployment.secrets.credentialFile.path }}
+            {{- end }}
+            {{- with .Values.deployment.awsConfig }}
+            - name: CONFIG_NETWORK_NAME
+              value: {{ .network | quote }}
+            - name: CONFIG_GSHEET_ID
+              value: {{ .sheetId | quote }}
+            - name: CONFIG_AWS_REGION
+              value: {{ .region | quote }}
+            - name: CONFIG_AWS_ACCOUNT_ID
+              value: {{ .accountId | quote }}
             {{- end }}
             {{- if .Values.deployment.test.enabled }}
             - name: TEST
