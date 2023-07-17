@@ -1,0 +1,24 @@
+---
+deployment:
+  image:
+    repository: nginx
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  replicaCount: 1
+  configMap:
+    volumeName:
+    name:
+    mountPath:
+    subPath:
+    value:
+
+service:
+  type: LoadBalancer
+  port: 8080
+  externalTrafficPolicy: Local
+
+ingress:
+  class: alb
+  annotations: {}
+  hosts: {}
+

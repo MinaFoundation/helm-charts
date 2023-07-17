@@ -1,0 +1,7 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }} 
+data:
+  nginx.conf: {{- .Values.deployment.configMap.value | toYaml | indent 1 }}
