@@ -45,9 +45,9 @@ spec:
             - name: CONFIG_ANALYZER_OUTPUT_GSHEET_ID
               value: {{ .analyzerOutputSheetId | quote }}
             {{- end }}
-            {{- if .Values.deployment.test.enabled }}
+            {{- if .Values.deployment.gcpStaging.enabled }}
             - name: TEST
-              value: {{ .Values.deployment.test.enabled | quote }}
+              value: {{ .Values.deployment.gcpStaging.enabled | quote }}
             {{- end }}
             {{- if .Values.deployment.network.name }}
             - name: NETWORK
