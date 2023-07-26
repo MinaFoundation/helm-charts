@@ -20,6 +20,11 @@ deployment:
     accountId:
   gcpStaging:
     enabled:
+resources:
+  memoryRequest: "256Mi"
+  cpuRequest: "500m"
+  memoryLimit: "512Mi"
+  cpuLimit: "1"
 
 service:
   type: LoadBalancer
