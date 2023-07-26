@@ -26,6 +26,13 @@ spec:
               port: 8080
             initialDelaySeconds: 15
             periodSeconds: 30
+          resources:
+            requests:
+              memory: {{ default "256Mi" .Values.resources.memoryRequest }}
+              cpu: {{ default "500m" .Values.resources.cpuRequest }}
+            limits:
+              memory: {{ default "512Mi" .Values.resources.memoryLimit }} 
+              cpu: {{ default "1" .Values.resources.cpuLimit }}
           ports:
             - containerPort: {{ .Values.service.port }}
           env:
