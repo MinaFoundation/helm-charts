@@ -25,6 +25,7 @@ node:
   role:
   replicas: 1
   fullname: "berkeley-node"
+  genesisLedgerURL:
   loadBalancer:
     enabled: false
     ip: "auto"
@@ -48,6 +49,7 @@ node:
     address: staging-berkeley-archive:3086
   libp2pKeys:
     enabled: true
+    legacy: false
   walletKeys:
     enabled: false
   daemonMode:
