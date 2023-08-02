@@ -18,8 +18,11 @@ spec:
         role: {{ default "undefined" .Values.node.role }}
         version: {{ trunc 8 (split ":" .Values.deployment.image)._1 | trimSuffix "-" }}
         syncStatus: INIT
-      {{- if .Values.node.metrics.enabled }}
       annotations:
+      {{- with .Values.podAnnotations }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.node.metrics.enabled }}
         prometheus.io/scrape: 'true'
         prometheus.io/port: {{ .Values.node.metrics.port | quote }}
         prometheus.io/path: '/metrics'

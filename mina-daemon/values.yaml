@@ -67,6 +67,8 @@ node:
 serviceAccount:
   annotations: {}
 
+podAnnotations: {}
+
 resources:
   memoryRequest: "16.0Gi"
   cpuRequest: "4"

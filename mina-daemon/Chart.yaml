@@ -7,10 +7,6 @@ appVersion: 2.1.0
 annotations:
   artifacthub.io/changes: |
     - Initial Commit
-dependencies:
-  - name: common-utilities
-    version: "*"
-    repository: "https://coda-charts.storage.googleapis.com"
 icon: https://storage.googleapis.com/coda-charts/Mina_Icon_Secondary_RGB_Black.png
 keywords:
 - seed

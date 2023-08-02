@@ -47,6 +47,8 @@ nodeSelector:
 serviceAccount:
   annotations: {}
 
+podAnnotations: {}
+
 healthcheck:
   enabled: true
   startup:

@@ -12,8 +12,8 @@ The following is a list of charts available in this repository:
 
 - `block-producer-uptime`: This chart deploys the Mina Foundation Block Producer Uptime application.
 - `leaderboard`: This chart deploys the Mina Foundation leaderboard application.
-- `mina-archive`: This chart deploys the Mina Daemon component from Mina Protocol.
-- `mina-daemon`: This chart deploys the Mina Archive component from Mina Protocol.
+- `mina-archive`: This chart deploys the Mina Archive component from Mina Protocol.
+- `mina-daemon`: This chart deploys the Mina Daemon component from Mina Protocol.
 
 ## Deploying a Local Chart
 
