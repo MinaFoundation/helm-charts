@@ -53,6 +53,18 @@ spec:
             - name: {{ .Release.Name }}-fixed-mina-keys
               mountPath: /root/mina-keys
         {{- end }}
+        {{ if .Values.deployment.genesisLedgerURL -}}
+        - name: get-genesis-ledger
+          image: busybox:latest
+          command:
+            - wget
+            - -O
+            - /root/.mina-config/genesis_ledger.json
+            - {{ .Values.deployment.genesisLedgerURL }}
+          volumeMounts:
+            - name: {{ .Release.Name }}-genesis-ledger-dir
+              mountPath: /root/.mina-config
+        {{- end }}
       containers:
         - name: mina
           resources:
@@ -98,11 +110,15 @@ spec:
             {{- if .Values.deployment.peerListURL }}
             "--peer-list-url", {{ .Values.deployment.peerListURL | quote }},
             {{- end -}}
-            {{- if .Values.deployment.runtimeConfig }}
-            "--config-file", "/config/daemon.json",
-            {{- end }}
+            {{- if .Values.deployment.genesisLedgerURL }}
+            "--config-file", "/root/.mina-config/genesis_ledger.json",
+            {{- end -}}
             {{- if .Values.node.libp2pKeys.enabled }}
-            {{ (eq .Values.deployment.testnet "berkeley") |ternary "--libp2p-keypair" "--discovery-keypair" |quote }}, "/root/libp2p-keys/{{ .Values.node.name }}-libp2p",
+            {{- if .Values.node.libp2pKeys.legacy }}
+            "--discovery-keypair", "/root/libp2p-keys/{{ .Values.node.name }}-libp2p",
+            {{- else }}
+            "--libp2p-keypair", "/root/libp2p-keys/{{ .Values.node.name }}-libp2p",
+            {{- end -}}
             {{- end -}}
             {{- with .Values.node }}
             {{- if and .walletKeys.enabled .daemonMode.blockProducer }}
@@ -210,20 +226,15 @@ spec:
             - name: {{ .Release.Name }}-gcloud-keyfile
               mountPath: "/gcloud/"
             {{- end }}
-            {{- if .Values.deployment.runtimeConfig }}
-            - name: {{ .Release.Name }}-runtime-config
-              mountPath: "/config/"
+            {{- if .Values.deployment.genesisLedgerURL }}
+            - name: {{ .Release.Name }}-genesis-ledger-dir
+              mountPath: /root/.mina-config
             {{- end }}
             {{- if .Values.deployment.storeBlocks.storageClass }}
             - name: {{ .Release.Name }}-precomputed-blocks
               mountPath: {{ .Values.deployment.storeBlocks.directory }}
             {{- end }}
       volumes:
-        {{- if .Values.deployment.runtimeConfig }}
-        - name: {{ .Release.Name }}-runtime-config
-          configMap:
-            name: {{ .Release.Name }}-runtime-config
-        {{- end }}
         {{- if .Values.node.walletKeys.enabled }}
         - name: {{ .Release.Name }}-mounted-mina-keys
           secret:
@@ -235,6 +246,10 @@ spec:
               - key: {{ .Values.node.name }}-key.pub
                 path: {{ .Values.node.name }}-key.pub
         - name: {{ .Release.Name }}-fixed-mina-keys
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.deployment.genesisLedgerURL }}
+        - name: {{ .Release.Name }}-genesis-ledger-dir
           emptyDir: {}
         {{- end }}
         {{- if .Values.node.libp2pKeys.enabled }}

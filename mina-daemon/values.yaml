@@ -1,7 +1,7 @@
 deployment:
   testnet: "berkeley"
   image: minaprotocol/mina-daemon:1.3.2beta2-release-2.0.0-05c2f73-bulseye-berkeley
-  runtimeConfig:
+  genesisLedgerURL:
   customEntrypoint:
     enabled: true
     entrypoint: "mina"
@@ -48,6 +48,7 @@ node:
     address: staging-berkeley-archive:3086
   libp2pKeys:
     enabled: true
+    legacy: false
   walletKeys:
     enabled: false
   daemonMode:
