@@ -36,7 +36,7 @@ $ helmfile apply
 Or use helmfile only to generate resources and apply them with kubectl like so:
 
 ```bash
-$ helmfile template | kubectl -f -
+$ helmfile template | kubectl apply -f -
 ```
 
 You can get some inspiration from helmfiles in `examples` folder.
@@ -63,6 +63,7 @@ Parameter | Description
 --- | ---
 `deployment.testnet` | "berkeley|devnet|mainnet"
 `deployment.image` | image to use for mina daemon node.
+`deployment.genesisLedgerURL` | a url to fetch external Genesis Ledger URL
 `deployment.peerListURL` | a url for txt file containing seed peers.
 `deployment.seedPeers` | a list of additional seed peers.
 `node.libp2pKeys.enabled` | This is mandatory for mina-daemon to start.
@@ -72,7 +73,7 @@ Parameter | Description
 
 ### Optional Settings
 
-> **Note** This is only more notable list of values. 
+> **Note** This is only more notable list of values.
 
 Parameter | Description | Default
 --- | --- | ---
@@ -99,7 +100,8 @@ Parameter | Description | Default
 `node.secrets.walletPassword` | Password for wallet keypair | ` `
 `node.secrets.walletKey` | Private wallet keypair key | ` `
 `node.secrets.walletPub` | Public wallet keypair key | ` `
-`serviceAccount.annotations` | Allow role to assume this service account | `{}`
+`serviceAccount.annotations` | Custom Annotations for the service account | `{}`
+`podAnnotations` | Custom Annotations for the pod | `{}`
 `resources.memoryRequest` | RAM to claim for mina-daemon container | "16.0Gi"
 `resources.cpuRequest` | # of CPUs to claim for mina-daemon container | "4"
 `resources.memoryLimit` | RAM limit for mina-daemon container | "18.0Gi"
@@ -114,7 +116,7 @@ Parameter | Description | Default
 
 ## Mina daemon nodes
 
-Apart from other things, Mina daemon can run in 3 modes. 
+Apart from other things, Mina daemon can run in 3 modes.
 
 - Seed
 - Block Producer
@@ -137,7 +139,10 @@ To run start Mina daemon with those modes set the following in values:
 
 To uninstall the Helm chart using helmfile, follow these steps:
 
-    ```bash
-    helmfile destroy
-    ```
-
+```bash
+$ helmfile destroy
+```
+or
+```bash
+$ helmfile template . | kubectl delete -f -
+```

@@ -82,6 +82,7 @@ Parameter | Description | Default
 `archive.metrics.enabled` | Whether to enable prometheus exporter for mina-archive | `false`
 `archive.metrics.port` | Prometheus exporter port for mina-archive | `10002`
 `serviceAccount.annotations` | Allow role to assume this service account | `{}`
+`podAnnotations` | Custom Annotations for the pod | `{}`
 
 ### Resource allocation
 

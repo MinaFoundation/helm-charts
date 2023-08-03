@@ -4,8 +4,8 @@ repositories:
 - name: bitnami
   url: https://charts.bitnami.com/bitnami
 
-environments: 
-  default: 
+environments:
+  default:
     values:
       - releases:
           blockProducers:
@@ -103,7 +103,6 @@ releases:
           enabled: true
         initFromDump: false
         image: {{ $archive.image }}
-        runtimeConfig:
         remoteSchemaAuxFiles:
           - https://raw.githubusercontent.com/MinaProtocol/mina/b1facecde934ce3969771c34962b878d75321ca7/src/app/archive/create_schema.sql
           - https://raw.githubusercontent.com/MinaProtocol/mina/b1facecde934ce3969771c34962b878d75321ca7/src/app/archive/zkapp_tables.sql

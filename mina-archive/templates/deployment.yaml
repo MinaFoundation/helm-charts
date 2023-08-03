@@ -16,8 +16,11 @@ spec:
         app: {{ .Release.Name }}
         testnet: {{ .Values.archive.testnet }}
         role: archive
-      {{- if .Values.archive.metrics.enabled }}
       annotations:
+      {{- with .Values.podAnnotations }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.archive.metrics.enabled }}
         prometheus.io/scrape: 'true'
         prometheus.io/port: {{ .Values.archive.metrics.port | quote }}
         prometheus.io/path: '/metrics'
