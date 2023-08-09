@@ -4,8 +4,19 @@ kind: Service
 metadata:
   name: {{ .Release.Name }}
   labels:
+  {{- if .Values.archive.service.labels }}
+  {{- with .Values.archive.service.labels }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
     app: {{ .Release.Name }}
     testnet: {{ .Values.archive.testnet }}
+  {{- if .Values.archive.service.annotations }}
+  {{- with .Values.archive.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
 spec:
   type: ClusterIP
   # We want all pods to have their addresses published for the sake of the
