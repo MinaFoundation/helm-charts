@@ -1,4 +1,4 @@
-{{- if .Values.archive.enablePostgresDB }}
+{{- if .Values.archive.bootstrapDB }}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -13,10 +13,7 @@ spec:
           image: gcr.io/o1labs-192920/postgresql-curl:latest
           env:
             - name: PGPASSWORD
-              valueFrom:
-                secretKeyRef:
-                  key: password
-                  name: "{{ .Release.Name }}-postgresql"
+              value: {{ .Values.postgresql.auth.password }}
           command: ["bash", "-c"]
           args:
             - 'sleep 30
@@ -41,10 +38,7 @@ spec:
           image: gcr.io/o1labs-192920/postgresql-curl:latest
           env:
             - name: PGPASSWORD
-              valueFrom:
-                secretKeyRef:
-                  key: password
-                  name: "{{ .Release.Name }}-postgresql"
+              value: {{ .Values.postgresql.auth.password }}
           command: ["bash", "-c"]
           args:
             - 'sleep 30
