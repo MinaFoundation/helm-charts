@@ -16,6 +16,7 @@ archive:
     postgres: 5432
   enablePostgresDB: true
   enableDumpCronjob: false
+  bootstrapDB: true
   initFromDump: false
 
   service:
