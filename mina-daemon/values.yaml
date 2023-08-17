@@ -30,11 +30,56 @@ node:
     ip: "auto"
   exposeGraphql: false
   exposeP2P:
-  seedFlags: true
   logLevel: Info
   fileLogLevel: Error
+  generateGenesisProof: true
   maxConnections: 200
   snarkWorkerFee:
+  allPeersSeenMetric:
+  archiveRocksDB:
+  background:
+  bindIP:
+  contactInfo:
+  currentProtocolVersion:
+  demoMode:
+  directPeer:
+  disableNodeStatus:
+  enableFlooding:
+  enablePeerExchange: true
+  externalIP:
+  fileLogRotations:
+  gcStatInterval:
+  internalTracing:
+  isolateNetwork:
+  itnGraphQLPort:
+  itnKeys:
+  itnMaxLogs:
+  libp2pMetricsPort:
+  limitedGraphQLPort:
+  logBlockCreation:
+  logPrecomputedBlocks:
+  logSnarkWorkGossip: true
+  logTxnPoolGossip: true
+  minConnections:
+  minBlockReward:
+  noSuperCatchup:
+  openLimitedGraphQLPort:
+  peer:
+  peerListFile:
+  peerListURL:
+  peerProtectionRate:
+  precomputedBlocksFile:
+  proofLevel:
+  proposedProtocolVersion:
+  snarkWorkerParallelism:
+  stopTime:
+  tracing:
+  uploadBlocksToGoogleCloud:
+  uploadSubmitterKey:
+  uploadSubmitterPubkey:
+  validationQueueSize:
+  workReassignmentWait:
+  workSelection:
   metrics:
     enabled: false
     port: 10001
