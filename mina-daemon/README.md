@@ -98,6 +98,50 @@ Parameter | Description | Default
 `node.daemonMode.coordinator` | enable SNARK Coordinator mode | `false`
 `node.daemonMode.seed` | enable Seed mode | `false`
 `node.snarkWorkerFee` | Fee for Snark Worker | ` `
+`node.allPeersSeenMetric` | Whether to track the set of all peers ever seen for the all_peers metric | `false`
+`node.archiveRocksDB` | Stores all the blocks heard in RocksDB | `false`
+`node.background` | Run process on the background | `false`
+`node.bindIP` | IP of network interface to use for peer connections | ` `
+`node.contactInfo` | info used in node error report service (it could be either email address or discord username), it should be less than 200 characters | ` `
+`node.currentProtocolVersion` | Current protocol version, only blocks with the same version accepted | ` `
+`node.demoMode` | Run the daemon in demo-mode -- assume we're "synced" to the network instantly | ` `
+`node.directPeer` | Peers to always send new messages to/from. These peers should also have you configured as a direct peer, the relationship is intended to be symmetric | ` `
+`node.disableNodeStatus` | Disable reporting node status to other nodes | ` `
+`node.enableFlooding` | Publish our own blocks/transactions to every peer we can find | ` `
+`node.enablePeerExchange` | Help keep the mesh connected when closing connections | `true`
+`node.externalIP` | External IP address for other nodes to connect to. You only need to set this if auto-discovery fails for some reason | ` `
+`node.fileLogRotations` | Number of file log rotations before overwriting old logs | `50`
+`node.gcStatInterval` | in mins for collecting GC stats for metrics | `15.000000`
+`node.internalTracing` | Enables internal tracing into $config-directory/internal-tracing/internal-trace.json | `false`
+`node.isolateNetwork` | Only allow connections to the peers passed on the command line or configured through GraphQL | `false`
+`node.itnGraphQLPort` | GraphQL-server for incentivized testnet interaction | ` `
+`node.itnKeys` | A comma-delimited list of Ed25519 public keys that are permitted to send signed requests to the incentivized testnet GraphQL server | ` `
+`node.itnMaxLogs` | Maximum number of logs to store to be made available via GraphQL for incentivized testnet | ` `
+`node.libp2pMetricsPort` | libp2p metrics server for scraping via Prometheus | ` `
+`node.limitedGraphQLPort` | GraphQL-server for limited daemon interaction | ` `
+`node.logBlockCreation` | Log the steps involved in including transactions and snark work in a block | `true`
+`node.logPrecomputedBlocks` | Include precomputed blocks in the log | `false`
+`node.logSnarkWorkGossip` | Log snark-pool diff received from peers | `false`
+`node.logTxnPoolGossip` | Log transaction-pool diff received from peers | `false`
+`node.minBlockReward` | Minimum reward a block produced by the node should have. Empty blocks are created if the rewards are lower than the specified threshold | ` `
+`node.noSuperCatchup` | Don't use super-catchup | `false`
+`node.openLimitedGraphQLPort` | Have the limited GraphQL server listen on all addresses, not just localhost (this is INSECURE, make sure your firewall is configured correctly!) | `false`
+`node.peer` | initial "bootstrap" peers for discovery | ` `
+`node.peerListFile` | path to a file containing "bootstrap" peers for discovery, one multiaddress per line | ` `
+`node.peerListURL` | URL of seed peer list file. Will be polled periodically. | ` `
+`node.peerProtectionRate` | Proportion of peers to be marked as protected | `0.2`
+`node.precomputedBlocksFile` | Path to write precomputed blocks to, for replay or archiving | ` `
+`node.proofLevel` | Internal, for testing. Start or connect to a network with full proving (`full`), snark-testing with dummy proofs (`check`), or dummy proofs (`none`) | `full`
+`node.proposedProtocolVersion` | Proposed protocol version to signal other nodes | ` `
+`node.snarkWorkerParallelism` | Run the SNARK worker using this many threads. Equivalent to setting OMP_NUM_THREADS, but doesn't affect block production. | ` `
+`node.stopTime` | in hours after which the daemon stops itself (only if there were no slots won within an hour after the stop time) | `168`
+`node.tracing` | Trace into $config-directory/trace/$pid.trace | ` `
+`node.uploadBlocksToGoogleCloud` | upload blocks to gcloud storage. Requires the environment variables GCLOUD_KEYFILE, NETWORK_NAME, and GCLOUD_BLOCK_UPLOAD_BUCKET | ` `
+`node.uploadSubmitterKey` | Private key file for the uptime submitter. You cannot provide both `uptime-submitter-key` and `uptime-submitter-pubkey` | ` `
+`node.uploadSubmitterPubkey` | Public key of the submitter to the Mina delegation program, for the associated private key that is being tracked by this daemon. You cannot provide both `uptime-submitter-key` and `uptime-submitter-pubkey` | ` `
+`node.validationQueueSize` | size of the validation queue in the p2p network used to buffer messages (like blocks and transactions received on the gossip network) while validation is pending. If a transaction, for example, is invalid, we don't forward the message on the gossip net. If this queue is too small, we will drop messages without validating them. If it is too large, we are susceptible to DoS attacks on memory | `150`
+`node.workReassignmentWait` | in ms before a snark-work is reassigned | `420000m`
+`node.workSelection` | Choose work sequentially `seq` or randomly `rand` | `rand`
 `node.secrets.walletPassword` | Password for wallet keypair | ` `
 `node.secrets.walletKey` | Private wallet keypair key | ` `
 `node.secrets.walletPub` | Public wallet keypair key | ` `

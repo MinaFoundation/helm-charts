@@ -154,9 +154,141 @@ spec:
             {{- if .Values.node.archive.enabled }}
             "--archive-address", {{ .Values.node.archive.address }},
             {{- end }}
-            {{- if .Values.node.seedFlags }}
-            "--enable-peer-exchange", "true", "-seed",
-            {{- end}}
+            {{- if .Values.node.allPeersSeenMetric }}
+            "--all-peers-seen-metric", {{ .Values.node.allPeersSeenMetric | quote }},
+            {{- end }}
+            {{- if .Values.node.archive.rocksdb }}
+            "--archive-rocksdb",
+            {{- end }}
+            {{- if .Values.node.archive.background }}
+            "--background",
+            {{- end }}
+            {{- if .Values.node.bindIP }}
+            "--bind-ip", {{ .Values.node.bindIP | quote }},
+            {{- end }}
+            {{- if .Values.node.contactInfo }}
+            "--contact-info", {{ .Values.node.contactInfo | quote }},
+            {{- end }}
+            {{- if .Values.node.currentProtocolVersion }}
+            "--current-protocol-version", {{ .Values.node.currentProtocolVersion | quote }},
+            {{- end }}
+            {{- if .Values.node.demoMode }}
+            "--demo-mode",
+            {{- end }}
+            {{- if .Values.node.directPeer }}
+            "--direct-peer", {{ .Values.node.directPeer | quote }},
+            {{- end }}
+            {{- if .Values.node.disableNodeStatus }}
+            "--disable-node-status",
+            {{- end }}
+            {{- if .Values.node.enableFlooding }}
+            "--enable-flooding", {{ .Values.node.currentProtocolVersion | quote }},
+            {{- end }}
+            {{- if .Values.node.enablePeerExchange }}
+            "--enable-peer-exchange", {{ .Values.node.enablePeerExchange | quote }},
+            {{- end }}
+            {{- if .Values.node.externalIP }}
+            "--external-ip", {{ .Values.node.externalIP | quote }},
+            {{- end }}
+            {{- if .Values.node.fileLogRotations }}
+            "--file-log-rotations", {{ .Values.node.fileLogRotations | quote }},
+            {{- end }}
+            {{- if .Values.node.gcStatInterval }}
+            "--gc-stat-interval", {{ .Values.node.gcStatInterval | quote }},
+            {{- end }}
+            {{- if .Values.node.internalTracing }}
+            "--internal-tracing",
+            {{- end }}
+            {{- if .Values.node.isolateNetwork }}
+            "--isolate-network", {{ .Values.node.isolateNetwork | quote }},
+            {{- end }}
+            {{- if .Values.node.itnGraphQLPort }}
+            "--itn-graphql-port", {{ .Values.node.itnGraphQLPort | quote }},
+            {{- end }}
+            {{- if .Values.node.itnKeys }}
+            "--itn-keys", {{ .Values.node.itnKeys | quote }},
+            {{- end }}
+            {{- if .Values.node.itnMaxLogs }}
+            "--itn-max-logs", {{ .Values.node.itnMaxLogs | quote }},
+            {{- end }}
+            {{- if .Values.node.libp2pMetricsPort }}
+            "--libp2p-metrics-port", {{ .Values.node.libp2pMetricsPort | quote }},
+            {{- end }}
+            {{- if .Values.node.limitedGraphQLPort }}
+            "--limited-graphql-port", {{ .Values.node.limitedGraphQLPort | quote }},
+            {{- end }}
+            {{- if .Values.node.logBlockCreation }}
+            "--log-block-creation", {{ .Values.node.logBlockCreation | quote }},
+            {{- end }}
+            {{- if .Values.node.logPrecomputedBlocks }}
+            "--log-precomputed-blocks", {{ .Values.node.logPrecomputedBlocks | quote }},
+            {{- end }}
+            {{- if .Values.node.logSnarkWorkGossip }}
+            "--log-snark-work-gossip", {{ .Values.node.logSnarkWorkGossip | quote }},
+            {{- end }}
+            {{- if .Values.node.logTxnPoolGossip }}
+            "--log-txn-pool-gossip", {{ .Values.node.logTxnPoolGossip | quote }},
+            {{- end }}
+            {{- if .Values.node.minConnections }}
+            "--min-connections", {{ .Values.node.minConnections | quote }},
+            {{- end }}
+            {{- if .Values.node.minBlockReward }}
+            "--minimum-block-reward", {{ .Values.node.minBlockReward | quote }},
+            {{- end }}
+            {{- if .Values.node.noSuperCatchup }}
+            "--no-super-catchup",
+            {{- end }}
+            {{- if .Values.node.openLimitedGraphQLPort }}
+            "--open-limited-graphql-port",
+            {{- end }}
+            {{- if .Values.node.peer }}
+            "--peer", {{ .Values.node.peer | quote }},
+            {{- end }}
+            {{- if .Values.node.peerListFile }}
+            "--peer-list-file", {{ .Values.node.peerListFile | quote }},
+            {{- end }}
+            {{- if .Values.node.peerListURL }}
+            "--peer-list-url", {{ .Values.node.peerListURL | quote }},
+            {{- end }}
+            {{- if .Values.node.peerProtectionRate }}
+            "--peer-protection-rate", {{ .Values.node.peerProtectionRate | quote }},
+            {{- end }}
+            {{- if .Values.node.precomputedBlocksFile }}
+            "--precomputed-blocks-file", {{ .Values.node.precomputedBlocksFile | quote }},
+            {{- end }}
+            {{- if .Values.node.proofLevel }}
+            "--proof-level", {{ .Values.node.proofLevel | quote }},
+            {{- end }}
+            {{- if .Values.node.proposedProtocolVersion }}
+            "--proposed-protocol-version", {{ .Values.node.proposedProtocolVersion | quote }},
+            {{- end }}
+            {{- if .Values.node.snarkWorkerParallelism }}
+            "--snark-worker-parallelism", {{ .Values.node.snarkWorkerParallelism | quote }},
+            {{- end }}
+            {{- if .Values.node.stopTime }}
+            "--stop-time", {{ .Values.node.stopTime | quote }},
+            {{- end }}
+            {{- if .Values.node.tracing }}
+            "--tracing",
+            {{- end }}
+            {{- if .Values.node.uploadBlocksToGoogleCloud }}
+            "--upload-blocks-to-gcloud", {{ .Values.node.uploadBlocksToGoogleCloud | quote }},
+            {{- end }}
+            {{- if .Values.node.uploadSubmitterKey }}
+            "--upload-submitter-key", {{ .Values.node.uploadSubmitterKey | quote }},
+            {{- end }}
+            {{- if .Values.node.uploadSubmitterPubkey }}
+            "--upload-submitter-pubkey", {{ .Values.node.uploadSubmitterPubkey | quote }},
+            {{- end }}
+            {{- if .Values.node.validationQueueSize }}
+            "--validation-queue-size", {{ .Values.node.validationQueueSize | quote }},
+            {{- end }}
+            {{- if .Values.node.workReassignmentWait }}
+            "--work-reassignment-wait", {{ .Values.node.workReassignmentWait | quote }},
+            {{- end }}
+            {{- if .Values.node.workSelection }}
+            "--work-selection", {{ .Values.node.workSelection | quote }},
+            {{- end }}
             "--log-json"
           ]
           env:
