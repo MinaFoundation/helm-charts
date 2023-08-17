@@ -124,14 +124,17 @@ spec:
             {{- end -}}
             {{- end -}}
             {{- with .Values.node }}
+            {{- if .snarkWorkerFee }}
+            "--snark-worker-fee", "{{ .snarkWorkerFee }}",
+            {{- end }}
             {{- if and .walletKeys.enabled .daemonMode.blockProducer }}
-            "--block-producer-key", "/root/mina-keys/{{ $.Values.node.name }}-key",
+            "--block-producer-key", "/root/mina-keys/{{ .name }}-key",
             {{- end }}
             {{- if and .walletKeys.enabled .daemonMode.snarkWorker }}
-            "--run-snark-worker", "{{ $.Values.node.secrets.walletPub }}",
+            "--run-snark-worker", "{{ .secrets.walletPub }}",
             {{- end }}
             {{- if and .walletKeys.enabled .daemonMode.coordinator ( not .daemonMode.snarkWorker ) }}
-            "--run-snark-coordinator", "{{ $.Values.node.secrets.walletPub }}",
+            "--run-snark-coordinator", "{{ .secrets.walletPub }}",
             {{- end }}
             {{- end }}
             {{- if .Values.node.daemonMode.seed }}

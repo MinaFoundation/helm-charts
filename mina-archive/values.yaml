@@ -18,6 +18,10 @@ archive:
   enableDumpCronjob: false
   initFromDump: false
 
+  service:
+    labels: {}
+    annotations: {}
+
 resource:
   memoryRequest: "6.0Gi"
   cpuRequest: "3"

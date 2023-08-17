@@ -97,11 +97,18 @@ Parameter | Description | Default
 `node.daemonMode.snarkWorker` | enable SNARK Worker mode | `false`
 `node.daemonMode.coordinator` | enable SNARK Coordinator mode | `false`
 `node.daemonMode.seed` | enable Seed mode | `false`
+`node.snarkWorkerFee` | Fee for Snark Worker | ` `
 `node.secrets.walletPassword` | Password for wallet keypair | ` `
 `node.secrets.walletKey` | Private wallet keypair key | ` `
 `node.secrets.walletPub` | Public wallet keypair key | ` `
 `serviceAccount.annotations` | Custom Annotations for the service account | `{}`
 `podAnnotations` | Custom Annotations for the pod | `{}`
+`ingress.enabled` | Enable Ingress | `false`
+`ingress.labels` | Ingress Labels | `{}`
+`ingress.annotations` | Ingress Annotations | `{}`
+`ingress.className` | Ingress className | `{}`
+`ingress.tls` | Ingress TLS | `false`
+`ingress.hosts` | Ingress Hosts | `[]`
 `resources.memoryRequest` | RAM to claim for mina-daemon container | "16.0Gi"
 `resources.cpuRequest` | # of CPUs to claim for mina-daemon container | "4"
 `resources.memoryLimit` | RAM limit for mina-daemon container | "18.0Gi"

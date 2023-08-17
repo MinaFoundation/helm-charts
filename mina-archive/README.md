@@ -71,6 +71,8 @@ Parameter | Description
 `archive.testnet` | Which `testnet` archive will be running on.
 `archive.image` | container image to use for operating an archive node
 `archive.remoteSchemaAuxFiles` | list of schema file download urls needed to bootstrap database.
+`archive.service.labels` | Custom Labels for the Archive Service | `{}`
+`archive.service.annotations` | Custom Annotations for the Archive Service | `{}`
 
 ### Optional Settings
 
