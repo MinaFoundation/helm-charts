@@ -182,7 +182,7 @@ spec:
             "--disable-node-status",
             {{- end }}
             {{- if .Values.node.enableFlooding }}
-            "--enable-flooding", {{ .Values.node.currentProtocolVersion | quote }},
+            "--enable-flooding", {{ .Values.node.enableFlooding | quote }},
             {{- end }}
             {{- if .Values.node.enablePeerExchange }}
             "--enable-peer-exchange", {{ .Values.node.enablePeerExchange | quote }},
