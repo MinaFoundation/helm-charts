@@ -1,0 +1,46 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ .Release.Name }}
+      {{- if .Values.deployment.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" ( dict "type" .Values.deployment.podAffinityPreset "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" ( dict "type" .Values.deployment.podAntiAffinityPreset "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" ( dict "type" .Values.deployment.nodeAffinityPreset.type "key" .Values.deployment.nodeAffinityPreset.key "values" .Values.deployment.nodeAffinityPreset.values ) | nindent 10 }}
+      {{- end }}
+      containers:
+        - name: {{ .Release.Name }}
+          image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
+          imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
+          resources:
+            requests:
+              memory: {{ default "256Mi" .Values.resources.memoryRequest }}
+              cpu: {{ default "500m" .Values.resources.cpuRequest }}
+            limits:
+              memory: {{ default "512Mi" .Values.resources.memoryLimit }} 
+              cpu: {{ default "1" .Values.resources.cpuLimit }}
+          env:
+            {{- if .Values.deployment.env.timeBefore }}
+            - name: TIME_BEFORE
+              value: {{ .Values.deployment.env.timeBefore }}
+            {{- end }}
+            {{- if .Values.deployment.env.timeUnit }}
+            - name: TIME_UNIT
+              value: {{ .Values.deployment.env.timeUnit }}
+            {{- end }}
