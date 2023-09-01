@@ -1,0 +1,19 @@
+deployment:
+  affinity:
+  image:
+    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/block-producers-uptime-monitoring
+    pullPolicy: IfNotPresent
+    tag: ""
+  replicaCount: 1
+  env:
+    timeBefore: "20"
+    timeUnit: "minutes"
+
+resources:
+  memoryRequest: "256Mi"
+  cpuRequest: "500m"
+  memoryLimit: "512Mi"
+  cpuLimit: "1"
+
+serviceaccount:
+  annotations: {}
