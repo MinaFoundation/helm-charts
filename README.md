@@ -14,6 +14,7 @@ The following is a list of charts available in this repository:
 - `leaderboard`: This chart deploys the Mina Foundation leaderboard application.
 - `mina-archive`: This chart deploys the Mina Archive component from Mina Protocol.
 - `mina-daemon`: This chart deploys the Mina Daemon component from Mina Protocol.
+- `node-stats-collector`: This chart deploys application for Mina nodes to report stats/errors to.
 
 ## Deploying a Local Chart
 
