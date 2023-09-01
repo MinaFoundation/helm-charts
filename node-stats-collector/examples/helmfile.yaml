@@ -1,0 +1,34 @@
+---
+releases:
+- name: partner1
+  namespace: nodestats-partners
+  chart: git::ssh://git@github.com/MinaProtocol/mina-helm-charts-private.git@node-stats-collector?ref=main
+  values:
+    - ingress:
+        enabled: true
+        className: "alb"    
+        annotations:
+          alb.ingress.kubernetes.io/backend-protocol: HTTP
+          alb.ingress.kubernetes.io/certificate-arn: valid_arn
+          alb.ingress.kubernetes.io/group.name: nodestats
+          alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+          alb.ingress.kubernetes.io/preserve-client-ip: "true"
+          alb.ingress.kubernetes.io/scheme: internet-facing
+          alb.ingress.kubernetes.io/ssl-redirect: "443"
+          alb.ingress.kubernetes.io/target-type: ip
+          external-dns.alpha.kubernetes.io/hostname: nodestats-sandbox-partner1.minaprotocol.tools
+        hosts:
+          - host: nodestats-dev-partner1.minaprotocol.tools
+            paths:
+              - path: /
+                pathType: Prefix
+                backend:
+                  service:
+                    name: partner1-node-stats-collector
+                    port: 8080
+    - nodestats:
+        opensearchUrl: https://name.region.es.amazonaws.com
+        partner: partner1
+    - image:
+        imagePullPolicy: always
+
