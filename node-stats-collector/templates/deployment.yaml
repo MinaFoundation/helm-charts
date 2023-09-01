@@ -37,13 +37,19 @@ spec:
             httpGet:
               path: /health
               port: http
+            timeoutSeconds: 5
           readinessProbe:
             httpGet:
               path: /health
               port: http
+            timeoutSeconds: 5
           env:
             - name: PORT
               value: {{ .Values.service.port | quote }}
+            - name: OPENSEARCH_URL
+              value: {{ .Values.nodestats.opensearchUrl }}
+            - name: PARTNER
+              value: {{ .Values.nodestats.partner }}
             {{- if .Values.extraEnvVars }}
             {{- toYaml .Values.extraEnvVars | nindent 12 }}
             {{- end }}
