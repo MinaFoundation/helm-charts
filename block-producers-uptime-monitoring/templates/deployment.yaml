@@ -37,9 +37,9 @@ spec:
           env:
             {{- if .Values.deployment.env.timeBefore }}
             - name: TIME_BEFORE
-              value: {{ .Values.deployment.env.timeBefore }}
+              value: {{ .Values.deployment.env.timeBefore | quote }}
             {{- end }}
             {{- if .Values.deployment.env.timeUnit }}
             - name: TIME_UNIT
-              value: {{ .Values.deployment.env.timeUnit }}
+              value: {{ .Values.deployment.env.timeUnit | quote }}
             {{- end }}
