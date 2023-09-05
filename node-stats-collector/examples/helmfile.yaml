@@ -16,9 +16,9 @@ releases:
           alb.ingress.kubernetes.io/scheme: internet-facing
           alb.ingress.kubernetes.io/ssl-redirect: "443"
           alb.ingress.kubernetes.io/target-type: ip
-          external-dns.alpha.kubernetes.io/hostname: nodestats-sandbox-partner1.minaprotocol.tools
+          external-dns.alpha.kubernetes.io/hostname: nodestats-platform-partner1.minaprotocol.tools
         hosts:
-          - host: nodestats-dev-partner1.minaprotocol.tools
+          - host: nodestats-platform-partner1.minaprotocol.tools
             paths:
               - path: /
                 pathType: Prefix
@@ -27,7 +27,7 @@ releases:
                     name: partner1-node-stats-collector
                     port: 8080
     - nodestats:
-        opensearchUrl: https://name.region.es.amazonaws.com
+        endpoint: name.region.es.amazonaws.com
         partner: partner1
     - image:
         imagePullPolicy: always
