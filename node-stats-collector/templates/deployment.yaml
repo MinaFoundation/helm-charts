@@ -47,7 +47,7 @@ spec:
             - name: PORT
               value: {{ .Values.service.port | quote }}
             - name: OPENSEARCH_URL
-              value: {{ .Values.nodestats.opensearchUrl }}
+              value: https://{{ .Values.nodestats.endpoint }}
             - name: PARTNER
               value: {{ .Values.nodestats.partner }}
             {{- if .Values.extraEnvVars }}

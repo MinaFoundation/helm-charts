@@ -58,8 +58,7 @@ The following table lists the configurable parameters of the `node-stats-collect
 
 Parameter | Description | Default
 --- | --- | ---
-`nodestats.endpoint` | Opensearch vpc endpoint url used by `opensearchUrl`. | ""
-`nodestats.opensearchUrl` | Opensearch domain internal endpoint where application should send stats. | ""
+`nodestats.endpoint` | Opensearch domain internal endpoint where application should send stats. | ""
 `nodestats.partner` | Partner who will report node stats to application. | ""
 
 ### Resource allocation
