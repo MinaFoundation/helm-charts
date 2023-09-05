@@ -47,7 +47,8 @@ service:
   port: 8080
 
 nodestats:
-  opensearchUrl: ""
+  endpoint: ""
+  opensearchUrl: https://{{ tpl .Values.nodestats.endpoint . }}
   partner: ""
 
 ingress:
