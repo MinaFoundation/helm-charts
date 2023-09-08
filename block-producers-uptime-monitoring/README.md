@@ -66,7 +66,7 @@ Parameter | Description
 `deployment.env.timeUnit` | the unit of measurement for the delta time (minutes,hours,seconds,days)
 
 ### Optional Settings
-
+--- | ---
 `deployment.affinity` | affinity for pod assignment (note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set)
 `deployment.podAffinityPreset` | pod affinity preset. Ignored if `affinity` is set. Allowed values: `soft` or `hard`
 `deployment.podAntiAffinityPreset` | pod anti-affinity preset. Ignored if `affinity` is set. Allowed values: `soft` or `hard`
