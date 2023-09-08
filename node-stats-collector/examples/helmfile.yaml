@@ -28,7 +28,7 @@ releases:
                     port: 8080
     - nodestats:
         endpoint: name.region.es.amazonaws.com
-        partner: partner1
+        index: node-stats
     - image:
         imagePullPolicy: always
 

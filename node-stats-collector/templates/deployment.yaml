@@ -48,8 +48,8 @@ spec:
               value: {{ .Values.service.port | quote }}
             - name: OPENSEARCH_URL
               value: https://{{ .Values.nodestats.endpoint }}
-            - name: PARTNER
-              value: {{ .Values.nodestats.partner }}
+            - name: OPENSEARCH_INDEX
+              value: {{ .Values.nodestats.index }}
             {{- if .Values.extraEnvVars }}
             {{- toYaml .Values.extraEnvVars | nindent 12 }}
             {{- end }}

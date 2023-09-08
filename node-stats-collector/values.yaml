@@ -48,7 +48,7 @@ service:
 
 nodestats:
   endpoint: ""
-  partner: ""
+  index: "node-stats"
 
 ingress:
   enabled: false
