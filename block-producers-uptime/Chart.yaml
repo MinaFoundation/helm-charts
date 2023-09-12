@@ -1,12 +1,6 @@
 apiVersion: v2
 name: block-producers-uptime
 description: A Helm chart for block-producers-uptime AKA Delegation Program Backend
-dependencies:
-  - name: common
-    repository: oci://registry-1.docker.io/bitnamicharts
-    tags:
-      - bitnami-common
-    version: 2.x.x
 type: application
 version: 0.1.0
 appVersion: "0.1.0"

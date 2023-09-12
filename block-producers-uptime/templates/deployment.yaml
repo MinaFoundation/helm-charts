@@ -22,7 +22,6 @@ spec:
       affinity:
         podAffinity: {{- include "common.affinities.pods" ( dict "type" .Values.deployment.podAffinityPreset "context" $) | nindent 10 }}
         podAntiAffinity: {{- include "common.affinities.pods" ( dict "type" .Values.deployment.podAntiAffinityPreset "context" $) | nindent 10 }}
-        nodeAffinity: {{- include "common.affinities.nodes" ( dict "type" .Values.deployment.nodeAffinityPreset.type "key" .Values.deployment.nodeAffinityPreset.key "values" .Values.deployment.nodeAffinityPreset.values ) | nindent 10 }}
       {{- end }}
       containers:
         - name: {{ .Release.Name }}

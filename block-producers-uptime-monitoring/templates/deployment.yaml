@@ -15,14 +15,13 @@ spec:
       labels:
         app: {{ .Release.Name }}
     spec:
-      serviceAccountName: {{ .Release.Name }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
       {{- if .Values.deployment.affinity }}
       affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.affinity "context" $) | nindent 8 }}
       {{- else }}
       affinity:
         podAffinity: {{- include "common.affinities.pods" ( dict "type" .Values.deployment.podAffinityPreset "context" $) | nindent 10 }}
         podAntiAffinity: {{- include "common.affinities.pods" ( dict "type" .Values.deployment.podAntiAffinityPreset "context" $) | nindent 10 }}
-        nodeAffinity: {{- include "common.affinities.nodes" ( dict "type" .Values.deployment.nodeAffinityPreset.type "key" .Values.deployment.nodeAffinityPreset.key "values" .Values.deployment.nodeAffinityPreset.values ) | nindent 10 }}
       {{- end }}
       containers:
         - name: {{ .Release.Name }}
@@ -36,11 +35,11 @@ spec:
               memory: {{ default "512Mi" .Values.resources.memoryLimit }} 
               cpu: {{ default "1" .Values.resources.cpuLimit }}
           env:
-            {{- if .Values.deployment.env.timeBefore }}
+            {{- with .Values.deployment.env.timeBefore | default "20" }}
             - name: TIME_BEFORE
-              value: {{ .Values.deployment.env.timeBefore }}
+              value: {{ . }}
             {{- end }}
-            {{- if .Values.deployment.env.timeUnit }}
-            - name: TIME_UNIT
-              value: {{ .Values.deployment.env.timeUnit }}
+            {{- with .Values.deployment.env.network | default "mainnet" }}
+            - name: NETWORK
+              value: {{ . }}
             {{- end }}

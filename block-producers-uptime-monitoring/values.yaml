@@ -1,19 +1,17 @@
 deployment:
-  affinity:
+  affinity: {}
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
   image:
     repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/block-producers-uptime-monitoring
     pullPolicy: IfNotPresent
-    tag: ""
+    tag: "1.0.0-82c48e5-bullseye-mainnet"
   replicaCount: 1
   env:
     timeBefore: "20"
-    timeUnit: "minutes"
 
 resources:
   memoryRequest: "256Mi"
   cpuRequest: "500m"
   memoryLimit: "512Mi"
   cpuLimit: "1"
-
-serviceaccount:
-  annotations: {}
