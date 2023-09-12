@@ -63,19 +63,16 @@ Parameter | Description
 `deployment.image.tag` | tag of the image from the repository, usually containing commit hash, version, network and linux flavour
 `deployment.replicaCount` | number of pods to deploy
 `deployment.env.timeBefore` | environment variable that determines the time window of the application (time between current time and how much the user wants to look back)
-`deployment.env.timeUnit` | the unit of measurement for the delta time (minutes,hours,seconds,days)
 
 ### Optional Settings
 
 `deployment.affinity` | affinity for pod assignment (note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set)
 `deployment.podAffinityPreset` | pod affinity preset. Ignored if `affinity` is set. Allowed values: `soft` or `hard`
 `deployment.podAntiAffinityPreset` | pod anti-affinity preset. Ignored if `affinity` is set. Allowed values: `soft` or `hard`
-`deployment.nodeAffinityPreset` | affinity preset
 `resources.memoryRequest` | requested memory for the application
 `resources.cpuRequest` | requested cpu for the application
 `resources.memoryLimit` | limit of the memory achieved by the application
 `resources.cpuLimit` | limit of the cpu achieved by the application
-`serviceaccount.annotations` | extra annotations for the service account
 
 ## Uninstallation
 

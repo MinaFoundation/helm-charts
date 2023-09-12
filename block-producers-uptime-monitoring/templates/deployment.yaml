@@ -15,7 +15,7 @@ spec:
       labels:
         app: {{ .Release.Name }}
     spec:
-      serviceAccountName: {{ .Release.Name }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
       {{- if .Values.deployment.affinity }}
       affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.affinity "context" $) | nindent 8 }}
       {{- else }}
@@ -35,11 +35,11 @@ spec:
               memory: {{ default "512Mi" .Values.resources.memoryLimit }} 
               cpu: {{ default "1" .Values.resources.cpuLimit }}
           env:
-            {{- if .Values.deployment.env.timeBefore }}
+            {{- with .Values.deployment.env.timeBefore | default "20" }}
             - name: TIME_BEFORE
-              value: {{ .Values.deployment.env.timeBefore | quote }}
+              value: {{ . }}
             {{- end }}
-            {{- if .Values.deployment.env.timeUnit }}
-            - name: TIME_UNIT
-              value: {{ .Values.deployment.env.timeUnit | quote }}
+            {{- with .Values.deployment.env.network | default "mainnet" }}
+            - name: NETWORK
+              value: {{ . }}
             {{- end }}
