@@ -1,0 +1,16 @@
+{{- if .Values.nodestats.metrics.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "node-stats-collector.fullname" . }}
+  labels:
+    app: {{- include "node-stats-collector.labels" . | nindent 4 }}
+spec:
+  endpoints:
+    - interval: 30s
+      port: http
+  selector:
+    matchLabels:
+      {{- include "node-stats-collector.selectorLabels" . | nindent 6 }}
+{{- end }}
