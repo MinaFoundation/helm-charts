@@ -43,3 +43,11 @@ spec:
             - name: NETWORK
               value: {{ . }}
             {{- end }}
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - ps aux | grep python | grep -v grep
+            initialDelaySeconds: 5
+            periodSeconds: 10

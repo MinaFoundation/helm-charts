@@ -33,6 +33,12 @@ spec:
               port: 8080
             initialDelaySeconds: 15
             periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /healthy
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 30
           resources:
             requests:
               memory: {{ default "256Mi" .Values.resources.memoryRequest }}
