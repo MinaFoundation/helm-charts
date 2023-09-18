@@ -9,7 +9,7 @@ deployment:
   replicaCount: 1
   env:
     timeBefore: "20"
-
+    network: "mainnet"
 resources:
   memoryRequest: "256Mi"
   cpuRequest: "500m"

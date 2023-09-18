@@ -35,11 +35,11 @@ spec:
               memory: {{ default "512Mi" .Values.resources.memoryLimit }} 
               cpu: {{ default "1" .Values.resources.cpuLimit }}
           env:
-            {{- with .Values.deployment.env.timeBefore | default "20" }}
+            {{- if .Values.deployment.env.timeBefore }}
             - name: TIME_BEFORE
-              value: {{ . }}
+              value: {{ .Values.deployment.env.timeBefore | quote }}
             {{- end }}
-            {{- with .Values.deployment.env.network | default "mainnet" }}
+            {{- if .Values.deployment.env.network }}
             - name: NETWORK
-              value: {{ . }}
+              value: {{ .Values.deployment.env.network | quote }}
             {{- end }}
