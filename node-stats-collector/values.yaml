@@ -48,7 +48,9 @@ service:
 
 nodestats:
   endpoint: ""
-  index: "node-stats"
+  index: "node-stats-errors"
+  metrics:
+    enabled: true
 
 ingress:
   enabled: false

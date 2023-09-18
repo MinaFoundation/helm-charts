@@ -17,6 +17,12 @@ spec:
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.nodestats.metrics.enabled }}
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: {{ .Values.service.port | quote }}
+        prometheus.io/path: '/metrics'
+      {{- end }}
+
       labels:
         {{- include "node-stats-collector.selectorLabels" . | nindent 8 }}
     spec:
@@ -50,6 +56,14 @@ spec:
               value: https://{{ .Values.nodestats.endpoint }}
             - name: OPENSEARCH_INDEX
               value: {{ .Values.nodestats.index }}
+            {{- if .Values.nodestats.metrics.enabled }}
+            - name: AXUM_HTTP_REQUESTS_TOTAL
+              value: node_stats_collector_requests_total
+            - name: AXUM_HTTP_REQUESTS_DURATION_SECONDS
+              value: node_stats_collector_requests_duration_seconds
+            - name: AXUM_HTTP_REQUESTS_PENDING
+              value: node_stats_collector_requests_pending
+            {{- end }}
             {{- if .Values.extraEnvVars }}
             {{- toYaml .Values.extraEnvVars | nindent 12 }}
             {{- end }}
