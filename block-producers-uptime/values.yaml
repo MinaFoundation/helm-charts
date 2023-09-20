@@ -27,7 +27,7 @@ resources:
   cpuLimit: "1"
 
 service:
-  type: LoadBalancer
+  type: ClusterIp
   port: 8080
   externalTrafficPolicy: Local
 
