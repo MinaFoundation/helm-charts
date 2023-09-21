@@ -7,25 +7,21 @@ metadata:
     app: {{ .Release.Name }}
     testnet: {{ .Values.deployment.testnet }}
     role: {{ default "undefined" .Values.node.role }}
-  {{- if .Values.node.exposeP2P }}
+  {{- with .Values.service.labels }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.service.annotations }}
   annotations:
-    service.beta.kubernetes.io/aws-loadbalancer-type: external
-    service.beta.kubernetes.io/aws-loadbalancer-nlb-target-type: ip
-    service.beta.kubernetes.io/aws-loadbalancer-scheme: internet-facing
+    {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- if .Values.node.loadBalancer.enabled }}
-  type: LoadBalancer
-  {{- if not (eq .Values.node.loadBalancer.ip "auto") }}
-  loadBalancerIP: {{ .Values.node.loadBalancer.ip }}
+  type: {{ .Values.service.type | quote }}
+  {{- if .Values.service.loadBalancerClass }}
+  loadBalancerClass: {{ .Values.service.loadBalancerClass | quote }}
   {{- end }}
-  {{- else }}
-  type: ClusterIP
+  {{- if .Values.service.publishNotReadyAddresses }}
+  publishNotReadyAddresses: {{ .Values.service.publishNotReadyAddresses }}
   {{- end }}
-  # We want all pods to have their addresses published for the sake of the
-  # other testnet pods even before they're ready, since they
-  # have to be able to talk to each other in order to become ready.
-  publishNotReadyAddresses: true
   selector:
     app: {{ .Release.Name }}
   ports:

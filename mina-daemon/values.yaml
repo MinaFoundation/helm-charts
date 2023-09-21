@@ -25,11 +25,7 @@ node:
   role:
   replicas: 1
   fullname: "berkeley-node"
-  loadBalancer:
-    enabled: false
-    ip: "auto"
   exposeGraphql: false
-  exposeP2P:
   logLevel: Info
   fileLogLevel: Error
   generateGenesisProof: true
@@ -128,6 +124,13 @@ ingress:
     #        service:
     #          name: chart-example.local
     #          port: 8080
+
+service:
+  type: ClusterIP
+  annotations: {}
+  labels: {}
+  loadBalancerClass:
+  publishNotReadyAddresses: true
 
 podAnnotations: {}
 
