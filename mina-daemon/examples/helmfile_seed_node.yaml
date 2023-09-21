@@ -4,8 +4,8 @@ repositories:
 - name: bitnami
   url: https://charts.bitnami.com/bitnami
 
-environments: 
-  default: 
+environments:
+  default:
     values:
       - seed:
           walletPassword: ref+awssecrets://seed-1?region=us-west-2&mode=singleparam#/key-password
@@ -21,7 +21,7 @@ environments:
             image: gcr.io/o1labs-192920/mina-daemon:d105e9f-buster-berkeley
 ---
 releases:
-- name: {{ .Values.releases.berkeleyDaemon.platform }}-{{ .Values.releases.berkeleyDaemon.testnet }}-mina-daemon
+- name: "{{ .Values.releases.berkeleyDaemon.platform }}-{{ .Values.releases.berkeleyDaemon.testnet }}-mina-daemon"
   namespace: {{ .Values.releases.berkeleyDaemon.testnet }}
   chart: ./mina-daemon
     #chart: git::ssh://git@github.com/MinaProtocol/mina-helm-charts-private.git@mina-daemon?ref=main
@@ -68,6 +68,15 @@ releases:
           walletPub: {{ .Values.seed.walletPub | fetchSecretValue | quote }}
           discoveryLibp2p: {{ .Values.seed.discoveryLibp2p | fetchSecretValue | quote }}
           discoveryLibp2pPeerid: {{ .Values.seed.discoveryLibp2pPeerid | fetchSecretValue | quote }}
+    - service:
+        type: LoadBalancer
+        loadBalancerClass: service.k8s.aws/nlb
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: seed0-berkeley.minaprotocol.network
+          service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: instance
+          service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
+          service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+          service.beta.kubernetes.io/aws-load-balancer-type: nlb
     - resources:
         memoryRequest: "16.0Gi"
         cpuRequests: "4"

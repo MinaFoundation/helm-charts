@@ -153,6 +153,11 @@ Parameter | Description | Default
 `ingress.className` | Ingress className | `{}`
 `ingress.tls` | Ingress TLS | `false`
 `ingress.hosts` | Ingress Hosts | `[]`
+`service.type` | Service Type of the Mina Daemon | `ClusterIP`
+`service.annotations` | Service Annotations of the Mina Daemon | `{}`
+`service.labels` | Service Labels of the Mina Daemon | `{}`
+`service.loadBalancerClass` | Service LoadBalancerClass of the Mina Daemon | ` `
+`service.publishNotReadyAddresses` | Publish Not Ready Mina Daemon Service Adresses | `true`
 `resources.memoryRequest` | RAM to claim for mina-daemon container | "16.0Gi"
 `resources.cpuRequest` | # of CPUs to claim for mina-daemon container | "4"
 `resources.memoryLimit` | RAM limit for mina-daemon container | "18.0Gi"
