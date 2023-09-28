@@ -5,7 +5,7 @@ metadata:
   labels:
     app: {{ .Release.Name }}
 spec:
-  schedule: "59 11,23 * * *"
+  schedule: {{ .Values.cron.schedule }}
   jobTemplate:
     spec:
       template:

@@ -29,7 +29,9 @@ resources:
 service:
   type: ClusterIp
   port: 8080
-  externalTrafficPolicy: Local
+
+cron:
+  schedule: "59 11,23 * * *" # This must be a string in quotes
 
 ingress:
   class: alb
