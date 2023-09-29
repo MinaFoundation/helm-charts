@@ -13,14 +13,14 @@ spec:
       {{- include "node-stats-collector.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- if .Values.nodestats.metrics.enabled }}
-      prometheus.io/scrape: 'true'
-      prometheus.io/port: {{ .Values.service.port | quote }}
-      prometheus.io/path: '/metrics'
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: {{ .Values.service.port | quote }}
+        prometheus.io/path: '/metrics'
       {{- end }}
 
       labels:
