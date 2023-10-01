@@ -85,6 +85,9 @@ spec:
             {{- if .Values.deployment.uptime.enabled }}
             "--uptime-url", {{ .Values.deployment.uptime.url | quote }},
             "--uptime-submitter-key", "/root/mina-keys/{{ .Values.node.name }}-key",
+            {{- if .Values.deployment.uptime.sendNodeCommitSha }}
+            "[--uptime-send-node-commit-sha]", {{ .Values.deployment.uptime.sendNodeCommitSha | quote }},
+            {{- end }}
             {{- end }}
             {{- if .Values.node.statsUrl }}
             "--node-status-url", {{ .Values.node.statsUrl | quote }},
@@ -160,6 +163,9 @@ spec:
             {{- if .Values.node.archive.rocksdb }}
             "--archive-rocksdb",
             {{- end }}
+            {{- if .Values.node.coinbaseReceiver }}
+            "--coinbase-receiver", {{ .Values.node.coinbaseReceiver | quote }},
+            {{- end }}
             {{- if .Values.node.archive.background }}
             "--background",
             {{- end }}
@@ -189,6 +195,9 @@ spec:
             {{- end }}
             {{- if .Values.node.externalIP }}
             "--external-ip", {{ .Values.node.externalIP | quote }},
+            {{- end }}
+            {{- if .Values.node.generateGenesisProof }}
+            "--generate-genesis-proof", {{ .Values.node.generateGenesisProof | quote }},
             {{- end }}
             {{- if .Values.node.fileLogRotations }}
             "--file-log-rotations", {{ .Values.node.fileLogRotations | quote }},
@@ -332,6 +341,9 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}
                   key: "wallet-password"
+            {{- end }}
+            {{- if .Values.node.extraEnvVars }}
+            {{- toYaml .Values.node.extraEnvVars | nindent 12 }}
             {{- end }}
           ports:
             - name: client-port

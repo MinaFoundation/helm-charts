@@ -9,6 +9,7 @@ deployment:
   uptime:
     enabled: false
     url:
+    sendNodeCommitSha:
   seedPeers:
     - /dns4/seed-1.berkeley.o1test.net/tcp/10000/p2p/12D3KooWAdgYL6hv18M3iDBdaK1dRygPivSfAfBNDzie6YqydVbs
     - /dns4/seed-2.berkeley.o1test.net/tcp/10001/p2p/12D3KooWLjs54xHzVmMmGYb7W5RVibqbwD1co7M2ZMfPgPm7iAag
@@ -28,7 +29,7 @@ node:
   exposeGraphql: false
   logLevel: Info
   fileLogLevel: Error
-  generateGenesisProof: true
+  generateGenesisProof:
   maxConnections: 200
   snarkWorkerFee:
   allPeersSeenMetric:
@@ -36,6 +37,7 @@ node:
   background:
   bindIP:
   contactInfo:
+  coinbaseReceiver:
   currentProtocolVersion:
   demoMode:
   directPeer:
@@ -54,8 +56,8 @@ node:
   limitedGraphQLPort:
   logBlockCreation:
   logPrecomputedBlocks:
-  logSnarkWorkGossip: true
-  logTxnPoolGossip: true
+  logSnarkWorkGossip:
+  logTxnPoolGossip:
   minConnections:
   minBlockReward:
   noSuperCatchup:
@@ -105,6 +107,14 @@ node:
     walletPub: ""
     discoveryLibp2p: ""
     discoveryLibp2pPeerid: ""
+  extraEnvVars: {}
+    # - name: FOO
+    #   value: FOO
+    # - name: BAR
+    #   valueFrom:
+    #     secretKeyRef:
+    #       name: mySecret
+    #       key: bar
 
 serviceAccount:
   annotations: {}
