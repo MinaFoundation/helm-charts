@@ -84,11 +84,14 @@ Parameter | Description | Default
 `deployment.storeBlocks.filename` | file name where to append blocks in `json` format | `precomputed_blocks.json`
 `deployment.storeBlocks.directory` | Path where to store precomputed_blocks file | `/blocks`
 `deployment.storeBlocks.sizePVC` | How much space to claim for volume | `5Gi`
+`deployment.uptime.enabled` | Enable Uptime Service | default `false`
+`deployment.uptime.url` | URL of the uptime service of the Mina delegation program | default ` `
+`deployment.uptime.sendNodeCommitSha` | Whether to send the commit SHA used to build the node to the uptime service | default ` `
 `node.exposeGraphql` | expose graphql to public | `false`
 `node.metrics.enabled` | expose prometheus metrics endpoint | `false`
 `node.metrics.port` | port to scrape prometheus metrics | `10001`
 `node.ports.graphql` |  | `3085`
-`node.archive.enabled` | Whether mina-daemon should connect to archive. | `false`
+`node.archive.enabled` | Whether mina-daemon should connect to archive | `false`
 `node.archive.address` | mina-archive url | `staging-berkeley-archive:3086`
 `node.statsUrl` | URL where to report node stats | ` `
 `node.errorsUrl` | URL where to report node errors | ` `
@@ -100,6 +103,7 @@ Parameter | Description | Default
 `node.snarkWorkerFee` | Fee for Snark Worker | ` `
 `node.allPeersSeenMetric` | Whether to track the set of all peers ever seen for the all_peers metric | `false`
 `node.archiveRocksDB` | Stores all the blocks heard in RocksDB | `false`
+`node.coinbaseReceiver` | Address to send coinbase rewards to (if this node is producing blocks) | ` `
 `node.background` | Run process on the background | `false`
 `node.bindIP` | IP of network interface to use for peer connections | ` `
 `node.contactInfo` | info used in node error report service (it could be either email address or discord username), it should be less than 200 characters | ` `
@@ -128,7 +132,7 @@ Parameter | Description | Default
 `node.openLimitedGraphQLPort` | Have the limited GraphQL server listen on all addresses, not just localhost (this is INSECURE, make sure your firewall is configured correctly!) | `false`
 `node.peer` | initial "bootstrap" peers for discovery | ` `
 `node.peerListFile` | path to a file containing "bootstrap" peers for discovery, one multiaddress per line | ` `
-`node.peerListURL` | URL of seed peer list file. Will be polled periodically. | ` `
+`node.peerListURL` | URL of seed peer list file. Will be polled periodically | ` `
 `node.peerProtectionRate` | Proportion of peers to be marked as protected | `0.2`
 `node.precomputedBlocksFile` | Path to write precomputed blocks to, for replay or archiving | ` `
 `node.proofLevel` | Internal, for testing. Start or connect to a network with full proving (`full`), snark-testing with dummy proofs (`check`), or dummy proofs (`none`) | `full`
