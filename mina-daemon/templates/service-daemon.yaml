@@ -28,6 +28,9 @@ spec:
     - name: tcp-p2p
       port: {{ .Values.node.ports.p2p }}
       targetPort: external-port
+    - name: client
+      port: {{ .Values.node.ports.client }}
+      targetPort: client-port
     {{- if .Values.node.metrics.enabled }}
     - name: metrics-port
       port: {{ .Values.node.metrics.port }}

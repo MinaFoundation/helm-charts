@@ -149,6 +149,8 @@ Parameter | Description | Default
 `node.secrets.walletPassword` | Password for wallet keypair | ` `
 `node.secrets.walletKey` | Private wallet keypair key | ` `
 `node.secrets.walletPub` | Public wallet keypair key | ` `
+`node.daemonAddress` | Snark Coordinator Daemon Address. Require `node.walletKeys.enabled: false` | localhost:8301
+`node.shutdownOnDisconnect` | Shutdown Snark Worker if disconnect. Require `node.walletKeys.enabled: false` | false
 `serviceAccount.annotations` | Custom Annotations for the service account | `{}`
 `podAnnotations` | Custom Annotations for the pod | `{}`
 `ingress.enabled` | Enable Ingress | `false`
