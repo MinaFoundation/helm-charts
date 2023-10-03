@@ -107,6 +107,11 @@ node:
     walletPub: ""
     discoveryLibp2p: ""
     discoveryLibp2pPeerid: ""
+  # Snark Worker specific settings - Note that walletKeys.enabled should be set to false. 
+  daemonAddress: localhost:8301
+  shutdownOnDisconnect: false
+
+
   extraEnvVars: {}
     # - name: FOO
     #   value: FOO
@@ -115,7 +120,6 @@ node:
     #     secretKeyRef:
     #       name: mySecret
     #       key: bar
-
 serviceAccount:
   annotations: {}
 

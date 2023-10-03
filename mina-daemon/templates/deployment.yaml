@@ -81,7 +81,19 @@ spec:
           {{ if .Values.deployment.customEntrypoint.enabled -}}
           command: [{{ .Values.deployment.customEntrypoint.entrypoint }}]
           {{- end }}
-          args: [ "daemon",
+          args: [
+
+            {{- if and (not .Values.node.walletKeys.enabled) .Values.node.daemonMode.snarkWorker }}
+            "internal", "snark-worker",
+            {{- if .Values.node.daemonAddress }}
+            "--daemon-address", {{ .Values.node.daemonAddress | quote }},
+            {{- end }}
+            {{- if .Values.node.proofLevel }}
+            "--proof-level", {{ .Values.node.proofLevel | quote }},
+            {{- end }}
+            {{- else }}
+
+            "daemon",
             {{- if .Values.deployment.uptime.enabled }}
             "--uptime-url", {{ .Values.deployment.uptime.url | quote }},
             "--uptime-submitter-key", "/root/mina-keys/{{ .Values.node.name }}-key",
@@ -299,6 +311,8 @@ spec:
             "--work-selection", {{ .Values.node.workSelection | quote }},
             {{- end }}
             "--log-json"
+
+            {{- end }}
           ]
           env:
             - name: MINA_NETWORK
