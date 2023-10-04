@@ -10,10 +10,10 @@ deployment:
     enabled: false
     url:
     sendNodeCommitSha:
-  seedPeers:
-    - /dns4/seed-1.berkeley.o1test.net/tcp/10000/p2p/12D3KooWAdgYL6hv18M3iDBdaK1dRygPivSfAfBNDzie6YqydVbs
-    - /dns4/seed-2.berkeley.o1test.net/tcp/10001/p2p/12D3KooWLjs54xHzVmMmGYb7W5RVibqbwD1co7M2ZMfPgPm7iAag
-    - /dns4/seed-3.berkeley.o1test.net/tcp/10002/p2p/12D3KooWEiGVAFC7curXWXiGZyMWnZK9h8BKr88U8D5PKV3dXciv
+  seedPeers: []
+    # - /dns4/seed-1.berkeley.o1test.net/tcp/10000/p2p/12D3KooWAdgYL6hv18M3iDBdaK1dRygPivSfAfBNDzie6YqydVbs
+    # - /dns4/seed-2.berkeley.o1test.net/tcp/10001/p2p/12D3KooWLjs54xHzVmMmGYb7W5RVibqbwD1co7M2ZMfPgPm7iAag
+    # - /dns4/seed-3.berkeley.o1test.net/tcp/10002/p2p/12D3KooWEiGVAFC7curXWXiGZyMWnZK9h8BKr88U8D5PKV3dXciv
   storeBlocks:
     enabled: false
     filename: precomputed_blocks.json
@@ -107,7 +107,7 @@ node:
     walletPub: ""
     discoveryLibp2p: ""
     discoveryLibp2pPeerid: ""
-  # Snark Worker specific settings - Note that walletKeys.enabled should be set to false. 
+  # Snark Worker specific settings - Note that walletKeys.enabled should be set to false.
   daemonAddress: localhost:8301
   shutdownOnDisconnect: false
 
@@ -151,8 +151,10 @@ podAnnotations: {}
 resources:
   memoryRequest: "16.0Gi"
   cpuRequest: "4"
+  ephemeralStorageRequest:
   memoryLimit: "16.0Gi"
   cpuLimit: "8"
+  ephemeralStorageLimit:
 
 healthcheck:
   enabled: true

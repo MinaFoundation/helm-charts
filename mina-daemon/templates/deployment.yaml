@@ -72,11 +72,17 @@ spec:
         - name: mina
           resources:
             limits:
-              memory: {{ default "18.0Gi" .Values.resources.memoryLimit }}
-              cpu: {{ default "8" .Values.resources.cpuLimit }}
+              memory: {{ .Values.resources.memoryLimit }}
+              cpu: {{ .Values.resources.cpuLimit }}
+              {{- if .Values.resources.ephemeralStorageLimit }}
+              ephemeral-storage: {{ .Values.resources.ephemeralStorageLimit }}
+              {{- end }}
             requests:
-              memory: {{ default "16.0Gi" .Values.resources.memoryRequest }}
-              cpu: {{ default "4" .Values.resources.cpuRequest }}
+              memory: {{ .Values.resources.memoryRequest }}
+              cpu: {{ .Values.resources.cpuRequest }}
+              {{- if .Values.resources.ephemeralStorageLimit }}
+              ephemeral-storage: {{ .Values.resources.ephemeralStorageRequest }}
+              {{- end }}
           image: {{ .Values.deployment.image }}
           {{ if .Values.deployment.customEntrypoint.enabled -}}
           command: [{{ .Values.deployment.customEntrypoint.entrypoint }}]
