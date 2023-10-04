@@ -164,8 +164,10 @@ Parameter | Description | Default
 `service.labels` | Service Labels of the Mina Daemon | `{}`
 `service.loadBalancerClass` | Service LoadBalancerClass of the Mina Daemon | ` `
 `service.publishNotReadyAddresses` | Publish Not Ready Mina Daemon Service Adresses | `true`
+`resources.ephemeralStorageRequest` | Ephemeral Storage to Request for mina-daemon container | ` `
 `resources.memoryRequest` | RAM to claim for mina-daemon container | "16.0Gi"
 `resources.cpuRequest` | # of CPUs to claim for mina-daemon container | "4"
+`resources.ephemeralStorageLimit` | Ephemeral Storage Limit for mina-daemon container | ` `
 `resources.memoryLimit` | RAM limit for mina-daemon container | "18.0Gi"
 `resources.cpuLimit` | # of CPUs limit for mina-daemon container | "8"
 `healthcheck.enabled` | Whether to use startup/liveness/readiness probes | true
