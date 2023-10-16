@@ -9,7 +9,7 @@ A helm chart to deploy Mina protocol archive node and Postgres database subchart
 <..>
 releases:
   - name: mina-archive
-    chart: git::ssh://git@github.com/MinaProtocol/mina-helm-charts-private.git@mina-archive?ref=main
+    chart: git::ssh://git@github.com/MinaFoundation/helm-charts.git@mina-archive?ref=main
 <..>
 ```
 

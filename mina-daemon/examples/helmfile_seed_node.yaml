@@ -24,7 +24,7 @@ releases:
 - name: "{{ .Values.releases.berkeleyDaemon.platform }}-{{ .Values.releases.berkeleyDaemon.testnet }}-mina-daemon"
   namespace: {{ .Values.releases.berkeleyDaemon.testnet }}
   chart: ./mina-daemon
-    #chart: git::ssh://git@github.com/MinaProtocol/mina-helm-charts-private.git@mina-daemon?ref=main
+    #chart: git::ssh://git@github.com/MinaFoundation/helm-charts.git@mina-daemon?ref=main
   version: 2.1.0
   values:
     - deployment:

@@ -8,7 +8,7 @@ A Helm chart to deploy Mina protocol daemon node.
 <..>
 releases:
   - name: mina-daemon
-    chart: git::https://git:accesstoken@github.com/MinaProtocol/mina-helm-charts-private.git@mina-daemon?ref=main
+    chart: git::https://git:accesstoken@github.com/MinaFoundation/helm-charts.git@mina-daemon?ref=main
 <..>
 ```
 
