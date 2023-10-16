@@ -18,6 +18,9 @@ deployment:
     sheetId:
     region:
     accountId:
+  whitelistConfig:
+    list:
+    column:
   gcpStaging:
     enabled:
 resources:
