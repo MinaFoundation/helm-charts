@@ -2,11 +2,11 @@
 releases:
 - name: partner1
   namespace: nodestats-partners
-  chart: git::ssh://git@github.com/MinaProtocol/mina-helm-charts-private.git@node-stats-collector?ref=main
+  chart: git::ssh://git@github.com/MinaFoundation/helm-charts.git@node-stats-collector?ref=main
   values:
     - ingress:
         enabled: true
-        className: "alb"    
+        className: "alb"
         annotations:
           alb.ingress.kubernetes.io/backend-protocol: HTTP
           alb.ingress.kubernetes.io/certificate-arn: valid_arn
@@ -31,4 +31,3 @@ releases:
         index: node-stats
     - image:
         imagePullPolicy: always
-

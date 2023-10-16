@@ -8,7 +8,7 @@ A helm chart to deploy node-stats-collector.
 <..>
 releases:
   - name: partner1
-    chart: git::ssh://git@github.com/MinaProtocol/mina-helm-charts-private.git@node-stats-collector?ref=main
+    chart: git::ssh://git@github.com/MinaFoundation/helm-charts.git@node-stats-collector?ref=main
 <..>
 ```
 

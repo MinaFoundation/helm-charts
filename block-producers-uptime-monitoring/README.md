@@ -8,7 +8,7 @@ A Helm chart for the custom monitoring tools needed for Block Producers Uptime (
 <..>
 releases:
   - name: block-producers-uptime-monitoring
-    chart: git::https://git:accesstoken@github.com/MinaProtocol/mina-helm-charts-private.git@block-producers-uptime-monitoring?ref=main
+    chart: git::https://git:accesstoken@github.com/MinaFoundation/helm-charts.git@block-producers-uptime-monitoring?ref=main
 <..>
 ```
 
