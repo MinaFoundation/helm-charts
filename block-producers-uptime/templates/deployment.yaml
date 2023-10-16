@@ -59,6 +59,12 @@ spec:
             - name: CONFIG_ANALYZER_OUTPUT_GSHEET_ID
               value: {{ .analyzerOutputSheetId | quote }}
             {{- end }}
+            {{- with .Values.deployment.whitelistConfig }}
+            - name: DELEGATION_WHITELIST_LIST
+              value: {{ .list | quote }}
+            - name: DELEGATION_WHITELIST_COLUMN
+              value: {{ .column | quote }}
+            {{- end }}
             {{- if .Values.deployment.gcpStaging.enabled }}
             - name: TEST
               value: {{ .Values.deployment.gcpStaging.enabled | quote }}
