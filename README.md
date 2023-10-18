@@ -13,6 +13,7 @@ The following is a list of charts available in this repository:
 - `mina-daemon`: This chart deploys the Mina Daemon component from Mina Protocol.
 - `mina-light-explorer`: This chart deploys the Mina Light Explorer project from Mina Protocol.
 - `node-stats-collector`: This chart deploys application for Mina nodes to report stats/errors to.
+- `minametrix`: This chart deploys an application to track repository that use o1js.
 
 ## Deploying a Local Chart
 
