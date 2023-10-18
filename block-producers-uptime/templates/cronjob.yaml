@@ -10,6 +10,7 @@ spec:
     spec:
       template:
         spec:
+          serviceAccountName: {{ .Release.Name }}
           containers:
           - name: {{ .Release.Name }}
             image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
@@ -25,9 +26,17 @@ spec:
               - name: TEST
                 value: {{ .Values.deployment.gcpStaging.enabled | quote }}
               {{- end }}
-              {{- if ne .Values.deployment.network.name "mainnet"  }} # if variable is not set the app assumes it's mainnet and will use mainnet signing byte
-              - name: NETWORK
-                value: {{ .Values.deployment.network.name | quote }}
+              {{- with .Values.deployment.awsConfig }}
+              - name: CONFIG_NETWORK_NAME
+                value: {{ .network | quote }}
+              - name: CONFIG_GSHEET_ID
+                value: {{ .sheetId | quote }}
+              - name: CONFIG_AWS_REGION
+                value: {{ .region | quote }}
+              - name: CONFIG_AWS_ACCOUNT_ID
+                value: {{ .accountId | quote }}
+              - name: CONFIG_ANALYZER_OUTPUT_GSHEET_ID
+                value: {{ .analyzerOutputSheetId | quote }}
               {{- end }}
             volumeMounts:
               {{- with .Values.deployment.secrets.credentialFile }}
