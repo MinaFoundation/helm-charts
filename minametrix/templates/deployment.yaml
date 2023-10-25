@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "minametrix.fullname" . }}
+  labels:
+    {{- include "minametrix.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "minametrix.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "minametrix.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "minametrix.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: init-data-files
+          image: busybox:latest
+          command: ["sh", "-c"]
+          args:
+          - |
+            if [ ! -f /app/cron/data/search.txt ]; then
+              echo $SEARCH_TIMESTAMP > /app/cron/data/search.txt
+            fi
+            if [ ! -f /app/cron/data/previous_search.txt ]; then
+              echo $PREVIOUS_SEARCH_TIMESTAMP > /app/cron/data/previous_search.txt
+            fi
+          env:
+            - name: SEARCH_TIMESTAMP
+              value: {{ .Values.search_timestamp | quote }}
+            - name: PREVIOUS_SEARCH_TIMESTAMP
+              value: {{ .Values.previous_search_timestamp | quote }}
+          volumeMounts:
+            - name: {{ .Release.Name }}-data
+              mountPath: /app/cron/data
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          env:
+            - name: PORT
+              value: {{ .Values.service.port | quote }}
+            - name: ADMIN_PASSWORD
+              value: {{ .Values.admin_password | quote }}
+            - name: API_TOKENS
+              value: {{ .Values.api_tokens | quote }}
+            - name: IS_LOCAL
+              value: {{ .Values.is_local | quote }}
+            - name: SESSION_SECRET
+              value: {{ .Values.session_secret | quote }}
+            - name: WEB_CONCURRENCY
+              value: {{ .Values.web_concurency | quote }}
+            - name: MONGODB_URI
+              value: {{ .Values.mongo_connection_string | quote }}
+            - name: MY_ENVVAR
+              value: {{ .Values.mongo_connection_string | quote }}
+            {{- if .Values.extraEnvVars }}
+            {{- toYaml .Values.extraEnvVars | nindent 12 }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: {{ .Release.Name }}-data
+              mountPath: /app/cron/data
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: {{ .Release.Name }}-data
+        {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-data
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
