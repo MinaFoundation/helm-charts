@@ -1,4 +1,4 @@
-{{- if .Values.archive.runtimeConfig }}
+{{- if .Values.archive.initFromDump }}
 ---
 apiVersion: v1
 kind: ConfigMap

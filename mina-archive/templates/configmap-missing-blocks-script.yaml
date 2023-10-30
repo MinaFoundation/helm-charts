@@ -1,0 +1,14 @@
+{{- if .Values.archive.initFromDump }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-missing-blocks-script
+  labels:
+    app: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+data:
+  missing-blocks.sh: |-
+{{ (.Files.Get "scripts/download-missing-blocks.sh") | indent 4 }}
+{{- end }}

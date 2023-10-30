@@ -17,7 +17,10 @@ archive:
   enablePostgresDB: true
   enableDumpCronjob: false
   bootstrapDB: true
-  initFromDump: false
+  initFromDump:
+    enabled: false
+    archiveDumpURL: https://storage.googleapis.com/mina-archive-dumps
+    precomputedBlocksURL: https://storage.googleapis.com/mina_network_block_data
 
   service:
     labels: {}
