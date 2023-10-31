@@ -1,0 +1,128 @@
+## Mina Foundation image version
+##
+## @param image.repository [default:  673156464838.dkr.ecr.us-west-2.amazonaws.com/github-actions-runner] pod-rotation-controller image name
+## @param image.pullPolicy pod-rotation-controller image pull policy
+## @param image.tag [default: default-2023.09.26] tag name
+image:
+  repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/github-actions-runner
+  pullPolicy: IfNotPresent
+  tag: "default-2023.09.26"
+
+## @param imagePullSecrets Specify docker-registry secret names as an array
+##
+imagePullSecrets: []
+## String to partially override pod-rotation-controller template (will maintain the release name)
+## @param nameOverride String to partially override common.names.fullname
+##
+nameOverride: ""
+## String to fully override pod-rotation-controller template
+## @param fullnameOverride String to fully override common.names.fullname
+##
+fullnameOverride: ""
+
+## Specifies whether a ServiceAccount should be created
+##
+## @param serviceAccount.create Enable the creation of a ServiceAccount for pod-rotation-controller pods
+## @param serviceAccount.annotations Name of the created ServiceAccount
+## @param serviceAccount.name Annotations for the created ServiceAccount
+##
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+## Annotations for server pods.
+## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+##
+## @param podAnnotations  Annotations for pod-rotation-controller pods
+##
+podAnnotations: {}
+
+## Pod extra labels
+## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+##
+## @param podLabels  Extra labels for pod-rotation-controller pods
+##
+podLabels: {}
+
+## Pod Regex Pattern
+##
+## @param podRegexPattern [default: .*] Regex pattern to match pods
+##
+podRegexPattern: ".*"
+
+## Schedule
+##
+## @param schedule [default: 0 */6 * * *] Schedule to run pod rotation, runs every 6 hours
+##
+schedule: "0 */6 * * *"
+
+## Restart Policy
+##
+## @param restartPolicy [default: OnFailure] Restart Policy when the job fails, can be OnFailure, Never, Always
+##
+restartPolicy: "OnFailure"
+
+## Pod podSecurityContext
+# ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+##
+## @param podSecurityContext  Set pod-rotation-controller Pod's Security Context
+##
+podSecurityContext: {}
+  # fsGroup: 2000
+
+## securityContext
+# ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+##
+## @param securityContext  Set pod-rotation-controller Security Context
+##
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+## pod-rotation-controller resource requests and limits
+## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+##
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  ##
+  ## @param resources.limits  The resources limits for the pod-rotation-controller container
+  ##
+  limits: {}
+  #   cpu: 200m
+  #   memory: 256Mi
+  ##
+  ## @param resources.requests  The resources requests for the pod-rotation-controller container
+  ##
+  requests: {}
+  #   cpu: 200m
+  #   memory: 10Mi
+
+## Node labels for pod assignment. Evaluated as a template.
+## ref: https://kubernetes.io/docs/user-guide/node-selection/
+##
+## @param nodeSelector  Node labels for pod assignment
+##
+nodeSelector: {}
+
+## Tolerations for pod assignment. Evaluated as a template.
+## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+## @param tolerations  Tolerations for pod assignment
+##
+tolerations: []
+
+## Affinity for pod assignment. Evaluated as a template.
+## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+## Note: podAffinityPreset, podAntiAffinityPreset, and nodeAffinityPreset will be ignored when it's set
+##
+## @param affinity  Affinity for pod assignment
+##
+affinity: {}
