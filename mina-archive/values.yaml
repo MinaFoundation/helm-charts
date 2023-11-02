@@ -21,6 +21,7 @@ archive:
     enabled: false
     archiveDumpURL: https://storage.googleapis.com/mina-archive-dumps
     precomputedBlocksURL: https://storage.googleapis.com/mina_network_block_data
+    missingBlocksGuardianWaitTime: 1800  # 30 minutes
 
   service:
     labels: {}

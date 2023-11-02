@@ -3,12 +3,12 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-missing-blocks-script
+  name: {{ .Release.Name }}-missing-blocks-guardian
   labels:
     app: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
 data:
-  missing-blocks.sh: |-
-{{ (.Files.Get "scripts/download-missing-blocks.sh") | indent 4 }}
+  missing-blocks-guardian.sh: |-
+{{ (.Files.Get "scripts/missing-blocks-guardian.sh") | indent 4 }}
 {{- end }}

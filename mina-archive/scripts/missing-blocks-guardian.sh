@@ -1,5 +1,39 @@
-#!/bin/bash
-# set -euo pipefail
+#!/usr/bin/env bash
+set -euo pipefail
+
+# This script is adapted from https://github.com/MinaProtocol/mina/blob/develop/src/app/rosetta/download-missing-blocks.sh
+# It is used to populate a postgres database with missing precomputed archiveDB blocks
+
+if [ -z "$DB_USERNAME" ]; then
+    echo "The DB_USERNAME environment variable is not set or is empty."
+    exit 1
+fi
+
+if [ -z "$PGPASSWORD" ]; then
+    echo "The PGPASSWORD environment variable is not set or is empty."
+    exit 1
+fi
+
+if [ -z "$DB_HOST" ]; then
+    echo "The DB_HOST environment variable is not set or is empty."
+    exit 1
+fi
+
+if [ -z "$DB_PORT" ]; then
+    echo "The DB_PORT environment variable is not set or is empty."
+    exit 1
+fi
+
+if [ -z "$DB_NAME" ]; then
+    echo "The DB_NAME environment variable is not set or is empty."
+    exit 1
+fi
+
+if [ -z "$PRECOMPUTED_BLOCKS_URL" ]; then
+    echo "The PRECOMPUTED_BLOCKS_URL environment variable is not set or is empty."
+    exit 1
+fi
+
 PG_CONN=postgres://${DB_USERNAME}:${PGPASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
 
 function jq_parent_json() {
@@ -11,13 +45,13 @@ function jq_parent_hash() {
 }
 
 function populate_db() {
-   mina-archive-blocks --precomputed --archive-uri "$MINA_NETWORK" "$DB_NAME" | jq -rs '"[BOOTSTRAP] Populated database with block: \(.[-1].message)"'
-   rm "$DB_NAME"
+   mina-archive-blocks --precomputed --archive-uri "${1}" "${2}" | jq -rs '"[BOOTSTRAP] Populated database with block: \(.[-1].message)"'
+   rm "${2}"
 }
 
 function download_block() {
-    echo "Downloading $MINA_NETWORK block"
-    curl -sO "${PRECOMPUTED_BLOCKS_URL}/${MINA_NETWORK}"
+    echo "Downloading ${1} block"
+    curl -sO "${PRECOMPUTED_BLOCKS_URL}/${1}"
 }
 
 HASH='map(select(.metadata.parent_hash != null and .metadata.parent_height != null)) | .[0].metadata.parent_hash'
@@ -36,7 +70,7 @@ function bootstrap() {
 
   echo "[BOOTSTRAP] Top 10 blocks in bootstrapped archiveDB:"
   psql "${PG_CONN}" -c "SELECT state_hash,height FROM blocks ORDER BY height DESC LIMIT 10"
-  echo "[BOOTSTRAP] This rosetta node is synced with no missing blocks back to genesis!"
+  echo "[BOOTSTRAP] This Archive node is synced with no missing blocks back to genesis!"
 
   echo "[BOOTSTRAP] Checking again in 60 minutes..."
   sleep 3000
@@ -50,4 +84,4 @@ while true; do # Test once every 10 minutes forever, take an hour off when boots
   [[ "$PARENT" != "null" ]] && echo "[BOOSTRAP] Some blocks are missing, moving to recovery logic..." && bootstrap
   sleep 600 # Wait for the daemon to catchup and start downloading new blocks
 done
-echo "[BOOTSTRAP] This rosetta node is synced with no missing blocks back to genesis!"
+echo "[BOOTSTRAP] This Archive node is synced with no missing blocks back to genesis!"

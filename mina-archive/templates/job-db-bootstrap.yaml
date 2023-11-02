@@ -26,32 +26,27 @@ spec:
               value: {{ .Values.archive.initFromDump.archiveDumpURL | quote }}
             - name: MINA_NETWORK
               value: {{ .Values.archive.testnet | quote }}
-            - name: PRECOMPUTED_BLOCKS_URL
-              value: {{ .Values.archive.initFromDump.precomputedBlocksURL| quote }}
           command: ["bash", "-c"]
           args:
-            - 'sleep 30000
-            # && cd /tmp
-            # && curl ${ARCHIVE_DUMP_URL}/${MINA_NETWORK}-archive-dump-$(date -Idate)_0000.sql.tar.gz -o archive-dump.tar.gz
-            # && tar -xvf archive-dump.tar.gz
-            # && echo "DEBUG==== --username ${DB_USERNAME} ## --host ${DB_HOST} ## --port ${DB_PORT} ## --dbname ${DB_NAME}"
-            # && psql
-            # --username ${DB_USERNAME}
-            # --host ${DB_HOST}
-            # --port ${DB_PORT}
-            # --dbname ${DB_NAME}
-            # -f $MINA_NETWORK-archive-dump-$(date -Idate)_0000.sql
-            # && rm -f $MINA_NETWORK-archive-dump-$(date -Idate)_0000.sql
-            # && psql
-            # --username ${DB_USERNAME}
-            # --host ${DB_HOST}
-            # --port ${DB_PORT}
-            # --dbname ${DB_NAME}
-            # -c "ALTER DATABASE ${DB_NAME} SET DEFAULT_TRANSACTION_ISOLATION TO SERIALIZABLE;"
-            && bash /scripts/missing-blocks.sh'
-          volumeMounts:
-            - name: {{ .Release.Name }}-missing-blocks-script
-              mountPath: "/scripts/"
+            - 'sleep 30
+            && cd /tmp
+            && curl ${ARCHIVE_DUMP_URL}/${MINA_NETWORK}-archive-dump-$(date -Idate)_0000.sql.tar.gz -o archive-dump.tar.gz
+            && tar -xvf archive-dump.tar.gz
+            && echo "DEBUG==== --username ${DB_USERNAME} ## --host ${DB_HOST} ## --port ${DB_PORT} ## --dbname ${DB_NAME}"
+            && psql
+            --username ${DB_USERNAME}
+            --host ${DB_HOST}
+            --port ${DB_PORT}
+            --dbname ${DB_NAME}
+            -f $MINA_NETWORK-archive-dump-$(date -Idate)_0000.sql
+            && rm -f $MINA_NETWORK-archive-dump-$(date -Idate)_0000.sql
+            && psql
+            --username ${DB_USERNAME}
+            --host ${DB_HOST}
+            --port ${DB_PORT}
+            --dbname ${DB_NAME}
+            -c "ALTER DATABASE ${DB_NAME} SET DEFAULT_TRANSACTION_ISOLATION TO SERIALIZABLE;"
+            '
         {{- else }}
         - name: import-schema
           image: {{ .Values.archive.image }}
@@ -86,11 +81,5 @@ spec:
             -c "ALTER DATABASE ${DB_NAME} SET DEFAULT_TRANSACTION_ISOLATION TO SERIALIZABLE;"'
         {{- end }}
       restartPolicy: Never
-      volumes:
-        {{- if .Values.archive.initFromDump.enabled }}
-        - name: {{ .Release.Name }}-missing-blocks-script
-          configMap:
-            name: {{ .Release.Name }}-missing-blocks-script
-        {{- end }}
   backoffLimit: 10
 {{- end }}
