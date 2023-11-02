@@ -81,7 +81,10 @@ Parameter | Description | Default
 `archive.postgresHost` | Postgres database host to store archival data | `see [default] values.yaml`
 `archive.postgresUri` | Postgres [connection URI](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING) to access postgres datastore instance | `see [default] values.yaml`
 `archive.bootstrapDB` | Run Bootstrap Job against the Postgres Database | `true`
-`archive.initFromDump` | Populate Postgres Database with an existing Dump | `false`
+`archive.initFromDump.enabled` | Populate Postgres Database with an existing Dump | `false`
+`archive.initFromDump.archiveDumpURL` | URL to retrieve SQL Dump | `https://storage.googleapis.com/mina-archive-dumps`
+`archive.initFromDump.precomputedBlocksURL` | URL to retrieve Precomputed Blocks | `https://storage.googleapis.com/mina_network_block_data`
+`archive.initFromDump.missingBlocksGuardianWaitTime` | Number of seconds before the Missing Blocks Guardian kicks off | `1200`
 `archive.remoteSchemaFile` | archive database schema during initialization | `see [default] values.yaml`
 `archive.metrics.enabled` | Whether to enable prometheus exporter for mina-archive | `false`
 `archive.metrics.port` | Prometheus exporter port for mina-archive | `10002`

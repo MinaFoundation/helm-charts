@@ -69,6 +69,42 @@ spec:
 {{- $postgresHost := tpl .Values.archive.postgresHost . }}
 {{- $data := dict "postgresHost" $postgresHost "healthcheck" $.Values.healthcheck }}
 {{- include "healthcheck.archive.allChecks" $data | indent 10 }}
+        {{- if .Values.archive.initFromDump.enabled }}
+        - name: missing-blocks-guardian
+          image: {{ .Values.archive.image }}
+          env:
+            - name: DB_USERNAME
+              value: {{ .Values.postgresql.auth.username | quote }}
+            - name: PGPASSWORD
+              value: {{ .Values.postgresql.auth.password | quote }}
+            - name: DB_HOST
+              value: {{ tpl .Values.archive.postgresHost . | quote }}
+            - name: DB_PORT
+              value: {{ .Values.archive.ports.postgres | quote }}
+            - name: DB_NAME
+              value: {{ .Values.postgresql.auth.database | quote }}
+            - name: ARCHIVE_DUMP_URL
+              value: {{ .Values.archive.initFromDump.archiveDumpURL | quote }}
+            - name: MINA_NETWORK
+              value: {{ .Values.archive.testnet | quote }}
+            - name: PRECOMPUTED_BLOCKS_URL
+              value: {{ .Values.archive.initFromDump.precomputedBlocksURL| quote }}
+            - name: MISSING_BLOCKS_GUARDIAN_WAIT_TIME
+              value: {{ .Values.archive.initFromDump.missingBlocksGuardianWaitTime| quote }}
+          command: ["bash", "-c"]
+          args:
+            - 'sleep ${MISSING_BLOCKS_GUARDIAN_WAIT_TIME} && bash /scripts/missing-blocks-guardian.sh'
+          resources:
+            limits:
+              memory: 512Mi
+              cpu: 500m
+            requests:
+              memory: 256Mi
+              cpu: 250m
+          volumeMounts:
+            - name: {{ .Release.Name }}-missing-blocks-guardian
+              mountPath: "/scripts/"
+        {{- end }}
       volumes:
         - name: {{ .Release.Name }}-config-dir
           emptyDir: {}
@@ -76,4 +112,9 @@ spec:
         - name: {{ .Release.Name }}-runtime-config
           configMap:
             name: {{ .Release.Name }}-runtime-config
+        {{- end }}
+        {{- if .Values.archive.initFromDump.enabled }}
+        - name: {{ .Release.Name }}-missing-blocks-guardian
+          configMap:
+            name: {{ .Release.Name }}-missing-blocks-guardian
         {{- end }}

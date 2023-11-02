@@ -8,55 +8,77 @@ spec:
   template:
     spec:
       containers:
-        {{- if .Values.archive.initFromDump }}
+        {{- if .Values.archive.initFromDump.enabled }}
         - name: import-dump
-          image: gcr.io/o1labs-192920/postgresql-curl:latest
+          image: {{ .Values.archive.image }}
           env:
+            - name: DB_USERNAME
+              value: {{ .Values.postgresql.auth.username | quote }}
             - name: PGPASSWORD
-              value: {{ .Values.postgresql.auth.password }}
+              value: {{ .Values.postgresql.auth.password | quote }}
+            - name: DB_HOST
+              value: {{ tpl .Values.archive.postgresHost . | quote }}
+            - name: DB_PORT
+              value: {{ .Values.archive.ports.postgres | quote }}
+            - name: DB_NAME
+              value: {{ .Values.postgresql.auth.database | quote }}
+            - name: ARCHIVE_DUMP_URL
+              value: {{ .Values.archive.initFromDump.archiveDumpURL | quote }}
+            - name: MINA_NETWORK
+              value: {{ .Values.archive.testnet | quote }}
           command: ["bash", "-c"]
           args:
             - 'sleep 30
             && cd /tmp
-            && curl https://storage.googleapis.com/mina-archive-dumps/{{ .Values.archive.testnet }}-archive-dump-$(date -Idate)_0000.sql.tar.gz -o {{ .Values.archive.testnet }}-archive-dump.tar.gz
-            && tar -xvf {{ .Values.archive.testnet }}-archive-dump.tar.gz
+            && curl ${ARCHIVE_DUMP_URL}/${MINA_NETWORK}-archive-dump-$(date -Idate)_0000.sql.tar.gz -o archive-dump.tar.gz
+            && tar -xvf archive-dump.tar.gz
+            && echo "DEBUG==== --username ${DB_USERNAME} ## --host ${DB_HOST} ## --port ${DB_PORT} ## --dbname ${DB_NAME}"
             && psql
-            --username {{ .Values.postgresql.auth.username }}
-            --host {{ tpl .Values.archive.postgresHost . }}
-            --port {{ .Values.archive.ports.postgres }}
-            --dbname {{ .Values.postgresql.auth.database }}
-            -f {{ .Values.archive.testnet }}-archive-dump-$(date -Idate)_0000.sql
-            && rm -f {{ .Values.archive.testnet }}-archive-dump-$(date -Idate)_0000.sql
+            --username ${DB_USERNAME}
+            --host ${DB_HOST}
+            --port ${DB_PORT}
+            --dbname ${DB_NAME}
+            -f $MINA_NETWORK-archive-dump-$(date -Idate)_0000.sql
+            && rm -f $MINA_NETWORK-archive-dump-$(date -Idate)_0000.sql
             && psql
-            --username {{ .Values.postgresql.auth.username }}
-            --host {{ tpl .Values.archive.postgresHost . }}
-            --port {{ .Values.archive.ports.postgres }}
-            --dbname {{ .Values.postgresql.auth.database }}
-            -c "ALTER DATABASE {{ .Values.postgresql.auth.database }} SET DEFAULT_TRANSACTION_ISOLATION TO SERIALIZABLE;"'
+            --username ${DB_USERNAME}
+            --host ${DB_HOST}
+            --port ${DB_PORT}
+            --dbname ${DB_NAME}
+            -c "ALTER DATABASE ${DB_NAME} SET DEFAULT_TRANSACTION_ISOLATION TO SERIALIZABLE;"
+            '
         {{- else }}
         - name: import-schema
-          image: gcr.io/o1labs-192920/postgresql-curl:latest
+          image: {{ .Values.archive.image }}
           env:
+            - name: {DB_USERNAME}
+              value: {{ .Values.postgresql.auth.username | quote }}
             - name: PGPASSWORD
-              value: {{ .Values.postgresql.auth.password }}
+              value: {{ .Values.postgresql.auth.password | quote }}
+            - name: DB_HOST
+              value: {{ tpl .Values.archive.postgresHost . | quote }}
+            - name: DB_PORT
+              value: {{ .Values.archive.ports.postgres | quote }}
+            - name: DB_NAME
+              value: {{ .Values.postgresql.auth.database | quote }}
           command: ["bash", "-c"]
           args:
             - 'sleep 30
             && cd /tmp
             && {{ range .Values.archive.remoteSchemaAuxFiles }} curl -O {{.}} && {{ end }}
             psql
-            --username {{ .Values.postgresql.auth.username }}
-            --host {{ tpl .Values.archive.postgresHost . }}
-            --port {{ .Values.archive.ports.postgres }}
-            --dbname {{ .Values.postgresql.auth.database }}
+            --username ${DB_USERNAME}
+            --host ${DB_HOST}
+            --port ${DB_PORT}
+            --dbname ${DB_NAME}
             -f /tmp/{{ .Values.archive.remoteSchemaFile }}
             && rm -f /tmp/*.sql
             && psql
-            --username {{ .Values.postgresql.auth.username }}
-            --host {{ tpl .Values.archive.postgresHost . }}
-            --port {{ .Values.archive.ports.postgres }}
-            --dbname {{ .Values.postgresql.auth.database }}
-            -c "ALTER DATABASE {{ .Values.postgresql.auth.database }} SET DEFAULT_TRANSACTION_ISOLATION TO SERIALIZABLE;"'
+            --username ${DB_USERNAME}
+            --host ${DB_HOST}
+            --port ${DB_PORT}
+            --dbname ${DB_NAME}
+            -c "ALTER DATABASE ${DB_NAME} SET DEFAULT_TRANSACTION_ISOLATION TO SERIALIZABLE;"'
         {{- end }}
       restartPolicy: Never
   backoffLimit: 10
