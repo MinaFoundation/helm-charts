@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -euo pipefail
 
 # This script is adapted from https://github.com/MinaProtocol/mina/blob/develop/src/app/rosetta/download-missing-blocks.sh
 # It is used to populate a postgres database with missing precomputed archiveDB blocks
