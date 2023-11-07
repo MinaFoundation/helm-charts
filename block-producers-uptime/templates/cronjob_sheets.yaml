@@ -1,9 +1,11 @@
+{{ if .Values.deployment.analyzerScriptConfig.enabled }}
+---
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-sheets
   labels:
-    app: {{ .Release.Name }}
+    app: {{ .Release.Name }}-sheets
 spec:
   schedule: {{ .Values.cron.schedule }}
   jobTemplate:
@@ -12,8 +14,8 @@ spec:
         spec:
           serviceAccountName: {{ .Release.Name }}
           containers:
-          - name: {{ .Release.Name }}
-            image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
+          - name: {{ .Release.Name }}-sheets
+            image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tagSheets }}"
             imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
             command:
             - itn_uptime_analyzer
@@ -29,14 +31,44 @@ spec:
               {{- with .Values.deployment.awsConfig }}
               - name: CONFIG_NETWORK_NAME
                 value: {{ .network | quote }}
-              - name: CONFIG_GSHEET_ID
-                value: {{ .sheetId | quote }}
               - name: CONFIG_AWS_REGION
                 value: {{ .region | quote }}
               - name: CONFIG_AWS_ACCOUNT_ID
                 value: {{ .accountId | quote }}
+              {{- end }}
+              {{- with .Values.deployment.analyzerScriptConfig }}
               - name: CONFIG_ANALYZER_OUTPUT_GSHEET_ID
-                value: {{ .analyzerOutputSheetId | quote }}
+                value: {{ .outputSheetId | quote }}
+              - name: CONFIG_STDOUT
+                value: {{ .stdout | quote }}
+              - name: CONFIG_LOCAL_OUTPUT
+                value: {{ .localOutput | quote }}
+              - name: CONFIG_S3_BUCKET
+                value: {{ .s3bucket | quote }}
+              - name: CONFIG_S3_KEY
+                value: {{ .s3key | quote }}
+              {{- if .periodStart }}
+              - name: CONFIG_PERIOD_START
+                value: {{ .periodStart | quote }}
+              {{- end }}
+              {{- if .periodEnd }}
+              - name: CONFIG_PERIOD_END
+                value: {{ .periodEnd | quote }}
+              {{- end }}
+              {{- if .periodInterval }}
+              - name: CONFIG_PERIOD_INTERVAL
+                value: {{ .periodInterval | quote }}
+              {{- end }}
+              - name: CONFIG_IGNORE_IPS
+                value: {{ .ignoreIps | quote }}
+              {{- end }}
+              {{- with .Values.deployment.whitelistConfig }}
+              - name: CONFIG_GSHEET_ID
+                value: {{ .sheetId | quote }}
+              - name: DELEGATION_WHITELIST_LIST
+                value: {{ .list | quote }}
+              - name: DELEGATION_WHITELIST_COLUMN
+                value: {{ .column | quote }}
               {{- end }}
             volumeMounts:
               {{- with .Values.deployment.secrets.credentialFile }}
@@ -54,3 +86,4 @@ spec:
                     path: {{ .name }}.json
             {{- end }}
           restartPolicy: OnFailure
+{{- end }}

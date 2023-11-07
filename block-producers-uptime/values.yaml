@@ -3,6 +3,8 @@ deployment:
     repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/block-producers-uptime
     pullPolicy: IfNotPresent
     tag: "1.2.0-test-1"
+    tagSheets: "1.2.0-test-1"
+    tagCSV:
   replicaCount: 1
   network:
     name:
@@ -15,10 +17,21 @@ deployment:
       content:
   awsConfig:
     network:
-    sheetId:
     region:
     accountId:
+  analyzerScriptConfig:
+    enabled: false
+    outputSheetId:
+    stdout: 1
+    localOutput:
+    s3bucket: "673156464838-block-producers-uptime"
+    s3key:
+    periodStart:
+    periodEnd:
+    periodInterval: 720
+    ignoreIps: 0
   whitelistConfig:
+    sheetId:
     list:
     column:
   gcpStaging:
