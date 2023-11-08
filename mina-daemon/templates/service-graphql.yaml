@@ -14,7 +14,7 @@ metadata:
   {{- end }}
 spec:
   type: {{ .Values.service.graphql.type | quote }}
-  {{- if and .Values.service.graphql.loadBalancerClass }}
+  {{- if .Values.service.graphql.loadBalancerClass }}
   loadBalancerClass: {{ .Values.service.graphql.loadBalancerClass | quote }}
   {{- end }}
   publishNotReadyAddresses: {{ .Values.service.graphql.publishNotReadyAddresses }}
