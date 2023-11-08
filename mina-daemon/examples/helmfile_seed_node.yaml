@@ -80,7 +80,7 @@ releases:
           type: LoadBalancer
           loadBalancerClass: service.k8s.aws/nlb
           annotations:
-            external-dns.alpha.kubernetes.io/hostname: seed0-berkeley.minaprotocol.network
+            external-dns.alpha.kubernetes.io/hostname: seed0-berkeley-graphql.minaprotocol.network
             service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: instance
             service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
             service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
