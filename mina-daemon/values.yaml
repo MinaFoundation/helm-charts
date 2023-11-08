@@ -145,6 +145,11 @@ service:
   labels: {}
   loadBalancerClass:
   publishNotReadyAddresses: true
+  graphql:
+    type: ClusterIP
+    loadBalancerClass:
+    annotations: {}
+    publishNotReadyAddresses: false
 
 podAnnotations: {}
 

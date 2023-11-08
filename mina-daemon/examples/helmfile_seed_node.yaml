@@ -44,7 +44,6 @@ releases:
         replicas: 1
         fullname: "node"
         exposeGraphql: true
-        seedFlags: false
         logLevel: Info
         fileLogLevel: Error
         maxConnections: 200
@@ -77,6 +76,16 @@ releases:
           service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
           service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
           service.beta.kubernetes.io/aws-load-balancer-type: nlb
+        graphql:
+          type: LoadBalancer
+          loadBalancerClass: service.k8s.aws/nlb
+          annotations:
+            external-dns.alpha.kubernetes.io/hostname: seed0-berkeley.minaprotocol.network
+            service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: instance
+            service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
+            service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+            service.beta.kubernetes.io/aws-load-balancer-type: nlb
+
     - resources:
         memoryRequest: "16.0Gi"
         cpuRequests: "4"

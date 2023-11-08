@@ -164,6 +164,7 @@ Parameter | Description | Default
 `service.labels` | Service Labels of the Mina Daemon | `{}`
 `service.loadBalancerClass` | Service LoadBalancerClass of the Mina Daemon | ` `
 `service.publishNotReadyAddresses` | Publish Not Ready Mina Daemon Service Adresses | `true`
+`service.graphql.annotations` | Service Annotations for the Mina Daemon graphql endpoint | `{}`
 `resources.ephemeralStorageRequest` | Ephemeral Storage to Request for mina-daemon container | ` `
 `resources.memoryRequest` | RAM to claim for mina-daemon container | "16.0Gi"
 `resources.cpuRequest` | # of CPUs to claim for mina-daemon container | "4"

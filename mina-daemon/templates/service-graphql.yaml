@@ -8,14 +8,21 @@ metadata:
     app: {{ .Release.Name }}
     testnet: {{ .Values.deployment.testnet }}
     role: {{ default "undefined" .Values.node.role }}
+  {{- with .Values.service.graphql.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
-  type: ClusterIP
-  publishNotReadyAddresses: true
+  type: {{ .Values.service.graphql.type | quote }}
+  {{- if and .Values.service.graphql.loadBalancerClass }}
+  loadBalancerClass: {{ .Values.service.graphql.loadBalancerClass | quote }}
+  {{- end }}
+  publishNotReadyAddresses: {{ .Values.service.graphql.publishNotReadyAddresses }}
   selector:
     app: {{ .Release.Name }}
   ports:
   - name: http-graphql
     protocol: TCP
-    port: 80
+    port: {{ .Values.node.ports.graphql }}
     targetPort: {{ .Values.node.ports.graphql }}
 {{- end }}
