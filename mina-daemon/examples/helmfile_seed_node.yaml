@@ -68,14 +68,15 @@ releases:
           discoveryLibp2p: {{ .Values.seed.discoveryLibp2p | fetchSecretValue | quote }}
           discoveryLibp2pPeerid: {{ .Values.seed.discoveryLibp2pPeerid | fetchSecretValue | quote }}
     - service:
-        type: LoadBalancer
-        loadBalancerClass: service.k8s.aws/nlb
-        annotations:
-          external-dns.alpha.kubernetes.io/hostname: seed0-berkeley.minaprotocol.network
-          service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: instance
-          service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
-          service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
-          service.beta.kubernetes.io/aws-load-balancer-type: nlb
+        daemon:
+          type: LoadBalancer
+          loadBalancerClass: service.k8s.aws/nlb
+          annotations:
+            external-dns.alpha.kubernetes.io/hostname: seed0-berkeley.minaprotocol.network
+            service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: instance
+            service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
+            service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+            service.beta.kubernetes.io/aws-load-balancer-type: nlb
         graphql:
           type: LoadBalancer
           loadBalancerClass: service.k8s.aws/nlb

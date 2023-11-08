@@ -140,11 +140,12 @@ ingress:
     #          port: 8080
 
 service:
-  type: ClusterIP
-  annotations: {}
-  labels: {}
-  loadBalancerClass:
-  publishNotReadyAddresses: true
+  daemon:
+    type: ClusterIP
+    annotations: {}
+    labels: {}
+    loadBalancerClass:
+    publishNotReadyAddresses: true
   graphql:
     type: ClusterIP
     loadBalancerClass:

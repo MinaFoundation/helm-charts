@@ -7,20 +7,20 @@ metadata:
     app: {{ .Release.Name }}
     testnet: {{ .Values.deployment.testnet }}
     role: {{ default "undefined" .Values.node.role }}
-  {{- with .Values.service.labels }}
+  {{- with .Values.service.daemon.labels }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- with .Values.service.annotations }}
+  {{- with .Values.service.daemon.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  type: {{ .Values.service.type | quote }}
-  {{- if .Values.service.loadBalancerClass }}
-  loadBalancerClass: {{ .Values.service.loadBalancerClass | quote }}
+  type: {{ .Values.service.daemon.type | quote }}
+  {{- if .Values.service.daemon.loadBalancerClass }}
+  loadBalancerClass: {{ .Values.service.daemon.loadBalancerClass | quote }}
   {{- end }}
-  {{- if .Values.service.publishNotReadyAddresses }}
-  publishNotReadyAddresses: {{ .Values.service.publishNotReadyAddresses }}
+  {{- if .Values.service.daemon.publishNotReadyAddresses }}
+  publishNotReadyAddresses: {{ .Values.service.daemon.publishNotReadyAddresses }}
   {{- end }}
   selector:
     app: {{ .Release.Name }}
