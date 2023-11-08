@@ -87,7 +87,7 @@ Parameter | Description | Default
 `deployment.uptime.enabled` | Enable Uptime Service | default `false`
 `deployment.uptime.url` | URL of the uptime service of the Mina delegation program | default ` `
 `deployment.uptime.sendNodeCommitSha` | Whether to send the commit SHA used to build the node to the uptime service | default ` `
-`node.exposeGraphql` | expose graphql to public | `false`
+`node.exposeGraphql` | expose graphql to public. See also `service.graphql` | `false`
 `node.metrics.enabled` | expose prometheus metrics endpoint | `false`
 `node.metrics.port` | port to scrape prometheus metrics | `10001`
 `node.ports.graphql` |  | `3085`
@@ -164,6 +164,11 @@ Parameter | Description | Default
 `service.labels` | Service Labels of the Mina Daemon | `{}`
 `service.loadBalancerClass` | Service LoadBalancerClass of the Mina Daemon | ` `
 `service.publishNotReadyAddresses` | Publish Not Ready Mina Daemon Service Adresses | `true`
+`service.graphql.annotations` | Service Annotations for the Mina Daemon graphql endpoint | `{}`
+`service.graphql.type` | GraphQL Service Type of the Mina Daemon | `ClusterIP`
+`service.graphql.loadBalancerClass` | GraphQL Service LoadBalancerClass of the Mina Daemon | ` `
+`service.graphql.annotations` | GraphQL Service Annotations of the Mina Daemon | `{}`
+`service.graphql.publishNotReadyAddresses` | Publish Not Ready Mina Daemon GraphQL Service Adresses | `false`
 `resources.ephemeralStorageRequest` | Ephemeral Storage to Request for mina-daemon container | ` `
 `resources.memoryRequest` | RAM to claim for mina-daemon container | "16.0Gi"
 `resources.cpuRequest` | # of CPUs to claim for mina-daemon container | "4"

@@ -52,7 +52,6 @@ releases:
         metrics:
           enabled: true
         exposeGraphql: false
-        seedFlags: false
         logLevel: Info
         fileLogLevel: Error
         maxConnections: 200
