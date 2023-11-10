@@ -51,7 +51,7 @@ spec:
         - name: import-schema
           image: {{ .Values.archive.image }}
           env:
-            - name: {DB_USERNAME}
+            - name: DB_USERNAME
               value: {{ .Values.postgresql.auth.username | quote }}
             - name: PGPASSWORD
               value: {{ .Values.postgresql.auth.password | quote }}
