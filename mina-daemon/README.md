@@ -159,11 +159,11 @@ Parameter | Description | Default
 `ingress.className` | Ingress className | `{}`
 `ingress.tls` | Ingress TLS | `false`
 `ingress.hosts` | Ingress Hosts | `[]`
-`service.type` | Service Type of the Mina Daemon | `ClusterIP`
-`service.annotations` | Service Annotations of the Mina Daemon | `{}`
-`service.labels` | Service Labels of the Mina Daemon | `{}`
-`service.loadBalancerClass` | Service LoadBalancerClass of the Mina Daemon | ` `
-`service.publishNotReadyAddresses` | Publish Not Ready Mina Daemon Service Adresses | `true`
+`service.daemon.type` | Service Type of the Mina Daemon | `ClusterIP`
+`service.daemon.annotations` | Service Annotations of the Mina Daemon | `{}`
+`service.daemon.labels` | Service Labels of the Mina Daemon | `{}`
+`service.daemon.loadBalancerClass` | Service LoadBalancerClass of the Mina Daemon | ` `
+`service.daemon.publishNotReadyAddresses` | Publish Not Ready Mina Daemon Service Adresses | `true`
 `service.graphql.annotations` | Service Annotations for the Mina Daemon graphql endpoint | `{}`
 `service.graphql.type` | GraphQL Service Type of the Mina Daemon | `ClusterIP`
 `service.graphql.loadBalancerClass` | GraphQL Service LoadBalancerClass of the Mina Daemon | ` `
