@@ -10,5 +10,7 @@ spec:
   resources:
     requests:
       storage: {{ .Values.deployment.storeBlocks.sizePVC }}
+  {{- if .Values.deployment.storeBlocks.storageClass }}
   storageClassName: {{ .Values.deployment.storeBlocks.storageClass }}
+  {{- end }}
 {{- end }}

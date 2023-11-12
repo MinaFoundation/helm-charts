@@ -68,6 +68,26 @@ spec:
             - name: {{ .Release.Name }}-genesis-ledger-dir
               mountPath: /root/.mina-config
         {{- end }}
+        {{ if .Values.deployment.storeBlocks.enabled -}}
+        - name: precomputed-blocks
+          image: busybox:latest
+          env:
+            - name: STORE_BLOCKS_DIR
+              value: {{ .Values.deployment.storeBlocks.directory }}
+            {{ if .Values.deployment.storeBlocks.local.enabled -}}
+            - name: STORE_BLOCKS_FILENAME
+              value: {{ .Values.deployment.storeBlocks.local.filename }}
+            {{- end }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - "mkdir -p $STORE_BLOCKS_DIR "
+            {{ if .Values.deployment.storeBlocks.local.enabled -}}
+            - "&& touch $STORE_BLOCKS_DIR/$STORE_BLOCKS_FILENAME "
+            {{- end }}
+          volumeMounts:
+            - name: {{ .Release.Name }}-precomputed-blocks
+              mountPath: {{ .Values.deployment.storeBlocks.directory }}
+        {{- end }}
       containers:
         - name: mina
           resources:
@@ -164,12 +184,10 @@ spec:
             {{- range .Values.deployment.seedPeers }}
             "--peer", {{ . | quote }},
             {{- end }}
-            {{- with .Values.deployment.storeBlocks }}
-            {{- if .enabled }}
-            "--precomputed-blocks-file", {{ .directory }}/{{ .filename }},
+            {{- if and .Values.deployment.storeBlocks.enabled .Values.deployment.storeBlocks.local.enabled  }}
+            "--precomputed-blocks-file", {{ .Values.deployment.storeBlocks.directory }}/{{ .Values.deployment.storeBlocks.local.filename }},
             {{- end }}
-            {{- end }}
-            {{- if .Values.deployment.uploadBlocksToGCloud }}
+            {{- if or .Values.deployment.storeBlocks.aws.enabled .Values.deployment.storeBlocks.gcp.enabled }}
             "--upload-blocks-to-gcloud", "true",
             {{- end }}
             {{- if .Values.node.archive.enabled }}
@@ -322,7 +340,7 @@ spec:
           ]
           env:
             - name: MINA_NETWORK
-              value: {{ .Values.deployment.testnet }}
+              value: {{ .Values.deployment.testnet | quote }}
             - name: MINA_GRAPHQL_PORT
               value: {{ .Values.node.ports.graphql | quote }}
             - name: DAEMON_CLIENT_PORT
@@ -331,13 +349,19 @@ spec:
             - name: DAEMON_METRICS_PORT
               value: {{ .Values.node.metrics.port | quote }}
             {{- end }}
+            {{- if .Values.node.clientTrustList }}
             - name: MINA_CLIENT_TRUSTLIST
-              value: "10.0.0.0/8"
-            {{- if .Values.deployment.uploadBlocksToGCloud }}
+              value: {{ .Values.node.clientTrustList }}
+            {{- end }}
+            {{- if or .Values.deployment.storeBlocks.gcp.enabled .Values.deployment.storeBlocks.aws.enabled  }}
             - name: GCLOUD_KEYFILE
               value: "/gcloud/keyfile.json"
+            {{- if .Values.deployment.storeBlocks.gcp.bucket }}
             - name: GCLOUD_BLOCK_UPLOAD_BUCKET
-              value: "mina_network_block_data"
+              value: {{ .Values.deployment.storeBlocks.gcp.bucket | quote }}
+            {{- end }}
+            - name: NETWORK_NAME
+              value: {{ .Values.deployment.testnet | quote }}
             {{- end }}
             - name: DAEMON_EXTERNAL_PORT
               value: {{ .Values.node.ports.p2p | quote }}
@@ -392,7 +416,7 @@ spec:
             - name: {{ .Release.Name }}-fixed-mina-keys
               mountPath: /root/mina-keys
             {{- end }}
-            {{- if .Values.deployment.uploadBlocksToGCloud }}
+            {{- if or .Values.deployment.storeBlocks.gcp.enabled .Values.deployment.storeBlocks.aws.enabled }}
             - name: {{ .Release.Name }}-gcloud-keyfile
               mountPath: "/gcloud/"
             {{- end }}
@@ -400,10 +424,66 @@ spec:
             - name: {{ .Release.Name }}-genesis-ledger-dir
               mountPath: /root/.mina-config
             {{- end }}
-            {{- if .Values.deployment.storeBlocks.storageClass }}
+            {{- if .Values.deployment.storeBlocks.enabled }}
             - name: {{ .Release.Name }}-precomputed-blocks
               mountPath: {{ .Values.deployment.storeBlocks.directory }}
             {{- end }}
+            {{- if .Values.deployment.storeBlocks.aws.enabled }}
+            - name: {{ .Release.Name }}-scripts
+              mountPath: /usr/bin/gsutil
+              subPath: gsutil-impersonator.sh
+            - name: {{ .Release.Name }}-scripts
+              mountPath: /usr/bin/gcloud
+              subPath: gcloud-impersonator.sh
+            {{- end }}
+        {{- if .Values.deployment.storeBlocks.aws.enabled }}
+        - name: s3-blocks-uploader
+          image: "{{ .Values.s3BlocksUploader.image.repository }}:{{ .Values.s3BlocksUploader.image.tag }}"
+          imagePullPolicy: {{ .Values.s3BlocksUploader.image.pullPolicy }}
+          command: ["/bin/sh", "/scripts/s3-blocks-uploader.sh"]
+          env:
+            - name: UPLOAD_INTERVAL
+              value: {{ .Values.deployment.storeBlocks.aws.uploadInterval | quote }}
+            - name: SOURCE_DIR
+              value: {{ .Values.deployment.storeBlocks.directory | quote }}
+            - name: S3_BUCKET
+              value: {{ .Values.deployment.storeBlocks.aws.bucket | quote }}
+            {{- if .Values.deployment.storeBlocks.aws.prefix }}
+            - name: PREFIX
+              value: {{ .Values.deployment.storeBlocks.aws.prefix | quote }}
+            {{- end }}
+            {{- if .Values.deployment.storeBlocks.aws.accessKeyID }}
+            - name: AWS_ACCESS_KEY_ID
+              value: {{ .Values.deployment.storeBlocks.aws.accessKeyID | quote }}
+            {{- end }}
+            {{- if .Values.deployment.storeBlocks.aws.secretKeyID }}
+            - name: AWS_SECRET_ACCESS_KEY
+              value: {{ .Values.deployment.storeBlocks.aws.secretKeyID | quote }}
+            {{- end }}
+            {{- if .Values.deployment.storeBlocks.aws.defaultRegion }}
+            - name: AWS_DEFAULT_REGION
+              value: {{ .Values.deployment.storeBlocks.aws.defaultRegion | quote }}
+            {{- end }}
+          resources:
+            limits:
+              memory: {{ .Values.s3BlocksUploader.resources.memoryLimit }}
+              cpu: {{ .Values.s3BlocksUploader.resources.cpuLimit }}
+              {{- if .Values.s3BlocksUploader.resources.ephemeralStorageLimit }}
+              ephemeral-storage: {{ .Values.s3BlocksUploader.resources.ephemeralStorageLimit }}
+              {{- end }}
+            requests:
+              memory: {{ .Values.s3BlocksUploader.resources.memoryRequest }}
+              cpu: {{ .Values.s3BlocksUploader.resources.cpuRequest }}
+              {{- if .Values.s3BlocksUploader.resources.ephemeralStorageLimit }}
+              ephemeral-storage: {{ .Values.s3BlocksUploader.resources.ephemeralStorageRequest }}
+              {{- end }}
+          volumeMounts:
+            - name: {{ .Release.Name }}-scripts
+              mountPath: /scripts/s3-blocks-uploader.sh
+              subPath: s3-blocks-uploader.sh
+            - name: {{ .Release.Name }}-precomputed-blocks
+              mountPath: {{ .Values.deployment.storeBlocks.directory }}
+        {{- end }}
       volumes:
         {{- if .Values.node.walletKeys.enabled }}
         - name: {{ .Release.Name }}-mounted-mina-keys
@@ -435,17 +515,26 @@ spec:
         - name: {{ .Release.Name }}-fixed-libp2p-keys
           emptyDir: {}
         {{- end }}
-        {{- if .Values.node.uploadBlocksToGCloud }}
-        - name: gcloud-keyfile
+        {{- if or .Values.deployment.storeBlocks.gcp.enabled .Values.deployment.storeBlocks.aws.enabled }}
+        - name: {{ .Release.Name }}-gcloud-keyfile
           secret:
-            secretName: gcloud-keyfile
+            secretName: {{ .Release.Name }}
             defaultMode: 0400
             items:
-              - key: keyfile
+              - key: gcloud-keyfile
                 path: keyfile.json
         {{- end }}
-        {{- if .Values.deployment.storeBlocks.storageClass }}
+        {{- if .Values.deployment.storeBlocks.enabled }}
         - name: {{ .Release.Name }}-precomputed-blocks
           persistentVolumeClaim:
             claimName: {{ .Release.Name }}-precomputed-blocks
         {{- end }}
+        {{- if .Values.deployment.storeBlocks.aws.enabled }}
+        - name: {{ .Release.Name }}-scripts
+          configMap:
+            name: {{ .Release.Name }}-scripts
+            defaultMode: 0755
+        {{- end }}
+  {{- if .Values.updateStrategy  }}
+  strategy: {{- toYaml .Values.updateStrategy | nindent  4 }}
+  {{- end }}
