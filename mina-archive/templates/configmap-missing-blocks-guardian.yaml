@@ -1,4 +1,4 @@
-{{- if .Values.archive.initFromDump }}
+{{- if .Values.archive.missingBlocksGuardian.enabled }}
 ---
 apiVersion: v1
 kind: ConfigMap
