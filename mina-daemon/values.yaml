@@ -16,10 +16,24 @@ deployment:
     # - /dns4/seed-3.berkeley.o1test.net/tcp/10002/p2p/12D3KooWEiGVAFC7curXWXiGZyMWnZK9h8BKr88U8D5PKV3dXciv
   storeBlocks:
     enabled: false
-    filename: precomputed_blocks.json
     directory: /blocks
     storageClass:
     sizePVC: 5Gi
+    local:
+      enabled: false
+      filename: precomputed_blocks.json
+    aws:
+      enabled: false
+      bucket:
+      prefix:
+      accessKeyID:
+      secretKeyID:
+      defaultRegion:
+      uploadInterval: 900
+    gcp:
+      enabled: false
+      bucket: mina_network_block_data
+      keyfile: "{}"
 
 node:
   name: "berkeley-node"
@@ -36,6 +50,7 @@ node:
   archiveRocksDB:
   background:
   bindIP:
+  clientTrustList: "10.0.0.0/8"
   contactInfo:
   coinbaseReceiver:
   currentProtocolVersion:
@@ -72,7 +87,6 @@ node:
   snarkWorkerParallelism:
   stopTime:
   tracing:
-  uploadBlocksToGoogleCloud:
   uploadSubmitterKey:
   uploadSubmitterPubkey:
   validationQueueSize:
@@ -154,6 +168,9 @@ service:
 
 podAnnotations: {}
 
+updateStrategy:
+  type: RollingUpdate
+
 resources:
   memoryRequest: "16.0Gi"
   cpuRequest: "4"
@@ -171,3 +188,16 @@ healthcheck:
   periodSeconds: 5
   initialDelaySeconds: 10
   timeoutSeconds: 60
+
+s3BlocksUploader:
+  image:
+    repository: amazon/aws-cli
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  resources:
+    memoryRequest: "128Mi"
+    cpuRequest: "1"
+    ephemeralStorageRequest:
+    memoryLimit: "256Mi"
+    cpuLimit: "2"
+    ephemeralStorageLimit:

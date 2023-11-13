@@ -79,11 +79,22 @@ Parameter | Description | Default
 --- | --- | ---
 `deployment.uptime.enabled` | Whether to use [Block Producer uptime](https://github.com/MinaProtocol/mina/tree/develop/src/app/delegation_backend) service | `false`
 `deployment.uptime.url` | BPU service url | ` `
-`deployment.storeBlocks.enabled` | Whether to store precomputed blocks locally | `false`
-`deployment.storeBlocks.storageClass` | Enable persistent volume for storing blocks | ` `
-`deployment.storeBlocks.filename` | file name where to append blocks in `json` format | `precomputed_blocks.json`
+`deployment.storeBlocks.enabled` | Whether to store precomputed blocks | `false`
 `deployment.storeBlocks.directory` | Path where to store precomputed_blocks file | `/blocks`
 `deployment.storeBlocks.sizePVC` | How much space to claim for volume | `5Gi`
+`deployment.storeBlocks.storageClass` | Enable persistent volume for storing blocks | ` `
+`deployment.storeBlocks.local.enabled` | Enable local storage for precomputed_blocks | `false`
+`deployment.storeBlocks.local.filename` | file name where to append blocks in `json` format | `precomputed_blocks.json`
+`deployment.storeBlocks.aws.enabled` | Enable precomputed_blocks storage on AWS | `false`
+`deployment.storeBlocks.aws.bucket` | s3 Bucket where the precomputed_blocks | ` `
+`deployment.storeBlocks.aws.prefix` | Folder within the s3 Bucket to store the precomputed_blocks (relative path) | ` `
+`deployment.storeBlocks.aws.accessKeyID` | AWS AccessKey ID | ` `
+`deployment.storeBlocks.aws.secretKeyID` | AWS SecretKey ID | ` `
+`deployment.storeBlocks.aws.defaultRegion` | AWS Default Region | ` `
+`deployment.storeBlocks.aws.uploadInterval` | Interval between each batch upload | ` `
+`deployment.storeBlocks.gcp.enabled` | Enable precomputed_blocks storage on GCP | `false`
+`deployment.storeBlocks.gcp.bucket` | gcloud Storage Bucket where the precomputed_blocks | ` `
+`deployment.storeBlocks.gcp.keyfile` | Content of the gcloud keyfile (json) | ` `
 `deployment.uptime.enabled` | Enable Uptime Service | default `false`
 `deployment.uptime.url` | URL of the uptime service of the Mina delegation program | default ` `
 `deployment.uptime.sendNodeCommitSha` | Whether to send the commit SHA used to build the node to the uptime service | default ` `
@@ -106,6 +117,7 @@ Parameter | Description | Default
 `node.coinbaseReceiver` | Address to send coinbase rewards to (if this node is producing blocks) | ` `
 `node.background` | Run process on the background | `false`
 `node.bindIP` | IP of network interface to use for peer connections | ` `
+`node.clientTrustList` | Mina Client Trust List | `10.0.0.0/8`
 `node.contactInfo` | info used in node error report service (it could be either email address or discord username), it should be less than 200 characters | ` `
 `node.currentProtocolVersion` | Current protocol version, only blocks with the same version accepted | ` `
 `node.demoMode` | Run the daemon in demo-mode -- assume we're "synced" to the network instantly | ` `
@@ -140,7 +152,6 @@ Parameter | Description | Default
 `node.snarkWorkerParallelism` | Run the SNARK worker using this many threads. Equivalent to setting OMP_NUM_THREADS, but doesn't affect block production. | ` `
 `node.stopTime` | in hours after which the daemon stops itself (only if there were no slots won within an hour after the stop time) | `168`
 `node.tracing` | Trace into $config-directory/trace/$pid.trace | ` `
-`node.uploadBlocksToGoogleCloud` | upload blocks to gcloud storage. Requires the environment variables GCLOUD_KEYFILE, NETWORK_NAME, and GCLOUD_BLOCK_UPLOAD_BUCKET | ` `
 `node.uploadSubmitterKey` | Private key file for the uptime submitter. You cannot provide both `uptime-submitter-key` and `uptime-submitter-pubkey` | ` `
 `node.uploadSubmitterPubkey` | Public key of the submitter to the Mina delegation program, for the associated private key that is being tracked by this daemon. You cannot provide both `uptime-submitter-key` and `uptime-submitter-pubkey` | ` `
 `node.validationQueueSize` | size of the validation queue in the p2p network used to buffer messages (like blocks and transactions received on the gossip network) while validation is pending. If a transaction, for example, is invalid, we don't forward the message on the gossip net. If this queue is too small, we will drop messages without validating them. If it is too large, we are susceptible to DoS attacks on memory | `150`
@@ -182,6 +193,16 @@ Parameter | Description | Default
 `healthcheck.periodSeconds` | liveness/readiness probe specific | 5
 `healthcheck.initialDelaySeconds` | liveness/readiness probe specific | 10
 `healthcheck.timeoutSeconds` | liveness/readiness probe specific | 60
+` `
+`s3BlocksUploader.image.repository` | Docker Repository used for the s3BlocksUploader container | `amazon/aws-cli`
+`s3BlocksUploader.image.pullPolicy` | Image Pull Policy used for the s3BlocksUploader container | `IfNotPresent`
+`s3BlocksUploader.image.tag` | Docker Tag used for the s3BlocksUploader container | `latest`
+`s3BlocksUploader.resources.ephemeralStorageRequest` | Ephemeral Storage to Request for s3-blocks-uploader container | ` `
+`s3BlocksUploader.resources.memoryRequest` | RAM to claim for s3-blocks-uploader container | "16.0Gi"
+`s3BlocksUploader.resources.cpuRequest` | # of CPUs to claim for s3-blocks-uploader container | "4"
+`s3BlocksUploader.resources.ephemeralStorageLimit` | Ephemeral Storage Limit for s3-blocks-uploader container | ` `
+`s3BlocksUploader.resources.memoryLimit` | RAM limit for s3-blocks-uploader container | "18.0Gi"
+`s3BlocksUploader.resources.cpuLimit` | # of CPUs limit for s3-blocks-uploader container | "8"
 
 ## Mina daemon nodes
 
