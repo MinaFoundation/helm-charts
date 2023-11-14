@@ -55,6 +55,7 @@ spec:
             - name: CONFIG_AWS_ACCOUNT_ID
               value: {{ .accountId | quote }}
             {{- end }}
+            {{- if .Values.deployment.analyzerScriptConfig.enabled }}
             {{- with .Values.deployment.analyzerScriptConfig }}
             - name: CONFIG_ANALYZER_OUTPUT_GSHEET_ID
               value: {{ .outputSheetId | quote }}
@@ -80,6 +81,7 @@ spec:
             {{- end }}
             - name: CONFIG_IGNORE_IPS
               value: {{ .ignoreIps | quote }}
+            {{- end }}
             {{- end }}
             {{- with .Values.deployment.whitelistConfig }}
             - name: CONFIG_GSHEET_ID
