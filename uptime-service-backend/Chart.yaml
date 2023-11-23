@@ -1,0 +1,13 @@
+apiVersion: v2
+name: uptime-service-backend
+description: A Helm chart for uptime-service-backend AKA Delegation Program Backend
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+- uptime
+- delegation
+- incentivized
+home: 'https://docs.minaprotocol.com/node-operators/foundation-delegation-program'
+sources: 
+  - 'https://github.com/MinaFoundation/uptime-service-backend/tree/main/src/delegation_backend'
