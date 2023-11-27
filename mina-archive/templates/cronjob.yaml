@@ -1,4 +1,4 @@
-{{- if and .Values.archive.enablePostgresDB .Values.archive.enableDumpCronjob }}
+{{- if .Values.archive.dumpCronjob.enabled }}
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -18,6 +18,9 @@ spec:
           containers:
             - name: {{ .Release.Name }}-dump-cronjob
               image: postgres:15-alpine
+          env:
+            - name: S3_BUCKET
+              value: {{ .Values.archive.dumpCronjob.s3Bucket | quote }}
               command:
                 - /bin/bash
                 - -c
@@ -30,7 +33,7 @@ spec:
                 pg_dump --no-owner --create {{ tpl .Values.archive.postgresUri . }} > $FILENAME;
                 tar -czvf $FILENAME.tar.gz $FILENAME;
                 echo "archive database dumped";
-                aws s3 cp $FILENAME.tar.gz s3://673156464838-archive-node-daily-backups;
+                aws s3 cp $FILENAME.tar.gz s3://$S3_BUCKET/$FILENAME.tar.gz;
                 echo "archive database uploaded to bucket";
                 '
 {{- end -}}

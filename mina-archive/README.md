@@ -81,6 +81,8 @@ Parameter | Description | Default
 `archive.postgresHost` | Postgres database host to store archival data | `see [default] values.yaml`
 `archive.postgresUri` | Postgres [connection URI](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING) to access postgres datastore instance | `see [default] values.yaml`
 `archive.bootstrapDB` | Run Bootstrap Job against the Postgres Database | `true`
+`dumpCronjob.enabled` | Backup the database periodically | `false`
+`dumpCronjob.s3Bucket` | s3 Bucket to upload backup | `673156464838-mina-archive-node-backups`
 `archive.initFromDump.enabled` | Populate Postgres Database with an existing Dump | `false`
 `archive.initFromDump.archiveDumpURL` | URL to retrieve SQL Dump | `https://storage.googleapis.com/mina-archive-dumps`
 `archive.initFromDump.precomputedBlocksURL` | URL to retrieve Precomputed Blocks | `https://storage.googleapis.com/mina_network_block_data`

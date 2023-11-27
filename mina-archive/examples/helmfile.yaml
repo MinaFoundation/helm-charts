@@ -26,7 +26,7 @@ releases:
         image: {{ .Values.releases.berkeleyArchive.image }}
     - serviceAccount:
         annotations:
-          eks.amazonaws.com/role-arn: arn:aws:iam::111122223333:role/s3-archive-node-daily-backups-staging
+          eks.amazonaws.com/role-arn: arn:aws:iam::111122223333:role/MinaNodesS3_sandbox
     - resource:
         memoryRequest: "6.0Gi"
         cpuRequest: "3"

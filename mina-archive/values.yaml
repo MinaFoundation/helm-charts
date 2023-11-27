@@ -15,7 +15,9 @@ archive:
     server: 3086
     postgres: 5432
   enablePostgresDB: true
-  enableDumpCronjob: false
+  dumpCronjob:
+    enabled: false
+    s3Bucket: 673156464838-mina-archive-node-backups
   bootstrapDB: true
   initFromDump:
     enabled: false
