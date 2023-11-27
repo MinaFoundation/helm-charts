@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-initdb
+data:
+  entrypoint-initdb.sh: |-
+{{ .Files.Get "files/entrypoint_initdb.sh" | indent 4 }}

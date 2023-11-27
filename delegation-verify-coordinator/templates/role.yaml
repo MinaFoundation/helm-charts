@@ -1,0 +1,10 @@
+# Kubernetes role to create pods
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: {{ .Release.Name }}
+rules:
+- apiGroups: ["batch"]
+  resources: ["pods", "jobs", "jobs/status"]
+  verbs: ["get", "list", "describe", "create"]
