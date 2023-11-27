@@ -1,0 +1,141 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ .Release.Name }}
+      {{- if .Values.deployment.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" ( dict "type" .Values.deployment.podAffinityPreset "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" ( dict "type" .Values.deployment.podAntiAffinityPreset "context" $) | nindent 10 }}
+      {{- end }}
+      initContainers:
+        {{- if eq .Values.deployment.storage.type "keyspace" }}
+        - name: dbmigration
+          image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
+          command: [ "db_migration" ]
+          args: [ "up" ]
+          env:
+            - name: CONFIG_NETWORK_NAME
+              value: {{ .Values.deployment.network }}
+            {{- with .Values.deployment.whitelistConfig }}
+            - name: CONFIG_GSHEET_ID
+              value: {{ .spreadsheetId | quote }}
+            - name: DELEGATION_WHITELIST_LIST
+              value: {{ .sheet | quote }}
+            - name: DELEGATION_WHITELIST_COLUMN
+              value: {{ .column | quote }}
+            {{- end }}
+            - name: AWS_KEYSPACE
+              value: {{ .Values.deployment.storage.keyspace.awsKeyspaceName | quote }}
+            # image is built with AWS_SSL_CERTIFICATE_PATH=/database/cert/sf-class2-root.crt therefore we only set it if it needs to be overridden.
+            {{- if .Values.deployment.secret.keyspaceCert.override }}
+            - name: AWS_SSL_CERTIFICATE_PATH
+              value: /uptime/cert/{{ .Values.deployment.secret.keyspaceCert.name }}
+            {{- end }}
+            - name: AWS_REGION
+              value: {{ .Values.deployment.awsConfig.region | quote }}
+            - name: AWS_ACCESS_KEY_ID
+              value: {{ .Values.deployment.awsConfig.accessKeyId | quote }}
+            - name: AWS_SECRET_ACCESS_KEY
+              value: {{ .Values.deployment.awsConfig.secretAccessKey | quote }}
+          volumeMounts:
+            {{- if .Values.deployment.secret.keyspaceCert.override }}
+            - name: {{ .Release.Name }}-keyspace-cert
+              mountPath: /uptime/cert
+            {{- end }}
+        {{- end }}
+      containers:
+        - name: uptime
+          image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
+          imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            requests:
+              memory: {{ default "256Mi" .Values.resources.request.memory }}
+              cpu: {{ default "500m" .Values.resources.request.cpu }}
+            limits:
+              memory: {{ default "512Mi" .Values.resources.limit.memory }} 
+              cpu: {{ default "1" .Values.resources.limit.cpu }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          env:
+            - name: GOLOG_LOG_LEVEL
+              value: {{ .Values.deployment.logLevel }}
+            - name: CONFIG_NETWORK_NAME
+              value: {{ .Values.deployment.network }}
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /uptime/gcloud/gcp-sa.json
+            {{- with .Values.deployment.whitelistConfig }}
+            - name: CONFIG_GSHEET_ID
+              value: {{ .spreadsheetId | quote }}
+            - name: DELEGATION_WHITELIST_LIST
+              value: {{ .sheet | quote }}
+            - name: DELEGATION_WHITELIST_COLUMN
+              value: {{ .column | quote }}
+            {{- end }}
+            - name: AWS_REGION
+              value: {{ .Values.deployment.awsConfig.region | quote }}
+            - name: AWS_ACCESS_KEY_ID
+              value: {{ .Values.deployment.awsConfig.accessKeyId | quote }}
+            - name: AWS_SECRET_ACCESS_KEY
+              value: {{ .Values.deployment.awsConfig.secretAccessKey | quote }}
+            {{- if eq .Values.deployment.storage.type "s3" }}
+            - name: AWS_BUCKET_NAME_SUFFIX
+              value: {{ .Values.deployment.storage.s3.awsBucketNameSuffix | quote }}
+            - name: AWS_ACCOUNT_ID
+              value: {{ .Values.deployment.awsConfig.accountId | quote }}
+            {{- else if eq .Values.deployment.storage.type "keyspace" }}
+            - name: AWS_KEYSPACE
+              value: {{ .Values.deployment.storage.keyspace.awsKeyspaceName | quote }}
+            {{- if .Values.deployment.secret.keyspaceCert.override }}
+            - name: AWS_SSL_CERTIFICATE_PATH
+              value: /uptime/cert/{{ .Values.deployment.secret.keyspaceCert.name }}
+            {{- end }}
+            {{ else if eq .Values.deployment.storage.type "local" }}
+            - name: CONFIG_FILESYSTEM_PATH
+              value: {{ .Values.deployment.storage.local.path | quote }}
+            {{- end }}
+          volumeMounts:
+            - name:  {{ .Release.Name }}-gcp-sa
+              mountPath: /uptime/gcloud
+            {{- if .Values.deployment.secret.keyspaceCert.override }}
+            - name: {{ .Release.Name }}-keyspace-cert
+              mountPath: /uptime/cert
+            {{- end }}
+      volumes:
+        {{- if .Values.deployment.secret.keyspaceCert.override }}
+        - name: {{ .Release.Name }}-keyspace-cert
+          secret:
+            secretName: {{ .Release.Name }}
+            defaultMode: 0600
+            items:
+              - key: {{ .Values.deployment.secret.keyspaceCert.name }}
+                path: {{ .Values.deployment.secret.keyspaceCert.name }}
+        {{- end }}
+        - name: {{ .Release.Name }}-gcp-sa
+          secret:
+            secretName: {{ .Release.Name }}
+            defaultMode: 0600
+            items:
+              - key: gcp-sa-json
+                path: gcp-sa.json
