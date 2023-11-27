@@ -45,13 +45,14 @@ The command removes all the Kubernetes components associated with the chart and 
 | `deployment.image.tag`         | Docker image tag                                       | `1.0.0itn1` |
 | `deployment.image.pullPolicy`  | Docker image pull policy                               | `IfNotPresent`  |
 | `deployment.network`           | Testnet name                                           | `berkeley`      |
-| `replicas`                     | Amount of replicas to deploy.                          | `1`             |
-| `resources.request.memory`     | Memory requested for the application pod.              | `256Mi`         |
-| `resources.request.cpu`        | CPU resources requested for the application pod.       | `500m`          |
-| `resources.limit.memory`       | Maximum memory allowed for the application pod.        | `512Mi`         |
-| `resources.limit.cpu`          | Maximum CPU resources allowed for the application pod. | `1`             |
+| `deployment.logLevel`          | Application log level                                  | `info`          |
+| `replicas`                     | Amount of replicas to deploy                           | `1`             |
+| `resources.request.memory`     | Memory requested for the application pod               | `256Mi`         |
+| `resources.request.cpu`        | CPU resources requested for the application pod        | `500m`          |
+| `resources.limit.memory`       | Maximum memory allowed for the application pod         | `512Mi`         |
+| `resources.limit.cpu`          | Maximum CPU resources allowed for the application pod  | `1`             |
 | `secret.gcpServiceAccount`     | Json Content of GCP Service Account                    | `""`            |
-| `secret.keyspaceCert.override` | Whether to override default certificate.               | `false`         |
+| `secret.keyspaceCert.override` | Whether to override default certificate                | `false`         |
 | `secret.keyspaceCert.name`     | Name of certificate placed in `/uptime/certs`          | `""`            |
 | `secret.keyspaceCert.content`  | Contents of certificate used by AWS Keyspaces          | `""`            |
 | `service.type`                 | Kubernetes Service type                                | `ClusterIP`     |

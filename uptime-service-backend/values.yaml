@@ -27,6 +27,7 @@ deployment:
       override: false
       name:
       content:
+  logLevel: info
 
 service:
   type: ClusterIp
