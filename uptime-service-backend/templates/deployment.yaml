@@ -30,6 +30,8 @@ spec:
           command: [ "db_migration" ]
           args: [ "up" ]
           env:
+            - name: GOLOG_LOG_LEVEL
+              value: {{ .Values.deployment.logLevel }}
             - name: CONFIG_NETWORK_NAME
               value: {{ .Values.deployment.network }}
             {{- with .Values.deployment.whitelistConfig }}
