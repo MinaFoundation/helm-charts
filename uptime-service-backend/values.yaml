@@ -14,7 +14,6 @@ deployment:
     accessKeyId:
     secretAccessKey:
   storage:
-    type:
     s3:
       awsBucketNameSuffix:
     keyspace:

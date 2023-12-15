@@ -42,9 +42,11 @@ spec:
             - name: DELEGATION_WHITELIST_COLUMN
               value: {{ .column | quote }}
             {{- end }}
+            {{- if .Values.deployment.storage.keyspace.awsKeyspaceName }}
             - name: AWS_KEYSPACE
               value: {{ .Values.deployment.storage.keyspace.awsKeyspaceName | quote }}
             # image is built with AWS_SSL_CERTIFICATE_PATH=/database/cert/sf-class2-root.crt therefore we only set it if it needs to be overridden.
+            {{- end }}
             {{- if .Values.deployment.secret.keyspaceCert.override }}
             - name: AWS_SSL_CERTIFICATE_PATH
               value: /uptime/cert/{{ .Values.deployment.secret.keyspaceCert.name }}
@@ -101,19 +103,21 @@ spec:
               value: {{ .Values.deployment.awsConfig.accessKeyId | quote }}
             - name: AWS_SECRET_ACCESS_KEY
               value: {{ .Values.deployment.awsConfig.secretAccessKey | quote }}
-            {{- if eq .Values.deployment.storage.type "s3" }}
+            {{- if and .Values.deployment.storage.s3 .Values.deployment.storage.s3.awsBucketNameSuffix }}
             - name: AWS_BUCKET_NAME_SUFFIX
               value: {{ .Values.deployment.storage.s3.awsBucketNameSuffix | quote }}
             - name: AWS_ACCOUNT_ID
               value: {{ .Values.deployment.awsConfig.accountId | quote }}
-            {{- else if eq .Values.deployment.storage.type "keyspace" }}
+            {{- end }}
+            {{- if and .Values.deployment.storage.keyspace .Values.deployment.storage.keyspace.awsKeyspaceName }}
             - name: AWS_KEYSPACE
               value: {{ .Values.deployment.storage.keyspace.awsKeyspaceName | quote }}
+            {{- end }}
             {{- if .Values.deployment.secret.keyspaceCert.override }}
             - name: AWS_SSL_CERTIFICATE_PATH
               value: /uptime/cert/{{ .Values.deployment.secret.keyspaceCert.name }}
             {{- end }}
-            {{ else if eq .Values.deployment.storage.type "local" }}
+            {{- if and .Values.deployment.storage.local .Values.deployment.storage.local.path }}
             - name: CONFIG_FILESYSTEM_PATH
               value: {{ .Values.deployment.storage.local.path | quote }}
             {{- end }}
