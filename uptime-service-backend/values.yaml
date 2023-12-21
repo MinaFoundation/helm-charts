@@ -9,6 +9,7 @@ deployment:
     sheet:
     column:
   awsConfig:
+    roleSession:
     accountId:
     region:
     accessKeyId:

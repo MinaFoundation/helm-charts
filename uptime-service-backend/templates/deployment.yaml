@@ -97,6 +97,8 @@ spec:
             - name: DELEGATION_WHITELIST_COLUMN
               value: {{ .column | quote }}
             {{- end }}
+            - name: AWS_ROLE_SESSION_NAME
+              value: {{ .Values.deployment.awsConfig.roleSession | quote }}
             - name: AWS_REGION
               value: {{ .Values.deployment.awsConfig.region | quote }}
             - name: AWS_ACCESS_KEY_ID
