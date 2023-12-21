@@ -3,7 +3,7 @@ deployment:
   podAffinityPreset: ""
   podAntiAffinityPreset: soft
   image:
-    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/block-producers-uptime-monitoring
+    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/uptime-service-monitoring
     pullPolicy: IfNotPresent
     tag: "1.0.0-82c48e5-bullseye-mainnet"
   replicaCount: 1

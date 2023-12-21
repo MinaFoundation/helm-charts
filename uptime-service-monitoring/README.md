@@ -1,14 +1,14 @@
-# `block-producers-uptime-monitoring` helm chart
+# `uptime-service-monitoring` helm chart
 
-A Helm chart for the custom monitoring tools needed for Block Producers Uptime (further referred to as BPU)
+A Helm chart for the custom monitoring tools needed for Uptime Service (further referred to as US)
 
 > **Note** Currently MF does not have chart repository. To install this chart i.e. with helmfile you need to reffer to it following ways:
 ```
 # helmfile.yaml
 <..>
 releases:
-  - name: block-producers-uptime-monitoring
-    chart: git::https://git:accesstoken@github.com/MinaFoundation/helm-charts.git@block-producers-uptime-monitoring?ref=main
+  - name: uptime-service-monitoring
+    chart: git::https://git:accesstoken@github.com/MinaFoundation/helm-charts.git@uptime-service-monitoring?ref=main
 <..>
 ```
 
@@ -52,7 +52,7 @@ To get all available values in cloned `mina-helm-charts-private` do:
 ```bash
 $ helm show values ./mina-daemon
 ```
-The following table lists the configurable parameters of the `block-producers-uptime-monitoring` chart and its common default values.
+The following table lists the configurable parameters of the `uptime-service-monitoring` chart and its common default values.
 
 ### Required Settings
 

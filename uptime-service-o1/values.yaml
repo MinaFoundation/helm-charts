@@ -1,6 +1,6 @@
 deployment:
   image:
-    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/block-producers-uptime
+    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/uptime-service
     pullPolicy: IfNotPresent
     tag: "1.2.0-test-1"
     tagSheets: "1.2.0-test-1"
@@ -11,7 +11,7 @@ deployment:
     platform:
   secrets:
     credentialFile:
-      name: "block-producers-uptime-gcp-sa-credential"
+      name:
       dir:
       path:
       content:
@@ -24,7 +24,7 @@ deployment:
     outputSheetId:
     stdout: 1
     localOutput:
-    s3bucket: "673156464838-block-producers-uptime"
+    s3bucket: "673156464838-uptime-service"
     s3key:
     periodStart:
     periodEnd:
