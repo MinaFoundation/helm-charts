@@ -24,7 +24,7 @@ spec:
         podAntiAffinity: {{- include "common.affinities.pods" ( dict "type" .Values.deployment.podAntiAffinityPreset "context" $) | nindent 10 }}
       {{- end }}
       initContainers:
-        {{- if eq .Values.deployment.storage.type "keyspace" }}
+        {{- if .Values.deployment.storage.keyspace }}
         - name: dbmigration
           image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
           command: [ "db_migration" ]
