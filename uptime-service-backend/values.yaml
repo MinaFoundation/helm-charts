@@ -9,12 +9,12 @@ deployment:
     sheet:
     column:
   awsConfig:
+    roleSession:
     accountId:
     region:
     accessKeyId:
     secretAccessKey:
   storage:
-    type:
     s3:
       awsBucketNameSuffix:
     keyspace:
