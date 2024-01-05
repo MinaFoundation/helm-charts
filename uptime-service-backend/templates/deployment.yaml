@@ -53,10 +53,14 @@ spec:
             {{- end }}
             - name: AWS_REGION
               value: {{ .Values.deployment.awsConfig.region | quote }}
+            - name: AWS_ROLE_SESSION_NAME
+              value: {{ .Values.deployment.awsConfig.roleSession | quote }}
+            {{- if and .Values.deployment.awsConfig.accessKeyId .Values.deployment.awsConfig.secretAccessKey }}
             - name: AWS_ACCESS_KEY_ID
               value: {{ .Values.deployment.awsConfig.accessKeyId | quote }}
             - name: AWS_SECRET_ACCESS_KEY
               value: {{ .Values.deployment.awsConfig.secretAccessKey | quote }}
+            {{- end }}
           volumeMounts:
             {{- if .Values.deployment.secret.keyspaceCert.override }}
             - name: {{ .Release.Name }}-keyspace-cert
@@ -101,10 +105,12 @@ spec:
               value: {{ .Values.deployment.awsConfig.roleSession | quote }}
             - name: AWS_REGION
               value: {{ .Values.deployment.awsConfig.region | quote }}
+            {{- if and .Values.deployment.awsConfig.accessKeyId .Values.deployment.awsConfig.secretAccessKey }}
             - name: AWS_ACCESS_KEY_ID
               value: {{ .Values.deployment.awsConfig.accessKeyId | quote }}
             - name: AWS_SECRET_ACCESS_KEY
               value: {{ .Values.deployment.awsConfig.secretAccessKey | quote }}
+            {{- end }}
             {{- if and .Values.deployment.storage.s3 .Values.deployment.storage.s3.awsBucketNameSuffix }}
             - name: AWS_BUCKET_NAME_SUFFIX
               value: {{ .Values.deployment.storage.s3.awsBucketNameSuffix | quote }}
