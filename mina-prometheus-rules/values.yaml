@@ -1,0 +1,15 @@
+# Default values for mina-prometheus-rules.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+---
+clusterName: "default"
+appNamespacesTarget: ".*"
+runbookUrl: "https://runbooks.prometheus-operator.dev/runbooks"
+
+alertTimeframe: "1h"
+alertEvaluationDuration: "10m"
+network: "mainnet"
+severityHigh: "critical"
+severityLow: "warning"
+syncStatus: "SYNCED"
