@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mina-rosetta.fullname" . }}
+  labels:
+    {{- include "mina-rosetta.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "mina-rosetta.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "mina-rosetta.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "mina-rosetta.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: rosetta
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["bash", "-c"]
+          args:
+          - |
+            /usr/local/bin/mina-rosetta${MINA_SUFFIX} \
+            --archive-uri "${PG_CONNECTION_STRING}" \
+            --graphql-uri "${GRAPHQL_URL}" \
+            --log-json \
+            --log-level ${LOG_LEVEL} \
+            --port ${PORT}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          # livenessProbe:
+          #   httpGet:
+          #     path: /network/list
+          #     port: online
+          # readinessProbe:
+          #   httpGet:
+          #     path: /network/list
+          #     port: online
+          env:
+            - name: MINA_SUFFIX
+              value: {{ .Values.rosetta.minaSuffix | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.rosetta.logLevel | quote }}
+            - name: GRAPHQL_URL
+              value: {{ .Values.rosetta.graphqlURL | quote }}
+            - name: PG_CONNECTION_STRING
+              value: {{ .Values.rosetta.pgConnectionString | quote }}
+            - name: MINA_ROSETTA_PG_DATA_INTERVAL
+              value: {{ .Values.rosetta.pgDataInterval | quote }}
+            - name: MINA_ROSETTA_MAX_DB_POOL_SIZE
+              value: {{ .Values.rosetta.maxDBPoolSize | quote }}
+            - name: PORT
+              value: {{ .Values.service.port | quote }}
+            {{- if .Values.envVars }}
+            {{- toYaml .Values.envVars | nindent 12 }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
