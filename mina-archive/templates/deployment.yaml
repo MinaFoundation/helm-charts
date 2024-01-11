@@ -5,11 +5,6 @@ metadata:
   name: {{ .Release.Name }}
   labels:
     app: {{ .Release.Name }}
-  annotations:
-  {{- with .Values.podAnnotations }}
-  {{- toYaml . | nindent 4 }}
-  {{- end }}
-    test: 'true'
 spec:
   replicas: {{ .Values.archive.replicas }}
   selector:
