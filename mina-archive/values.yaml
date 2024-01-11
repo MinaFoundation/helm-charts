@@ -19,6 +19,7 @@ archive:
     enabled: false
     s3Bucket: 673156464838-mina-archive-node-backups
   bootstrapDB: true
+  bootstrapDBAnnotations: {}
   initFromDump:
     enabled: false
     archiveDumpURL: https://storage.googleapis.com/mina-archive-dumps

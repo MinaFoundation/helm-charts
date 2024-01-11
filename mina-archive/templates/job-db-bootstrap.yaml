@@ -4,6 +4,10 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ .Release.Name }}-db-bootstrap
+  {{- if .Values.archive.bootstrapDBAnnotations }}
+  annotations:
+    {{- toYaml .Values.archive.bootstrapDBAnnotations | nindent 4 }}
+  {{- end }}
 spec:
   template:
     spec:
