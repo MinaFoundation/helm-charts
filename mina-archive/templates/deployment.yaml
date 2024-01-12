@@ -5,6 +5,10 @@ metadata:
   name: {{ .Release.Name }}
   labels:
     app: {{ .Release.Name }}
+  annotations:
+    {{- with .Values.podAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   replicas: {{ .Values.archive.replicas }}
   selector:
@@ -17,9 +21,6 @@ spec:
         testnet: {{ .Values.archive.testnet }}
         role: archive
       annotations:
-      {{- with .Values.podAnnotations }}
-      {{- toYaml . | nindent 8 }}
-      {{- end }}
       {{- if .Values.archive.metrics.enabled }}
         prometheus.io/scrape: 'true'
         prometheus.io/port: {{ .Values.archive.metrics.port | quote }}

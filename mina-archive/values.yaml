@@ -6,7 +6,7 @@ archive:
   # `remoteSchemaFile` needs to be just the script name, not a url.  `remoteSchemaAuxFiles` needs to be a list of urls of sqls, one of these urls needs to be the url of the main sql script that invokes the other ones.
   remoteSchemaFile: "create_schema.sql"
   remoteSchemaAuxFiles: []
-  postgresHost:  '{{ .Release.Name }}-postgresql'
+  postgresHost: '{{ .Release.Name }}-postgresql'
   postgresUri: postgres://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password }}@{{ tpl .Values.archive.postgresHost . }}:{{ .Values.archive.ports.postgres }}/{{ .Values.postgresql.auth.database }}
   metrics:
     enabled: false
@@ -26,7 +26,7 @@ archive:
   missingBlocksGuardian:
     enabled: false
     precomputedBlocksURL: https://storage.googleapis.com/mina_network_block_data
-    waitTime: 1800  # 30 minutes
+    waitTime: 1800 # 30 minutes
   service:
     labels: {}
     annotations: {}
