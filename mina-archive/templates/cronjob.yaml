@@ -18,9 +18,9 @@ spec:
           containers:
             - name: {{ .Release.Name }}-dump-cronjob
               image: postgres:15-alpine
-          env:
-            - name: S3_BUCKET
-              value: {{ .Values.archive.dumpCronjob.s3Bucket | quote }}
+              env:
+                - name: S3_BUCKET
+                  value: {{ .Values.archive.dumpCronjob.s3Bucket | quote }}
               command:
                 - /bin/bash
                 - -c
