@@ -25,9 +25,7 @@ spec:
                 - /bin/bash
                 - -c
                 - '
-                apk add --no-cache python3 py3-pip;
-                pip3 install --upgrade pip;
-                pip3 install --no-cache-dir awscli;
+                apk add aws-cli;
                 DATE="$(date +%F_%H%M)";
                 FILENAME="{{ .Values.archive.testnet }}-archive-dump-${DATE}".sql;
                 pg_dump --no-owner --create {{ tpl .Values.archive.postgresUri . }} > $FILENAME;
