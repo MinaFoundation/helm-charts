@@ -25,7 +25,7 @@ spec:
                 - /bin/bash
                 - -c
                 - '
-                apk add --no-cache aws-cli;
+                apk add aws-cli;
                 DATE="$(date +%F_%H%M)";
                 FILENAME="{{ .Values.archive.testnet }}-archive-dump-${DATE}".sql;
                 pg_dump --no-owner --create {{ tpl .Values.archive.postgresUri . }} > $FILENAME;
