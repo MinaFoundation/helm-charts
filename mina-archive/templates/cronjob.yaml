@@ -26,7 +26,7 @@ spec:
                 - -c
                 - '
                 apk add aws-cli;
-                DATE="$(date +%F_%H%M)";
+                DATE="$(date +%F_0000)";
                 FILENAME="{{ .Values.archive.testnet }}-archive-dump-${DATE}".sql;
                 pg_dump --no-owner --create {{ tpl .Values.archive.postgresUri . }} > $FILENAME;
                 tar -czvf $FILENAME.tar.gz $FILENAME;
