@@ -1,3 +1,8 @@
+# One of the authentication methods has to be provided
+{{- if not (or (and .Values.deployment.awsConfig.accessKeyId .Values.deployment.awsConfig.secretAccessKey) .Values.deployment.awsConfig.roleSession) }}
+{{- required "Either .Values.deployment.awsConfig.accessKeyId .Values.deployment.awsConfig.secretAccessKey OR .Values.deployment.awsConfig.roleSession is required. Cannot authenticate without either one" .Values.deployment.awsConfig.roleSession -}}
+{{- end }}
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -53,8 +58,10 @@ spec:
             {{- end }}
             - name: AWS_REGION
               value: {{ .Values.deployment.awsConfig.region | quote }}
+            {{- if .Values.deployment.awsConfig.roleSession }}
             - name: AWS_ROLE_SESSION_NAME
               value: {{ .Values.deployment.awsConfig.roleSession | quote }}
+            {{- end }}
             {{- if and .Values.deployment.awsConfig.accessKeyId .Values.deployment.awsConfig.secretAccessKey }}
             - name: AWS_ACCESS_KEY_ID
               value: {{ .Values.deployment.awsConfig.accessKeyId | quote }}
@@ -101,10 +108,12 @@ spec:
             - name: DELEGATION_WHITELIST_COLUMN
               value: {{ .column | quote }}
             {{- end }}
-            - name: AWS_ROLE_SESSION_NAME
-              value: {{ .Values.deployment.awsConfig.roleSession | quote }}
             - name: AWS_REGION
               value: {{ .Values.deployment.awsConfig.region | quote }}
+            {{- if .Values.deployment.awsConfig.roleSession }}
+            - name: AWS_ROLE_SESSION_NAME
+              value: {{ .Values.deployment.awsConfig.roleSession | quote }}
+            {{- end }}
             {{- if and .Values.deployment.awsConfig.accessKeyId .Values.deployment.awsConfig.secretAccessKey }}
             - name: AWS_ACCESS_KEY_ID
               value: {{ .Values.deployment.awsConfig.accessKeyId | quote }}
