@@ -44,8 +44,11 @@ The command removes all the Kubernetes components associated with the chart and 
 | `deployment.image.repository`  | `uptime-service-backend` docker image url              | `673156464838.dkr.ecr.us-west-2.amazonaws.com/block-producers-uptime` |
 | `deployment.image.tag`         | Docker image tag                                       | `1.0.0itn1` |
 | `deployment.image.pullPolicy`  | Docker image pull policy                               | `IfNotPresent`  |
-| `deployment.network`           | Testnet name                                           | `berkeley`      |
+| `deployment.network`           | Testnet name                                           | `""`              |
 | `deployment.logLevel`          | Application log level                                  | `info`          |
+| `deployment.affinity`          | Determines affinity https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity | `{}` |
+| `deployment.podAffinityPreset` | Ignored if affinity is set. Allowed values `soft`, `hard`| `""`          |
+| `deployment.podAntiAffinityPreset`| Ignored if affinity is set. Allowed values `soft`, `hard`| `hard`     |
 | `replicas`                     | Amount of replicas to deploy                           | `1`             |
 | `resources.request.memory`     | Memory requested for the application pod               | `256Mi`         |
 | `resources.request.cpu`        | CPU resources requested for the application pod        | `500m`          |
