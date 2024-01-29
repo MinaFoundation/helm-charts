@@ -1,0 +1,92 @@
+# Default values for delegation-verify-coordinator.
+replicas: 1
+
+image:
+  repository: ""
+  pullPolicy: IfNotPresent
+  tag: ""
+
+nameOverride:
+fullnameOverride:
+
+coordinator:
+  networkName: ""
+  platform: ""
+  cqlsh: ""
+  noChecks: ""
+  surveyIntervalMinutes: 20
+  command:
+    override: # use '"<command>"' notation to template correctly
+  postgres:
+    host: '{{ .Release.Name }}-psql'
+    port: 5432
+    db: ""
+    user: ""
+    password: ""
+  miniBatchNumber: 2
+  uptimeDaysForScore: ""
+  worker:
+    image: ""
+    tag: ""
+    cpu:
+      request:
+      limit:
+    memory:
+      request:
+      limit:
+  aws:
+    host: "cassandra.us-west-2.amazonaws.com"
+    port: "9142"
+    keyspace: ""
+    region: us-west-2
+    accessKeyID:
+    secretAccessKey:
+    s3Bucket: "673156464838-uptime-service-backend"
+  ssl:
+    certfile:
+
+serviceAccount:
+  coordinator:
+
+    # Annotations to add to the service account
+    annotations: {}
+
+  worker:
+
+    # Annotations to add to the service account
+    annotations: {}
+     
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+affinity: {}
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources: {}
+
+postgresql:
+  global:
+    storageClass: ebs-gp3-encrypted
+  primary:
+    name: "uptime-validation"
+    persistence:
+      enabled: false
+      size: 8Gi
+    initdb:
+      user: "coordinator"
+      password: "SayWGWkoFQdM5Tqv"
+  auth:
+    username: "coordinator"
+    password: "SayWGWkoFQdM5Tqv"
+    database: "uptime-validation"
+    enablePostgresUser: false
