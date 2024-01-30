@@ -4,6 +4,10 @@ deployment:
     pullPolicy: IfNotPresent
     tag: "1.0.0itn1"
   network:
+  logLevel: info
+  affinity: {}
+  podAffinityPreset:
+  podAntiAffinityPreset: hard
   whitelistConfig:
     spreadsheetId:
     sheet:
@@ -27,7 +31,6 @@ deployment:
       override: false
       name:
       content:
-  logLevel: info
 
 service:
   type: ClusterIp
@@ -49,10 +52,10 @@ serviceaccount:
   annotations: {}
 
 replicas: 1
-resources:
-  request:
-    memory: 256Mi
-    cpu: 500m
-  limit:
-    memory: 512Mi
-    cpu: 1
+resources: {}
+  #  request:
+  #    memory: 256Mi
+  #    cpu: 500m
+  #  limit:
+  #    memory: 512Mi
+  #    cpu: 1
