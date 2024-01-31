@@ -79,12 +79,7 @@ spec:
             initialDelaySeconds: 15
             periodSeconds: 30
           resources:
-            requests:
-              memory: {{ .Values.resources.request.memory }}
-              cpu: {{ .Values.resources.request.cpu }}
-            limits:
-              memory: {{ .Values.resources.limit.memory }} 
-              cpu: {{ .Values.resources.limit.cpu }}
+            {{- toYaml .Values.resources | nindent 12 }}
           ports:
             - containerPort: {{ .Values.service.port }}
           env:
