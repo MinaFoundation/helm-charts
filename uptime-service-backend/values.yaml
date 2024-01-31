@@ -9,6 +9,7 @@ deployment:
   podAffinityPreset:
   podAntiAffinityPreset: hard
   whitelistConfig:
+    enabled: false
     spreadsheetId:
     sheet:
     column:

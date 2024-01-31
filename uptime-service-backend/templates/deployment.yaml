@@ -40,12 +40,19 @@ spec:
             - name: CONFIG_NETWORK_NAME
               value: {{ .Values.deployment.network }}
             {{- with .Values.deployment.whitelistConfig }}
+            {{- if .enabled }}
             - name: CONFIG_GSHEET_ID
               value: {{ .spreadsheetId | quote }}
             - name: DELEGATION_WHITELIST_LIST
               value: {{ .sheet | quote }}
             - name: DELEGATION_WHITELIST_COLUMN
               value: {{ .column | quote }}
+            - name: DELEGATION_WHITELIST_DISABLED
+              value: "0"
+            {{- else }}
+            - name: DELEGATION_WHITELIST_DISABLED
+              value: "1"
+            {{- end }}
             {{- end }}
             {{- if .Values.deployment.storage.keyspace.awsKeyspaceName }}
             - name: AWS_KEYSPACE
@@ -95,12 +102,19 @@ spec:
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /uptime/gcloud/gcp-sa.json
             {{- with .Values.deployment.whitelistConfig }}
+            {{- if .enabled }}
             - name: CONFIG_GSHEET_ID
               value: {{ .spreadsheetId | quote }}
             - name: DELEGATION_WHITELIST_LIST
               value: {{ .sheet | quote }}
             - name: DELEGATION_WHITELIST_COLUMN
               value: {{ .column | quote }}
+            - name: DELEGATION_WHITELIST_DISABLED
+              value: "0"
+            {{- else }}
+            - name: DELEGATION_WHITELIST_DISABLED
+              value: "1"
+            {{- end }}
             {{- end }}
             - name: AWS_ACCESS_KEY_ID
               value: {{ .Values.deployment.awsConfig.accessKeyId | quote }}

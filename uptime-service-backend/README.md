@@ -73,6 +73,7 @@ The command removes all the Kubernetes components associated with the chart and 
 
 | Name                                       | Description           | Value |
 | ------------------------------------------ | --------------------- | ----- |
+| `deployment.whitelistConfig.enabled`       | Whitelisting toggle. If enabled will configure other variables if not will omit| `false`|
 | `deployment.whitelistConfig.spreadsheetId` | Google spreadsheet ID | `""`  |
 | `deployment.whitelistConfig.sheet`         | Google sheet name     | `""`  |
 | `deployment.whitelistConfig.column`        | Google document       | `""`  |
