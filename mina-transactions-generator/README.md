@@ -37,32 +37,22 @@ The command removes all the Kubernetes components associated with the chart and 
 
 ### Parameters
 
-| Name                           | Description                                            | Value           |
-| ------------------------------ | ------------------------------------------------------ | --------------- |
-| `image.repository`  | `mina-transactions-generator` docker image url              | `673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-transactions-generator` |
-| `image.tag`         | Docker image tag                                       | `1.0.0itn1` |
-| `image.pullPolicy`  | Docker image pull policy                               | `IfNotPresent`  |
-| `nameOverride`           | Name override                                           | `""`              |
-| `fullnameOverride`          | Full name override                                  | `""`          |
-| `job.minaGraphqlUrl` | Graphql endpoint url to connect to. | `""`          |
-| `job.senderPrivateKey` | A private key of a sender | `""`          |
-| `job.recepientWalletList` | A list of wallet public keys to send transactions to. | `""`          |
-| `job.transaction.type` || `"regular"`          |
-| `job.transaction.count` | Number of transactions to send | `"5"`          |
-| `job.transaction.interval` | Time delay in ms between transactions | `"5000"`     |
-| `resources.request.memory`     | Memory requested for the application pod               | `256Mi`         |
-| `resources.request.cpu`        | CPU resources requested for the application pod        | `500m`          |
-| `resources.limit.memory`       | Maximum memory allowed for the application pod         | `512Mi`         |
-| `resources.limit.cpu`          | Maximum CPU resources allowed for the application pod  | `1`             |
-| `secret.gcpServiceAccount`     | Json Content of GCP Service Account                    | `""`            |
-| `secret.keyspaceCert.override` | Whether to override default certificate                | `false`         |
-| `secret.keyspaceCert.name`     | Name of certificate placed in `/uptime/certs`          | `""`            |
-| `secret.keyspaceCert.content`  | Contents of certificate used by AWS Keyspaces          | `""`            |
-| `ingress.enabled`              | Whether to enable ingress                              | `false`         |
-| `ingress.className`            | Ingress class name                                     | `alb`           |
-| `ingress.labels`               | Ingress Labels                                         | `{}`            |
-| `ingress.annotations`          | Ingress Annotations                                    | `{}`            |
-| `ingress.hosts`                | Ingress Hosts                                          | `[]`            |
-| `serviceAccount.create`   | Specifies whether a service account should be created                        | `true`            |
-| `serviceAccount.automount`   | Automatically mount a ServiceAccount's API credentials | `true`            |
-| `serviceAccount.annotations`   | Annotations to add to the service account | `{}`            |
+| Name                             | Description                                            | Value |
+| -------------------------------- | ------------------------------------------------------ | ----- |
+| `image.repository`               | `mina-transactions-generator` docker image url         | `673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-transactions-generator` |
+| `image.tag`                      | Docker image tag                                       | `0.1.2-5b82cae` |
+| `image.pullPolicy`               | Docker image pull policy                               | `IfNotPresent` |
+| `nameOverride`                   | Name override                                          | `""` |
+| `fullnameOverride`               | Full name override                                     | `""` |
+| `generator.minaGraphqlUrl`       | Graphql endpoint url to connect to.                    | `""` |
+| `generator.senderPrivateKey`     | A private key of a sender                              | `""` |
+| `generator.recepientWalletList`  | A list of wallet public keys to send transactions to.  | `[]` |
+| `generator.transaction.type`     | Transaction type: `regular` or `zkApp`.                | `"regular"` |
+| `generator.transaction.interval` | Time delay in ms between transactions.                 | `"5000"` |
+| `resources.request.memory`       | Memory requested for the application pod               | `256Mi` |
+| `resources.request.cpu`          | CPU resources requested for the application pod        | `500m` |
+| `resources.limit.memory`         | Maximum memory allowed for the application pod         | `512Mi` |
+| `resources.limit.cpu`            | Maximum CPU resources allowed for the application pod  | `1` |
+| `serviceAccount.create`          | Specifies whether a service account should be created  | `true` |
+| `serviceAccount.automount`       | Automatically mount a ServiceAccount's API credentials | `true` |
+| `serviceAccount.annotations`     | Annotations to add to the service account              | `{}` |

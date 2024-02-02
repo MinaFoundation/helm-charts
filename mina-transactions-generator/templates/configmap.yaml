@@ -4,6 +4,6 @@ metadata:
   name: {{ include "mina-transactions-generator.fullname" . }}
 data:
   walletList.txt: |-
-    {{- range .Values.job.recepientWalletList }}
+    {{- range .Values.generator.recepientWalletList }}
     {{ . }}
     {{- end }}
