@@ -82,6 +82,8 @@ spec:
               value: {{ .worker.memory.request | quote }}
             - name: WORKER_MEMORY_LIMIT
               value: {{ .worker.memory.limit | quote }}
+            - name: WORKER_TTL_SECONDS_AFTER_FINISHED
+              value: {{ .worker.ttlSecondsAfterFinished | quote }}
             - name: CASSANDRA_HOST
               value: {{ .aws.host }}
             - name: CASSANDRA_PORT

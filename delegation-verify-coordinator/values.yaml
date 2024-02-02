@@ -34,6 +34,7 @@ coordinator:
     memory:
       request:
       limit:
+    ttlSecondsAfterFinished: 43200 # half a day
   aws:
     host: "cassandra.us-west-2.amazonaws.com"
     port: "9142"
