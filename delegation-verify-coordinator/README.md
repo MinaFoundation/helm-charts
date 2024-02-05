@@ -63,6 +63,7 @@ The command removes all the Kubernetes components associated with the chart and 
 | `coordinator.worker.cpu.limit`       | CPU limit for the delegation verify container             | `4` |
 | `coordinator.worker.memory.request`  | Memory request for the delegation verify                  | `3072Mi` |
 | `coordinator.worker.memory.limit`    | Memory limit for the delegation verify                    | `4096Mi` |
+| `coordinator.worker.ttlSecondsAfterFinished`| Time to live seconds after the job finished        | `43200` |
 | `coordinator.aws.host`               | AWS host to connect to keyspace                           | `cassandra.us-west-2.amazonaws.com` |
 | `coordinator.aws.port`               | AWS port to connect to keyspace                           | `9142` |
 | `coordinator.aws.keyspace`           | AWS Keyspace name                                         | `` |
