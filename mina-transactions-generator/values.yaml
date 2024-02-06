@@ -17,10 +17,12 @@ fullnameOverride: ""
 generator:
   minaGraphqlUrl: "http://localhost:3085/graphql"
   senderPrivateKey: ""
-  recepientWalletList: []
+  recipientWalletList: []
   transaction:
     type: regular
     interval: 5000
+    amount: 2
+    fee: 0.1
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
