@@ -46,9 +46,11 @@ The command removes all the Kubernetes components associated with the chart and 
 | `fullnameOverride`               | Full name override                                     | `""` |
 | `generator.minaGraphqlUrl`       | Graphql endpoint url to connect to.                    | `""` |
 | `generator.senderPrivateKey`     | A private key of a sender                              | `""` |
-| `generator.recepientWalletList`  | A list of wallet public keys to send transactions to.  | `[]` |
-| `generator.transaction.type`     | Transaction type: `regular` or `zkApp`.                | `"regular"` |
+| `generator.recipientWalletList`  | A list of wallet public keys to send transactions to.  | `[]` |
+| `generator.transaction.type`     | Transaction type: `regular`, `zkApp` or `mixed`.       | `"regular"` |
 | `generator.transaction.interval` | Time delay in ms between transactions.                 | `"5000"` |
+| `generator.transaction.amount`   | Amount(per transaction) to send.                       | `"2"` |
+| `generator.transaction.fee`      | Transaction fee.                                       | `"0.1"` |
 | `resources.request.memory`       | Memory requested for the application pod               | `256Mi` |
 | `resources.request.cpu`          | CPU resources requested for the application pod        | `500m` |
 | `resources.limit.memory`         | Maximum memory allowed for the application pod         | `512Mi` |

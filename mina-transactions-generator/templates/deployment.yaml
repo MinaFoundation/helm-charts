@@ -47,6 +47,10 @@ spec:
               value: "-1"
             - name: TRANSACTION_INTERVAL
               value: {{ .Values.generator.transaction.interval | quote }}
+            - name: TRANSACTION_AMOUNT
+              value: {{ .Values.generator.transaction.amount | quote }}
+            - name: TRANSACTION_FEE
+              value: {{ .Values.generator.transaction.fee | quote }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
