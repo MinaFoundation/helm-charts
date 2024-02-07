@@ -87,21 +87,3 @@ The command removes all the Kubernetes components associated with the chart and 
 | `resources.request.cpu`              | CPU resources requested for the application pod           | `500m` |
 | `resources.limit.memory`             | Maximum memory allowed for the application pod            | `512Mi` |
 | `resources.limit.cpu`                | Maximum CPU resources allowed for the application pod     | `1` |
-
-### `bitnami/postgresql` subcharts set values
-
-> [!NOTE] Here are listed only the values that we configure in our environment. For all configurable values refer to [`bitnami/postgresql`](https://github.com/bitnami/charts/tree/main/bitnami/postgresql) documentation.
-
-| Name                                     | Description                                          | Value           |
-| ---------------------------------------- | ---------------------------------------------------- | --------------- |
-| `postgresql.global.storageClass`         | Global StorageClass for Persistent Volume(s)         | `ebs-gp3-encrypted` |
-| `postgresql.primary.name`                | Name of the primary database                         | `uptime-validation` |
-| `postgresql.primary.persistence.enabled` | Enable PostgreSQL Primary data persistence using PVC | `false` |
-| `postgresql.primary.persistence.size`    | PVC Storage Request for PostgreSQL volume            | `8Gi` |
-| `postgresql.primary.initdb.user`         | PostgreSQL username to execute the initdb scripts    | `coordinator` |
-| `postgresql.primary.initdb.password`     | PostgreSQL password to execute the initdb scripts    | `SayWGWkoFQdM5Tqv` |
-| `postgresql.auth.username`               | Name for a custom user to create                     | `"coordinator"` |
-| `postgresql.auth.password`               | Password for the custom user.                        | `SayWGWkoFQdM5Tqv` |
-| `postgresql.auth.database`               | Name for a custom database to create                 | `uptime-validation` |
-| `postgresql.auth.enablePostgresUser`     | Assign a password to the "postgres" admin user. Otherwise, remote access will be blocked for this user | `false` |
-

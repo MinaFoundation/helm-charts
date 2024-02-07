@@ -29,15 +29,15 @@ spec:
             {{- $postgresHost := (tpl .Values.coordinator.postgres.host .) }}
             {{- with .Values.coordinator }}
             - name: POSTGRES_HOST
-              value: {{ $postgresHost }}
+              value: {{ $postgresHost | quote }}
             - name: POSTGRES_PORT
               value: {{ .postgres.port | quote }}
             - name: POSTGRES_DB
-              value: {{ .postgres.db }}
+              value: {{ .postgres.db | quote }}
             - name: POSTGRES_USER
-              value: {{ .postgres.user }}
+              value: {{ .postgres.user | quote }}
             - name: POSTGRES_PASSWORD
-              value: {{ .postgres.password }}
+              value: {{ .postgres.password | quote }}
             {{- end }}
           command: ["/bin/entrypoint/entrypoint-initdb.sh"]
           volumeMounts:
@@ -55,15 +55,15 @@ spec:
             - name: SURVEY_INTERVAL_MINUTES
               value: {{ .surveyIntervalMinutes | quote }}
             - name: POSTGRES_HOST
-              value: {{ $postgresHost }}
+              value: {{ $postgresHost | quote }}
             - name: POSTGRES_PORT
               value: {{ .postgres.port | quote }}
             - name: POSTGRES_DB
-              value: {{ .postgres.db }}
+              value: {{ .postgres.db | quote }}
             - name: POSTGRES_USER
-              value: {{ .postgres.user }}
+              value: {{ .postgres.user | quote }}
             - name: POSTGRES_PASSWORD
-              value: {{ .postgres.password }}
+              value: {{ .postgres.password | quote }}
             - name: NO_CHECKS
               value: {{ .noChecks | quote }}
             - name: MINI_BATCH_NUMBER
