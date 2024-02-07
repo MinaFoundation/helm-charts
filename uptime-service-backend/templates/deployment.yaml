@@ -7,11 +7,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ include "common.names.fullname" . }}
   labels:
-    app: {{ .Release.Name }}
+    {{- include "common.labels.standard" . | nindent 4 }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicas }}
+  {{- end }}
   selector:
     matchLabels:
       app: {{ .Release.Name }}
