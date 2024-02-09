@@ -37,14 +37,15 @@ The command removes all the Kubernetes components associated with the chart and 
 
 > **Note:** For `keyspace` storage backend helmchart sets default certificate located in `/database/cert/sf-class2-root.crt`. However this could be 
 
-### Common parameters
+## Common parameters
 
 | Name                           | Description                                            | Value           |
 | ------------------------------ | ------------------------------------------------------ | --------------- |
 | `deployment.image.repository`  | `uptime-service-backend` docker image url              | `673156464838.dkr.ecr.us-west-2.amazonaws.com/block-producers-uptime` |
-| `deployment.image.tag`         | Docker image tag                                       | `1.0.0itn1` |
+| `deployment.image.tag`         | Docker image tag                                       | `1.0.0itn1`     |
 | `deployment.image.pullPolicy`  | Docker image pull policy                               | `IfNotPresent`  |
-| `deployment.network`           | Testnet name                                           | `""`              |
+| `deployment.network`           | Testnet name                                           | `""`            |
+| `deployment.requestsPerPkHourly`| Number of requests accepted per hour                  | `1000`            |
 | `deployment.logLevel`          | Application log level                                  | `info`          |
 | `deployment.affinity`          | Determines affinity https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity | `{}` |
 | `deployment.podAffinityPreset` | Ignored if affinity is set. Allowed values `soft`, `hard`| `""`          |

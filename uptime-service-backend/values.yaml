@@ -5,6 +5,7 @@ deployment:
     tag: "1.0.0itn1"
   network:
   logLevel: info
+  requestsPerPkHourly: 120
   affinity: {}
   podAffinityPreset:
   podAntiAffinityPreset: hard
