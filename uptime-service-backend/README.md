@@ -66,6 +66,12 @@ The command removes all the Kubernetes components associated with the chart and 
 | `ingress.annotations`          | Ingress Annotations                                    | `{}`            |
 | `ingress.hosts`                | Ingress Hosts                                          | `[]`            |
 | `serviceaccount.annotations`   | K8s Service Account Annotations                        | `{}`            |
+| `autoscaling.enabled`          | Autoscaling toggle                                     | `false`         |
+| `autoscaling.minReplicas`      | Autoscaling minimum replicas                           | `1`             |
+| `autoscaling.maxReplicas`      | Autoscaling maximum replicas                           | `10`            |
+| `autoscaling.targetCPUUtilizationPercentage`| Autoscaling cpu utilization threshold in precentage| `80`   |
+| `autoscaling.targetMemoryUtilizationPercentage`| Autoscaling memory utilization threshold in precentage| `80`|
+
 
 ## Application Parameters
 
