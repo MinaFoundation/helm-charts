@@ -92,6 +92,8 @@ spec:
           ports:
             - containerPort: {{ .Values.service.port }}
           env:
+            - name: REQUESTS_PER_PK_HOURLY
+              value: {{ .Values.deployment.requestsPerPkHourly | quote }}
             - name: GOLOG_LOG_LEVEL
               value: {{ .Values.deployment.logLevel }}
             - name: CONFIG_NETWORK_NAME
