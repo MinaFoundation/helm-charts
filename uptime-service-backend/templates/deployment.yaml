@@ -7,27 +7,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ include "uptime-service-backend.fullname" . }}
   labels:
-    app: {{ .Release.Name }}
+    {{- include "uptime-service-backend.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicas }}
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
+      {{- include "uptime-service-backend.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      labels:
-        app: {{ .Release.Name }}
-    spec:
-      serviceAccountName: {{ .Release.Name }}
-      {{- if .Values.deployment.affinity }}
-      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.affinity "context" $) | nindent 8 }}
-      {{- else }}
-      affinity:
-        podAffinity: {{- include "common.affinities.pods" ( dict "type" .Values.deployment.podAffinityPreset "context" $) | nindent 10 }}
-        podAntiAffinity: {{- include "common.affinities.pods" ( dict "type" .Values.deployment.podAntiAffinityPreset "context" $) | nindent 10 }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
       {{- end }}
+      labels:
+        {{- include "uptime-service-backend.labels" . | nindent 8 }}
+	{{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "uptime-service-backend.serviceAccountName" . }}
       initContainers:
         {{- if .Values.deployment.storage.keyspace }}
         - name: dbmigration
@@ -159,3 +161,15 @@ spec:
             items:
               - key: gcp-sa-json
                 path: gcp-sa.json
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
