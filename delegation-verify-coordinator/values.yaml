@@ -75,19 +75,3 @@ service:
 
 resources: {}
 
-postgresql:
-  global:
-    storageClass: ebs-gp3-encrypted
-  primary:
-    name: "uptime-validation"
-    persistence:
-      enabled: false
-      size: 8Gi
-    initdb:
-      user: "coordinator"
-      password: "SayWGWkoFQdM5Tqv"
-  auth:
-    username: "coordinator"
-    password: "SayWGWkoFQdM5Tqv"
-    database: "uptime-validation"
-    enablePostgresUser: false
