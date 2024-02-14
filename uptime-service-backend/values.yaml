@@ -1,6 +1,6 @@
 deployment:
   image:
-    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/block-producers-uptime
+    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/uptime-service-backend
     pullPolicy: IfNotPresent
     tag: "1.0.0itn1"
   network:

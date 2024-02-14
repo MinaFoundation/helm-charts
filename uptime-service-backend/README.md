@@ -41,7 +41,7 @@ The command removes all the Kubernetes components associated with the chart and 
 
 | Name                           | Description                                            | Value           |
 | ------------------------------ | ------------------------------------------------------ | --------------- |
-| `deployment.image.repository`  | `uptime-service-backend` docker image url              | `673156464838.dkr.ecr.us-west-2.amazonaws.com/block-producers-uptime` |
+| `deployment.image.repository`  | `uptime-service-backend` docker image url              | `673156464838.dkr.ecr.us-west-2.amazonaws.com/uptime-service-backend` |
 | `deployment.image.tag`         | Docker image tag                                       | `1.0.0itn1`     |
 | `deployment.image.pullPolicy`  | Docker image pull policy                               | `IfNotPresent`  |
 | `deployment.network`           | Testnet name                                           | `""`            |
