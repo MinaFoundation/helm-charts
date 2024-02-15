@@ -56,7 +56,7 @@ helm show values ./uptime-service-backend
 
 The following table lists the configurable parameters of the `uptime-service-backend` chart and its common default values.
 
-### Container parameters
+### Common parameters
 
 | Name                           | Description                                            | Value           |
 | ------------------------------ | ------------------------------------------------------ | --------------- |

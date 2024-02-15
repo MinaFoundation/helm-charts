@@ -3,17 +3,11 @@
 # Declare variables to be passed into your templates.
 
 # Application specific values
-deployment:
-  image:
-    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/block-producers-uptime
-    pullPolicy: IfNotPresent
-    tag: "1.0.0itn1"
+backend:
   network:
   logLevel: info
   requestsPerPkHourly: 120
   affinity: {}
-  podAffinityPreset:
-  podAntiAffinityPreset: hard
   whitelistConfig:
     enabled: false
     spreadsheetId:
@@ -32,12 +26,18 @@ deployment:
       awsKeyspaceName:
     local:
       path:
-  secret:
-    gcpServiceAccount:
-    keyspaceCert:
-      override: false
-      name:
-      content:
+
+secret:
+  gcpServiceAccount:
+  keyspaceCert:
+    override: false
+    name:
+    content:
+
+image:
+  repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/uptime-service-backend
+  pullPolicy: IfNotPresent
+  tag: "2.0.0rc5-cb6524c"
 
 imagePullSecrets: []
 nameOverride: ""
