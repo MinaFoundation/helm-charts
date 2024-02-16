@@ -67,8 +67,8 @@ spec:
               value: {{ .Values.rosetta.maxDBPoolSize | quote }}
             - name: PORT
               value: {{ .Values.service.port | quote }}
-            {{- if .Values.envVars }}
-            {{- toYaml .Values.envVars | nindent 12 }}
+            {{- if .Values.rosetta.envVars }}
+            {{- toYaml .Values.rosetta.envVars | nindent 12 }}
             {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

@@ -1,47 +1,49 @@
 # One of the authentication methods has to be provided
-{{- if not (and .Values.deployment.awsConfig.accessKeyId .Values.deployment.awsConfig.secretAccessKey) }}
-{{- required "Both .Values.deployment.awsConfig.accessKeyId .Values.deployment.awsConfig.secretAccessKey are required. Cannot authenticate without them" .Values.deployment.awsConfig.accessKeyId -}}
+{{- if not (and .Values.backend.awsConfig.accessKeyId .Values.backend.awsConfig.secretAccessKey) }}
+{{- required "Both .Values.backend.awsConfig.accessKeyId .Values.backend.awsConfig.secretAccessKey are required. Cannot authenticate without them" .Values.backend.awsConfig.accessKeyId -}}
 {{- end }}
 
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "common.names.fullname" . }}
+  name: {{ include "uptime-service-backend.fullname" . }}
   labels:
-    {{- include "common.labels.standard" . | nindent 4 }}
+    {{- include "uptime-service-backend.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicas }}
+  replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
+      {{- include "uptime-service-backend.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      labels:
-        app: {{ .Release.Name }}
-    spec:
-      serviceAccountName: {{ .Release.Name }}
-      {{- if .Values.deployment.affinity }}
-      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.affinity "context" $) | nindent 8 }}
-      {{- else }}
-      affinity:
-        podAffinity: {{- include "common.affinities.pods" ( dict "type" .Values.deployment.podAffinityPreset "context" $) | nindent 10 }}
-        podAntiAffinity: {{- include "common.affinities.pods" ( dict "type" .Values.deployment.podAntiAffinityPreset "context" $) | nindent 10 }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
       {{- end }}
+      labels:
+        {{- include "uptime-service-backend.labels" . | nindent 8 }}
+	      {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "uptime-service-backend.serviceAccountName" . }}
       initContainers:
-        {{- if .Values.deployment.storage.keyspace }}
+        {{- if .Values.backend.storage.keyspace }}
         - name: dbmigration
-          image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           command: [ "db_migration" ]
           args: [ "up" ]
           env:
+            # Backend related variables
             - name: GOLOG_LOG_LEVEL
-              value: {{ .Values.deployment.logLevel }}
+              value: {{ .Values.backend.logLevel }}
             - name: CONFIG_NETWORK_NAME
-              value: {{ .Values.deployment.network }}
-            {{- with .Values.deployment.whitelistConfig }}
+              value: {{ .Values.backend.network }}
+            # Whitelisting related variables
+            {{- with .Values.backend.whitelistConfig }}
             {{- if .enabled }}
             - name: CONFIG_GSHEET_ID
               value: {{ .spreadsheetId | quote }}
@@ -56,51 +58,52 @@ spec:
               value: "1"
             {{- end }}
             {{- end }}
-            {{- if .Values.deployment.storage.keyspace.awsKeyspaceName }}
+            # AWS related variables
+            {{- if .Values.backend.storage.keyspace.awsKeyspaceName }}
             - name: AWS_KEYSPACE
-              value: {{ .Values.deployment.storage.keyspace.awsKeyspaceName | quote }}
-            # image is built with AWS_SSL_CERTIFICATE_PATH=/database/cert/sf-class2-root.crt therefore we only set it if it needs to be overridden.
+              value: {{ .Values.backend.storage.keyspace.awsKeyspaceName | quote }}
             {{- end }}
-            {{- if .Values.deployment.secret.keyspaceCert.override }}
+            # image is built with AWS_SSL_CERTIFICATE_PATH=/database/cert/sf-class2-root.crt therefore we only set it if it needs to be overridden.
+            {{- if .Values.secret.keyspaceCert.override }}
             - name: AWS_SSL_CERTIFICATE_PATH
-              value: /uptime/cert/{{ .Values.deployment.secret.keyspaceCert.name }}
+              value: /uptime/cert/{{ .Values.secret.keyspaceCert.name }}
             {{- end }}
             - name: AWS_ACCESS_KEY_ID
-              value: {{ .Values.deployment.awsConfig.accessKeyId | quote }}
+              value: {{ .Values.backend.awsConfig.accessKeyId | quote }}
             - name: AWS_SECRET_ACCESS_KEY
-              value: {{ .Values.deployment.awsConfig.secretAccessKey | quote }}
+              value: {{ .Values.backend.awsConfig.secretAccessKey | quote }}
             - name: AWS_REGION
-              value: {{ .Values.deployment.awsConfig.region | quote }}
+              value: {{ .Values.backend.awsConfig.region | quote }}
           volumeMounts:
-            {{- if .Values.deployment.secret.keyspaceCert.override }}
+            {{- if .Values.secret.keyspaceCert.override }}
             - name: {{ .Release.Name }}-keyspace-cert
               mountPath: /uptime/cert
             {{- end }}
         {{- end }}
       containers:
-        - name: uptime
-          image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
-          imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 8080
-            initialDelaySeconds: 15
-            periodSeconds: 30
+        - name: backend
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           ports:
             - containerPort: {{ .Values.service.port }}
           env:
+            # Backend related variables
             - name: REQUESTS_PER_PK_HOURLY
-              value: {{ .Values.deployment.requestsPerPkHourly | quote }}
+              value: {{ .Values.backend.requestsPerPkHourly | quote }}
             - name: GOLOG_LOG_LEVEL
-              value: {{ .Values.deployment.logLevel }}
+              value: {{ .Values.backend.logLevel }}
             - name: CONFIG_NETWORK_NAME
-              value: {{ .Values.deployment.network }}
+              value: {{ .Values.backend.network }}
+            {{- if and .Values.backend.storage.local .Values.backend.storage.local.path }}
+            - name: CONFIG_FILESYSTEM_PATH
+              value: {{ .Values.backend.storage.local.path | quote }}
+            {{- end }}
+            # Whitelisting related variables
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /uptime/gcloud/gcp-sa.json
-            {{- with .Values.deployment.whitelistConfig }}
+            {{- with .Values.backend.whitelistConfig }}
             {{- if .enabled }}
             - name: CONFIG_GSHEET_ID
               value: {{ .spreadsheetId | quote }}
@@ -115,46 +118,43 @@ spec:
               value: "1"
             {{- end }}
             {{- end }}
+            # AWS related variables
             - name: AWS_ACCESS_KEY_ID
-              value: {{ .Values.deployment.awsConfig.accessKeyId | quote }}
+              value: {{ .Values.backend.awsConfig.accessKeyId | quote }}
             - name: AWS_SECRET_ACCESS_KEY
-              value: {{ .Values.deployment.awsConfig.secretAccessKey | quote }}
+              value: {{ .Values.backend.awsConfig.secretAccessKey | quote }}
             - name: AWS_REGION
-              value: {{ .Values.deployment.awsConfig.region | quote }}
-            {{- if and .Values.deployment.storage.s3 .Values.deployment.storage.s3.awsBucketNameSuffix }}
+              value: {{ .Values.backend.awsConfig.region | quote }}
+            {{- if and .Values.backend.storage.s3 .Values.backend.storage.s3.awsBucketNameSuffix }}
             - name: AWS_BUCKET_NAME_SUFFIX
-              value: {{ .Values.deployment.storage.s3.awsBucketNameSuffix | quote }}
+              value: {{ .Values.backend.storage.s3.awsBucketNameSuffix | quote }}
             - name: AWS_ACCOUNT_ID
-              value: {{ .Values.deployment.awsConfig.accountId | quote }}
+              value: {{ .Values.backend.awsConfig.accountId | quote }}
             {{- end }}
-            {{- if and .Values.deployment.storage.keyspace .Values.deployment.storage.keyspace.awsKeyspaceName }}
+            {{- if and .Values.backend.storage.keyspace .Values.backend.storage.keyspace.awsKeyspaceName }}
             - name: AWS_KEYSPACE
-              value: {{ .Values.deployment.storage.keyspace.awsKeyspaceName | quote }}
+              value: {{ .Values.backend.storage.keyspace.awsKeyspaceName | quote }}
             {{- end }}
-            {{- if .Values.deployment.secret.keyspaceCert.override }}
+            {{- if .Values.secret.keyspaceCert.override }}
             - name: AWS_SSL_CERTIFICATE_PATH
-              value: /uptime/cert/{{ .Values.deployment.secret.keyspaceCert.name }}
-            {{- end }}
-            {{- if and .Values.deployment.storage.local .Values.deployment.storage.local.path }}
-            - name: CONFIG_FILESYSTEM_PATH
-              value: {{ .Values.deployment.storage.local.path | quote }}
+              value: /uptime/cert/{{ .Values.secret.keyspaceCert.name }}
             {{- end }}
           volumeMounts:
             - name:  {{ .Release.Name }}-gcp-sa
               mountPath: /uptime/gcloud
-            {{- if .Values.deployment.secret.keyspaceCert.override }}
+            {{- if .Values.secret.keyspaceCert.override }}
             - name: {{ .Release.Name }}-keyspace-cert
               mountPath: /uptime/cert
             {{- end }}
       volumes:
-        {{- if .Values.deployment.secret.keyspaceCert.override }}
+        {{- if .Values.secret.keyspaceCert.override }}
         - name: {{ .Release.Name }}-keyspace-cert
           secret:
             secretName: {{ .Release.Name }}
             defaultMode: 0600
             items:
-              - key: {{ .Values.deployment.secret.keyspaceCert.name }}
-                path: {{ .Values.deployment.secret.keyspaceCert.name }}
+              - key: {{ .Values.secret.keyspaceCert.name }}
+                path: {{ .Values.secret.keyspaceCert.name }}
         {{- end }}
         - name: {{ .Release.Name }}-gcp-sa
           secret:
@@ -163,3 +163,15 @@ spec:
             items:
               - key: gcp-sa-json
                 path: gcp-sa.json
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

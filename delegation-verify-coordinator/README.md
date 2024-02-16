@@ -70,7 +70,7 @@ The command removes all the Kubernetes components associated with the chart and 
 | `coordinator.aws.region`             | AWS Region                                                | `` |
 | `coordinator.aws.accessKeyID`        | AWS Access Key ID                                         | `` |
 | `coordinator.aws.secretAccessKey`    | AWS Secret Access Key                                     | `` |
-| `coordinator.aws.s3Bucket`           | AWS S3 Bucket name that holds submissions                 | `673156464838-block-producers-uptime` |
+| `coordinator.aws.s3Bucket`           | AWS S3 Bucket name that holds submissions                 | `673156464838-uptime-service-backend` |
 | `coordinator.ssl.certfile`           | Path to the certfile for AWS Keyspaces                    | `` |
 | `serviceAccount.create`              | Create or not Service Account                             | `true` |
 | `serviceAccount.automount`           | Automatically mount ServiceAccount API credentials        | `true` |
