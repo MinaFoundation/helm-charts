@@ -19,15 +19,20 @@ spec:
       {{- include "uptime-service-backend.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.backend.metrics.enabled }}
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: {{ .Values.service.port | quote }}
+        prometheus.io/path: '/metrics'
       {{- end }}
       labels:
-        {{- include "uptime-service-backend.labels" . | nindent 8 }}
-	      {{- with .Values.podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+      {{- include "uptime-service-backend.labels" . | nindent 8 }}
+      {{- with .Values.podLabels }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
       serviceAccountName: {{ include "uptime-service-backend.serviceAccountName" . }}
       initContainers:

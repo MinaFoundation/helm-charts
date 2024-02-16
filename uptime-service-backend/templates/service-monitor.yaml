@@ -1,0 +1,16 @@
+{{- if .Values.backend.metrics.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "uptime-service-backend.fullname" . }}
+  labels:
+    app: {{- include "uptime-service-backend.labels" . | nindent 4 }}
+spec:
+  endpoints:
+    - interval: 30s
+      port: http
+  selector:
+    matchLabels:
+      {{- include "uptime-service-backend.selectorLabels" . | nindent 6 }}
+{{- end }}

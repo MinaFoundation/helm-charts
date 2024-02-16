@@ -26,6 +26,8 @@ backend:
       awsKeyspaceName:
     local:
       path:
+  metrics:
+    enabled: false
 
 secret:
   gcpServiceAccount:
