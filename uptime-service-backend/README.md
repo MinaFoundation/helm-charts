@@ -120,9 +120,10 @@ The following table lists the configurable parameters of the `uptime-service-bac
 
 | Name                           | Description                                            | Value           |
 | ------------------------------ | ------------------------------------------------------ | --------------- |
-| `backend.network`                | Testnet name                                           | `""`              |
-| `backend.requestsPerPkHourly`    | Number of requests accepted per hour                   | `1000`            |
-| `backend.logLevel`               | Application log level                                  | `info`            |
+| `backend.network`              | Testnet name                                           | `""`            |
+| `backend.requestsPerPkHourly`  | Number of requests accepted per hour                   | `1000`          |
+| `backend.logLevel`             | Application log level                                  | `info`          |
+| `backend.metrics.enabled`      | Toggle for prometheus metrics                          | `false`         |
 
 ### Google spreadsheet to read whitelist from
 
