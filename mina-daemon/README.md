@@ -70,6 +70,7 @@ Parameter | Description
 `node.secrets.libp2pPassword` | Password for libp2p keypair | ` `
 `node.secrets.discoveryLibp2p` | Private libp2p keypair key | ` `
 `node.secrets.discoveryLibp2pPeerid` | Public libp2p keypair key | ` `
+`node.libp2pKeys.create` | If set to `true`, libp2p keypair is created at runtime | `false`
 
 ### Optional Settings
 
