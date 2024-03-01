@@ -31,6 +31,20 @@ spec:
       serviceAccountName: {{ .Release.Name }}
       initContainers:
         {{ if .Values.node.libp2pKeys.enabled -}}
+        {{ if .Values.node.libp2pKeys.create -}}
+        - name: generate-libp2p-keys
+          image: {{ .Values.deployment.image }}
+          command: ["/bin/sh", "/scripts/generate-libp2p-keys.sh"]
+          env:
+            - name: MINA_LIBP2P_PRIV_KEYPATH
+              value: /root/libp2p-keys/{{ .Values.node.name }}-libp2p
+          volumeMounts:
+            - name: {{ .Release.Name }}-scripts
+              mountPath: /scripts/generate-libp2p-keys.sh
+              subPath: generate-libp2p-keys.sh
+            - name: {{ .Release.Name }}-generated-libp2p-keys
+              mountPath: /root/libp2p-keys
+        {{- else -}}
         - name: fix-libp2p-perms
           image: busybox:latest
           command:
@@ -42,6 +56,7 @@ spec:
               mountPath: /libp2p-keys
             - name: {{ .Release.Name }}-fixed-libp2p-keys
               mountPath: /root/libp2p-keys
+        {{- end }}
         {{- end }}
         {{ if .Values.node.walletKeys.enabled -}}
         - name: fix-mina-perms
@@ -104,11 +119,8 @@ spec:
               ephemeral-storage: {{ .Values.resources.ephemeralStorageRequest }}
               {{- end }}
           image: {{ .Values.deployment.image }}
-          {{ if .Values.deployment.customEntrypoint.enabled -}}
-          command: [{{ .Values.deployment.customEntrypoint.entrypoint }}]
-          {{- end }}
+          command: ["/bin/sh", "/scripts/entrypoint.sh"]
           args: [
-
             {{- if and (not .Values.node.walletKeys.enabled) .Values.node.daemonMode.snarkWorker }}
             "internal", "snark-worker",
             {{- if .Values.node.daemonAddress }}
@@ -118,7 +130,6 @@ spec:
             "--proof-level", {{ .Values.node.proofLevel | quote }},
             {{- end }}
             {{- else }}
-
             "daemon",
             {{- if .Values.deployment.uptime.enabled }}
             "--uptime-url", {{ .Values.deployment.uptime.url | quote }},
@@ -366,11 +377,16 @@ spec:
             - name: DAEMON_EXTERNAL_PORT
               value: {{ .Values.node.ports.p2p | quote }}
             {{- if .Values.node.libp2pKeys.enabled }}
+            {{- if .Values.node.libp2pKeys.create }}
+            - name: MINA_LIBP2P_PASS_PATH
+              value: /root/libp2p-keys/{{ .Values.node.name }}-libp2p.password
+            {{- else }}
             - name: MINA_LIBP2P_PASS
               valueFrom:
                 secretKeyRef:
                   name: {{ .Release.Name }}
                   key: "libp2p-password"
+            {{- end }}
             {{- end }}
             {{- if .Values.node.walletKeys.enabled }}
             - name: MINA_PRIVKEY_PASS
@@ -408,9 +424,17 @@ spec:
 {{- include "healthcheck.node.allChecks" $data | indent 10 }}
           imagePullPolicy: Always
           volumeMounts:
-            {{- if .Values.node.libp2pKeys.enabled }}
+            - name: {{ .Release.Name }}-scripts
+              mountPath: /scripts/entrypoint.sh
+              subPath: entrypoint.sh
+            {{ if .Values.node.libp2pKeys.enabled -}}
+            {{ if .Values.node.libp2pKeys.create -}}
+            - name: {{ .Release.Name }}-generated-libp2p-keys
+              mountPath: /root/libp2p-keys
+            {{- else -}}
             - name: {{ .Release.Name }}-fixed-libp2p-keys
               mountPath: /root/libp2p-keys
+            {{- end }}
             {{- end }}
             {{- if .Values.node.walletKeys.enabled }}
             - name: {{ .Release.Name }}-fixed-mina-keys
@@ -503,6 +527,10 @@ spec:
           emptyDir: {}
         {{- end }}
         {{- if .Values.node.libp2pKeys.enabled }}
+        {{- if .Values.node.libp2pKeys.create }}
+        - name: {{ .Release.Name }}-generated-libp2p-keys
+          emptyDir: {}
+        {{- else }}
         - name: {{ .Release.Name }}-mounted-libp2p-keys
           secret:
             secretName: {{ .Release.Name }}
@@ -514,6 +542,7 @@ spec:
                 path: {{ .Values.node.name }}-libp2p.peerid
         - name: {{ .Release.Name }}-fixed-libp2p-keys
           emptyDir: {}
+        {{- end }}
         {{- end }}
         {{- if or .Values.deployment.storeBlocks.gcp.enabled .Values.deployment.storeBlocks.aws.enabled }}
         - name: {{ .Release.Name }}-gcloud-keyfile
@@ -529,12 +558,10 @@ spec:
           persistentVolumeClaim:
             claimName: {{ .Release.Name }}-precomputed-blocks
         {{- end }}
-        {{- if .Values.deployment.storeBlocks.aws.enabled }}
         - name: {{ .Release.Name }}-scripts
           configMap:
             name: {{ .Release.Name }}-scripts
             defaultMode: 0755
-        {{- end }}
   {{- if .Values.updateStrategy  }}
   strategy: {{- toYaml .Values.updateStrategy | nindent  4 }}
   {{- end }}

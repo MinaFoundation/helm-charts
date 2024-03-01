@@ -2,9 +2,6 @@ deployment:
   testnet: "berkeley"
   image: minaprotocol/mina-daemon:1.3.2beta2-release-2.0.0-05c2f73-bulseye-berkeley
   genesisLedgerURL:
-  customEntrypoint:
-    enabled: true
-    entrypoint: "mina"
   peerListURL: "https://storage.googleapis.com/seed-lists/berkeley_seeds.txt"
   uptime:
     enabled: false
@@ -106,6 +103,7 @@ node:
     address: staging-berkeley-archive:3086
   libp2pKeys:
     enabled: true
+    create: false
     legacy: false
   walletKeys:
     enabled: false
@@ -169,7 +167,7 @@ service:
 podAnnotations: {}
 
 updateStrategy:
-  type: RollingUpdate
+  type: Recreate
 
 resources:
   memoryRequest: "16.0Gi"
