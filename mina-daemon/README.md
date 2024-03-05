@@ -126,6 +126,8 @@ Parameter | Description | Default
 `node.disableNodeStatus` | Disable reporting node status to other nodes | ` `
 `node.enableFlooding` | Publish our own blocks/transactions to every peer we can find | ` `
 `node.enablePeerExchange` | Help keep the mesh connected when closing connections | `true`
+`node.discoveryExternalIp.enabled` | Retrieve ExternalIP based on DNS (Required in Private Networks) | `false`
+`node.discoveryExternalIp.targetDNS` | DNS used to Retrieve ExternalIP  | `example.nlb.us-west-2.amazonaws.com`
 `node.externalIP` | External IP address for other nodes to connect to. You only need to set this if auto-discovery fails for some reason | ` `
 `node.fileLogRotations` | Number of file log rotations before overwriting old logs | `50`
 `node.gcStatInterval` | in mins for collecting GC stats for metrics | `15.000000`
