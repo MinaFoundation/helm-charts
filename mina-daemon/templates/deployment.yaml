@@ -27,6 +27,7 @@ spec:
         prometheus.io/port: {{ .Values.node.metrics.port | quote }}
         prometheus.io/path: '/metrics'
       {{- end }}
+        checksum/environment: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
       serviceAccountName: {{ .Release.Name }}
       initContainers:
@@ -119,7 +120,7 @@ spec:
               ephemeral-storage: {{ .Values.resources.ephemeralStorageRequest }}
               {{- end }}
           image: {{ .Values.deployment.image }}
-          command: ["/bin/sh", "/scripts/entrypoint.sh"]
+          command: ["/scripts/entrypoint.sh"]
           args: [
             {{- if and (not .Values.node.walletKeys.enabled) .Values.node.daemonMode.snarkWorker }}
             "internal", "snark-worker",
@@ -401,6 +402,12 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}
                   key: "wallet-password"
+            {{- end }}
+            {{- if .Values.node.discoveryExternalIp.enabled }}
+            - name: DISCOVERY_EXTERNAL_IP_ENABLED
+              value: "true"
+            - name: DISCOVERY_EXTERNAL_IP_TARGET_DNS
+              value: {{ .Values.node.discoveryExternalIp.targetDNS | quote }}
             {{- end }}
             {{- if .Values.node.extraEnvVars }}
             {{- toYaml .Values.node.extraEnvVars | nindent 12 }}
