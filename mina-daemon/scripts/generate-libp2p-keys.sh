@@ -12,7 +12,8 @@ generate_password() {
 }
 
 generate_libp2p_keys() {
-    mina libp2p generate-keypair -privkey-path ${MINA_LIBP2P_PRIV_KEYPATH}
+    mina libp2p generate-keypair -privkey-path ${MINA_LIBP2P_PRIV_KEYPATH} 2>/dev/null || \
+    mina advanced generate-libp2p-keypair -privkey-path ${MINA_LIBP2P_PRIV_KEYPATH}
     chmod -R 0700 "$(dirname ${MINA_LIBP2P_PRIV_KEYPATH})"
     chmod -R 0600 ${MINA_LIBP2P_PRIV_KEYPATH}*
 }
