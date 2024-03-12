@@ -47,7 +47,7 @@ spec:
               mountPath: /root/libp2p-keys
         {{- else -}}
         - name: fix-libp2p-perms
-          image: busybox:latest
+          image: {{ .Values.deployment.image }}
           command:
             - sh
             - -c
@@ -61,7 +61,7 @@ spec:
         {{- end }}
         {{ if .Values.node.walletKeys.enabled -}}
         - name: fix-mina-perms
-          image: busybox:latest
+          image: {{ .Values.deployment.image }}
           command:
             - sh
             - -c
@@ -74,10 +74,10 @@ spec:
         {{- end }}
         {{ if .Values.deployment.genesisLedgerURL -}}
         - name: get-genesis-ledger
-          image: busybox:latest
+          image: {{ .Values.deployment.image }}
           command:
-            - wget
-            - -O
+            - curl
+            - -o
             - /root/.mina-config/genesis_ledger.json
             - {{ .Values.deployment.genesisLedgerURL }}
           volumeMounts:
@@ -86,7 +86,7 @@ spec:
         {{- end }}
         {{ if .Values.deployment.storeBlocks.enabled -}}
         - name: precomputed-blocks
-          image: busybox:latest
+          image: {{ .Values.deployment.image }}
           env:
             - name: STORE_BLOCKS_DIR
               value: {{ .Values.deployment.storeBlocks.directory }}
