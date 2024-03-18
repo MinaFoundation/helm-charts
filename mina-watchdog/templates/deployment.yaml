@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mina-watchdog.fullname" . }}
+  labels:
+    {{- include "mina-watchdog.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "mina-watchdog.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{ if .Values.metrics.enabled }}
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: {{ .Values.metrics.ports | quote }}
+        prometheus.io/path: '/metrics'
+      {{ end }}
+      labels:
+        {{- include "mina-watchdog.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "mina-watchdog.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: watchdog
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["python3"]
+          args: ["-u", "/code/watchdog.py"]
+          env:
+            - name: "RESTART_EVERY_MINS"
+              value: {{ .Values.watchdog.restartEveryMins | quote }}
+            - name: "RESTART_NODES"
+              value: {{ .Values.watchdog.restartNodes | quote }}
+            - name: "MAKE_REPORTS"
+              value: {{ .Values.watchdog.makeReports | quote }}
+            - name: "MAKE_REPORT_EVERY_MINS"
+              value: {{ .Values.watchdog.makeReportEveryMins | quote }}
+            - name: "MAKE_REPORT_DISCORD_WEBHOOK_URL"
+              value: {{ .Values.watchdog.makeReportDiscordWebhookUrl | quote }}
+            - name: "MAKE_REPORT_ACCOUNTS"
+              value: {{ .Values.watchdog.makeReportAccounts | quote }}
+            - name: "METRICS_PORT"
+              value: {{ .Values.watchdog.mina.ports.metrics | quote }}
+            - name: "SEED_PEERS_URL"
+              value: {{ .Values.watchdog.seedPeersURL | quote }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+            {{ if .Values.metrics.enabled }}
+            - name: metrics-port
+              containerPort: {{ .Values.metrics.port }}
+              protocol: TCP
+            {{ end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

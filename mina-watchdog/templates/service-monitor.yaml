@@ -1,0 +1,16 @@
+{{- if .Values.metrics.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "mina-watchdog.fullname" . }}
+  labels:
+    app: {{ include "mina-watchdog.labels" . | nindent 4 }}
+spec:
+  endpoints:
+    - interval: 30s
+      port: metrics-port
+  selector:
+    matchLabels:
+      {{- include "mina-watchdog.selectorLabels" . | nindent 6 }}
+{{- end }}

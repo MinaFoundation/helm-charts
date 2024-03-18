@@ -1,0 +1,12 @@
+# RoleBinding to bind Pod to Role
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "mina-watchdog.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "mina-watchdog.serviceAccountName" . }}
+roleRef:
+  kind: Role
+  name: {{ include "mina-watchdog.fullname" . }}
+  apiGroup: rbac.authorization.k8s.io
