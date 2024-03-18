@@ -1,0 +1,56 @@
+{{- if .Values.minaPayoutsDataProvider.ledgerDBQuery.bootstrap.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "mina-payouts-data-provider.fullname" . }}-ledger-db-bootstrap
+  labels:
+    {{- include "mina-payouts-data-provider.labels" . | nindent 4 }}
+spec:
+  template:
+    spec:
+      containers:
+        - name: import-schema
+          image: "{{ .Values.minaPayoutsDataProvider.ledgerDBQuery.bootstrap.image.repository }}:{{ .Values.minaPayoutsDataProvider.ledgerDBQuery.bootstrap.image.tag }}"
+          env:
+            - name: LEDGER_DB_QUERY_HOST
+              value: {{ .Values.minaPayoutsDataProvider.ledgerDBQuery.host | quote }}
+            - name: LEDGER_DB_QUERY_PORT
+              value: {{ .Values.minaPayoutsDataProvider.ledgerDBQuery.port | quote }}
+            - name: LEDGER_DB_QUERY_NAME
+              value: {{ .Values.minaPayoutsDataProvider.ledgerDBQuery.name | quote }}
+            - name: LEDGER_DB_QUERY_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mina-payouts-data-provider.fullname" . }}-ledger-db-query
+                  key: LEDGER_DB_QUERY_USER
+            - name: LEDGER_DB_QUERY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mina-payouts-data-provider.fullname" . }}-ledger-db-query
+                  key: LEDGER_DB_QUERY_PASSWORD
+            - name: LEDGER_DB_QUERY_REQUIRE_SSL
+              value: {{ .Values.minaPayoutsDataProvider.ledgerDBQuery.ssl.enabled | quote }}
+            {{- if .Values.minaPayoutsDataProvider.ledgerDBQuery.ssl.enabled }}
+            - name: LEDGER_DB_QUERY_CERTIFICATE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mina-payouts-data-provider.fullname" . }}-ledger-db-query
+                  key: LEDGER_DB_QUERY_CERTIFICATE
+            {{- end }}
+            - name: LEDGER_DB_QUERY_SCHEMA_URL
+              value: {{ .Values.minaPayoutsDataProvider.ledgerDBQuery.bootstrap.schemaURL | quote }}
+            - name: LEDGER_DB_QUERY_BOOTSTRAP_DELAY
+              value: {{ .Values.minaPayoutsDataProvider.ledgerDBQuery.bootstrap.delay | quote }}
+          command: ["bash", "-c", "/scripts/ledger-db-bootstrap.sh"]
+          volumeMounts:
+            - name: {{ include "mina-payouts-data-provider.fullname" . }}-ledger-db-bootstrap
+              mountPath: "/scripts/"
+      volumes:
+        - name: {{ include "mina-payouts-data-provider.fullname" . }}-ledger-db-bootstrap
+          configMap:
+            name: {{ include "mina-payouts-data-provider.fullname" . }}-ledger-db-bootstrap
+            defaultMode: 0755
+      restartPolicy: Never
+  backoffLimit: 10
+{{- end }}
