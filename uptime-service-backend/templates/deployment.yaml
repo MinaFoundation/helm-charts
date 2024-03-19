@@ -47,6 +47,8 @@ spec:
               value: {{ .Values.backend.logLevel }}
             - name: CONFIG_NETWORK_NAME
               value: {{ .Values.backend.network }}
+            - name: VERIFY_SIGNATURE_DISABLED
+              value: {{ ternary "1" "0" .Values.backend.verifySignatureDisabled }}
             # Whitelisting related variables
             {{- with .Values.backend.whitelistConfig }}
             {{- if .enabled }}

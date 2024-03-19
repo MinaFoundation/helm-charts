@@ -6,6 +6,7 @@
 backend:
   network:
   logLevel: info
+  verifySignatureDisabled: false
   requestsPerPkHourly: 120
   affinity: {}
   whitelistConfig:
