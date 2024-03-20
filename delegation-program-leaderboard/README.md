@@ -1,101 +1,93 @@
-# `delegation-program-leaderboard` helm chart
+# delegation-program-leaderboard
 
-A Helm chart to deploy Delegation Program Leaderboard.
+![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
 
-> **Note** Currently MF does not have chart repository. To install this chart i.e. with helmfile you need to reffer to it following ways:
-```console
-# helmfile.yaml
-<..>
-releases:
-  - name: mina-daemon
-    chart: git::https://git:accesstoken@github.com/MinaFoundation/helm-charts.git@delegation-program-leaderboard?ref=main
-<..>
-```
+A helm chart for the Delegation Program Leaderboard frontend
+
+**Homepage:** <https://github.com/MinaFoundation/delegation-program-leaderboard>
+
+## Maintainers
+
+| Name | Email | Url |
+| ---- | ------ | --- |
+| Marton Szekely | <marton.szekely@minaprotocol.com> |  |
+
+## Source Code
+
+* <https://github.com/MinaFoundation/delegation-program-leaderboard>
 
 ## Prerequisites
 
-Before installing this Helm chart, you should have the following prerequisites:
+Before using this Helm chart, you should have the following prerequisites:
 
- - Access to Kubernetes cluster
- - Helm installed on your local machine
- - Basic knowledge of Kubernetes and Helm
- - Access to https://github.com/MinaFoundation/helm-charts
- - Optional: helmfile to install this chart
+- Access to Kubernetes cluster (If needed contact your friendly neighbourhood DevOps engineer)
+- Helm >= v3.14.3
+- (**Optional**) helmfile >= v0.162.0 to install this chart
 
 ## Installation
 
-To install this Helm chart, easiest is create a helmfile.yaml with needed values and run:
+> Note: **examples** can be found in the repository
 
-```bash
-$ helmfile template
-$ helmfile apply
+To install this Helm chart, the easiest is to create a helmfile.yaml with needed values and run:
+
+```
+helmfile template
+helmfile apply
 ```
 
 Or use helmfile only to generate resources and apply them with kubectl like so:
 
-```bash
-$ helmfile template | kubectl apply -f -
+```
+helmfile template | kubectl -f -
 ```
 
-## Configuration
+Verify that the chart is deployed successfully:
 
-To get all available values in cloned `helm-charts` do:
+> Note: `kubectl` is a better suited tool for this
 
-```bash
-$ helm show values ./delegation-program-leaderboard
+```
+helmfile status
 ```
 
-The following table lists the configurable parameters of the `delegation-program-leaderboard` chart and its common default values.
+## Values
 
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| affinity | object | `{}` | Affinity rules |
+| autoscaling.enabled | bool | `false` | Toggle for autoscaling |
+| autoscaling.maxReplicas | int | `100` | Maximum replicat to be present |
+| autoscaling.minReplicas | int | `1` | Minimum replicas to be present |
+| autoscaling.targetCPUUtilizationPercentage | int | `80` | CPU Utilization threshold |
+| fullnameOverride | string | `""` | The full release name override |
+| image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
+| image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/delegation-program-leaderboard"` | The repository of the image |
+| image.tag | string | `"0.1.0-b66ffbd"` | The tag of the iamge. Overrides the image tag whose default is the chart appVersion. |
+| imagePullSecrets | list | `[]` | The secrets used to pull the image |
+| ingress.annotations | object | `{}` | Annotations to add to the ingress |
+| ingress.className | string | `""` | Ingress class name |
+| ingress.enabled | bool | `false` | Toggle for enabling ingress for the application |
+| ingress.hosts[0] | object | `{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}` | Host to route traffic from |
+| ingress.hosts[0].paths[0].pathType | string | `"ImplementationSpecific"` | Type of the path |
+| ingress.tls | list | `[]` | TLS specific options for the ingress https://kubernetes.io/docs/concepts/services-networking/ingress/#tls |
+| leaderboard.dbHost | string | `"localhost"` | Host of the Delegation Program Database Cluster |
+| leaderboard.dbName | string | `"postgres"` | Name of the Delegation Program Database |
+| leaderboard.dbPassword | string | `"postgres"` | Password of the Delegation Program Database |
+| leaderboard.dbPort | string | `"5432"` | Port of the Delegation Program Database |
+| leaderboard.dbUser | string | `"postgres"` | User of the Delegation Program Database |
+| leaderboard.envVars | object | `{}` | Environment variables for the application |
+| nameOverride | string | `""` | The release name override |
+| nodeSelector | object | `{}` | Node selector labels |
+| podAnnotations | object | `{}` | Annotations to add to the pods |
+| podSecurityContext | object | `{}` | SecurityContext used for the pod |
+| replicaCount | int | `1` | The number of pods to be deployed |
+| resources | object | `{}` | Resource limitations for the pods |
+| securityContext | object | `{}` |  |
+| service.port | int | `80` | Defines the port which the service exposes |
+| service.type | string | `"ClusterIP"` | Defines the type of the service |
+| serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
+| serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
+| serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
+| tolerations | list | `[]` | Tolerations |
 
-### Optional Settings
-
-> **Note** This is only more notable list of values.
-
-Parameter | Description | Default
---- | --- | ---
-`nameOverride` | Override Release Name | ` `
-`fullnameOverride` | Override Release and Chart Name | ` `
-`serviceAccount.create` | Create or not Service Account | `true`
-`serviceAccount.annotations` | Annotations for Service Account | `{}`
-`serviceAccount.name` | If specified, name of the service account | ` `
---- | --- | ---
-`replicaCount` | Number of Replicas | `1`
-`image.repository` | Docker Respository | `673156464838.dkr.ecr.us-west-2.amazonaws.com/delegation-program-leaderboard`
-`image.pullPolicy` | Image Pull Policy| `IfNotPresent`
-`image.tag` | Tag | `0.1.0`
-`image.imagePullSecrets` | Secret to pull Docker image | `[]`
-`podAnnotations` | Pod Annotations | `{}`
-`podSecurityContext` | Pod Security Context | `{}`
-`securityContext` | Security Context | `{}`
-`service.type` | Service Type | `ClusterIP`
-`service.port` | Service Port | `80`
-`ingress.enabled` | Enable Ingress | `false`
-`ingress.className` | Ingress Class Name | ` `
-`ingress.annotations` | Ingress Annotations | `{}`
-`ingress.hosts` | Ingress Hosts | `[]`
-`ingress.tls` | Ingress TLS | `[]`
-`resources` | Resources allocated to the pods | `{}`
---- | --- | ---
-`leaderboard.envVars` | Environment Variables to pass to the container | `{}`
-`leaderboard.dbHost` | Database Host | `localhost`
-`leaderboard.dbPort` | Database Port | `5432`
-`leaderboard.dbUser` | Database User | `postgres`
-`leaderboard.dbPassword` | Database Password | `postgres`
-`leaderboard.dbName` | Database Name | `postgres`
---- | --- | ---
-`nodeSelector` | Override Node Selector | `{}`
-`tolerations` | Set tolerations | `[]`
-`affinity` | Set affinity | `{}`
-
-## Uninstallation
-
-To uninstall the Helm chart using helmfile, follow these steps:
-
-```bash
-$ helmfile destroy
-```
-or
-```bash
-$ helmfile template . | kubectl delete -f -
-```
+----------------------------------------------
+Autogenerated from chart metadata using [helm-docs v1.11.2](https://github.com/norwoodj/helm-docs/releases/v1.11.2)

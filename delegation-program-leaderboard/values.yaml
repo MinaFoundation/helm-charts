@@ -2,29 +2,36 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# -- The number of pods to be deployed
 replicaCount: 1
 
 image:
+  # image.repository -- The repository of the image
   repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/delegation-program-leaderboard
+  # image.pullPolicy -- The pullPolicy used when pulling the image
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
+  # image.tag -- The tag of the iamge. Overrides the image tag whose default is the chart appVersion.
   tag: "0.1.0-b66ffbd"
 
+# -- The secrets used to pull the image
 imagePullSecrets: []
+# -- The release name override
 nameOverride: ""
+# -- The full release name override
 fullnameOverride: ""
 
 serviceAccount:
-  # Specifies whether a service account should be created
+  # -- Specifies whether a service account should be created
   create: true
-  # Annotations to add to the service account
+  # -- Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # -- The name of the service account to use. If not set and create is true, a name is generated using the fullname template
   name: ""
 
+# -- Annotations to add to the pods
 podAnnotations: {}
 
+# -- SecurityContext used for the pod
 podSecurityContext: {}
   # fsGroup: 2000
 
@@ -37,26 +44,35 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
+  # -- Defines the type of the service
   type: ClusterIP
+  # -- Defines the port which the service exposes
   port: 80
 
 ingress:
+  # -- Toggle for enabling ingress for the application
   enabled: false
+  # -- Ingress class name
   className: ""
+  # -- Annotations to add to the ingress
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
+      # -- Host to route traffic from
     - host: chart-example.local
       paths:
         - path: /
+          # -- Type of the path
           pathType: ImplementationSpecific
+  # -- TLS specific options for the ingress https://kubernetes.io/docs/concepts/services-networking/ingress/#tls
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
 
 leaderboard:
+  # -- Environment variables for the application
   envVars: {}
     # - name: FOO
     #   value: FOO
@@ -65,12 +81,18 @@ leaderboard:
     #     secretKeyRef:
     #       name: mySecret
     #       key: bar  offline:
+  # -- Host of the Delegation Program Database Cluster
   dbHost: "localhost"
+  # -- Port of the Delegation Program Database
   dbPort: "5432"
+  # -- User of the Delegation Program Database
   dbUser: "postgres"
+  # -- Password of the Delegation Program Database
   dbPassword: "postgres"
+  # -- Name of the Delegation Program Database
   dbName: "postgres"
 
+# -- Resource limitations for the pods
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
@@ -84,14 +106,22 @@ resources: {}
   #   memory: 128Mi
 
 autoscaling:
+  # -- Toggle for autoscaling
   enabled: false
+  # -- Minimum replicas to be present
   minReplicas: 1
+  # -- Maximum replicat to be present
   maxReplicas: 100
+  # -- CPU Utilization threshold
   targetCPUUtilizationPercentage: 80
+  # -- Memory Utilization threshold
   # targetMemoryUtilizationPercentage: 80
 
+# -- Node selector labels
 nodeSelector: {}
 
+# -- Tolerations
 tolerations: []
 
+# -- Affinity rules
 affinity: {}
