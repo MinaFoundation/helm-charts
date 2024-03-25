@@ -5,6 +5,10 @@ metadata:
   name: {{ .Release.Name }}
   labels:
     app: {{ .Release.Name }}
+  annotations:
+    {{- with .Values.podAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   replicas: {{ .Values.node.replicas }}
   selector:
@@ -19,9 +23,6 @@ spec:
         version: {{ trunc 8 (split ":" .Values.deployment.image)._1 | trimSuffix "-" }}
         syncStatus: INIT
       annotations:
-      {{- with .Values.podAnnotations }}
-      {{- toYaml . | nindent 8 }}
-      {{- end }}
       {{- if .Values.node.metrics.enabled }}
         prometheus.io/scrape: 'true'
         prometheus.io/port: {{ .Values.node.metrics.port | quote }}
