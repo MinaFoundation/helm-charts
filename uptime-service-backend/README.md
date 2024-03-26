@@ -122,6 +122,7 @@ The following table lists the configurable parameters of the `uptime-service-bac
 | ------------------------------ | ------------------------------------------------------ | --------------- |
 | `backend.network`              | Testnet name                                           | `""`            |
 | `backend.requestsPerPkHourly`  | Number of requests accepted per hour                   | `1000`          |
+| `backend.verifySignatureDisabled`| Specifies if the backend signature verification is enabled or not| `false |
 | `backend.logLevel`             | Application log level                                  | `info`          |
 | `backend.metrics.enabled`      | Toggle for prometheus metrics                          | `false`         |
 
