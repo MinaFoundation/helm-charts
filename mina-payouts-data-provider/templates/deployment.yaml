@@ -1,0 +1,160 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mina-payouts-data-provider.fullname" . }}
+  labels:
+    {{- include "mina-payouts-data-provider.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "mina-payouts-data-provider.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "mina-payouts-data-provider.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "mina-payouts-data-provider.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: data-provider-api
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: NUM_SLOTS_IN_EPOCH
+              value: {{ .Values.minaPayoutsDataProvider.numSlotsInEpoch | quote }}
+            - name: ARCHIVE_DB_RECENCY_THRESHOLD
+              value: {{ .Values.minaPayoutsDataProvider.archiveDBRecencyThreshold | quote }}
+            - name: API_PORT
+              value: {{ .Values.service.port | quote }}
+            - name: LEDGER_UPLOAD_API_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mina-payouts-data-provider.fullname" . }}-ledger-upload-api
+                  key: LEDGER_UPLOAD_API_USER
+            - name: LEDGER_UPLOAD_API_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mina-payouts-data-provider.fullname" . }}-ledger-upload-api
+                  key: LEDGER_UPLOAD_API_PASSWORD
+            - name: BLOCK_DB_QUERY_HOST
+              value: {{ .Values.minaPayoutsDataProvider.blockDBQuery.host | quote }}
+            - name: BLOCK_DB_QUERY_PORT
+              value: {{ .Values.minaPayoutsDataProvider.blockDBQuery.port | quote }}
+            - name: BLOCK_DB_QUERY_NAME
+              value: {{ .Values.minaPayoutsDataProvider.blockDBQuery.name | quote }}
+            - name: BLOCK_DB_QUERY_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mina-payouts-data-provider.fullname" . }}-block-db-query
+                  key: BLOCK_DB_QUERY_USER
+            - name: BLOCK_DB_QUERY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mina-payouts-data-provider.fullname" . }}-block-db-query
+                  key: BLOCK_DB_QUERY_PASSWORD
+            - name: BLOCK_DB_QUERY_REQUIRE_SSL
+              value: {{ .Values.minaPayoutsDataProvider.blockDBQuery.ssl.enabled | quote }}
+            {{- if .Values.minaPayoutsDataProvider.blockDBQuery.ssl.enabled }}
+            - name: BLOCK_DB_QUERY_CERTIFICATE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mina-payouts-data-provider.fullname" . }}-block-db-query
+                  key: BLOCK_DB_QUERY_CERTIFICATE
+            {{- end }}
+            - name: BLOCK_DB_VERSION
+              value: {{ .Values.minaPayoutsDataProvider.blockDBQuery.version | quote }}
+            - name: LEDGER_DB_QUERY_HOST
+              value: {{ .Values.minaPayoutsDataProvider.ledgerDBQuery.host | quote }}
+            - name: LEDGER_DB_QUERY_PORT
+              value: {{ .Values.minaPayoutsDataProvider.ledgerDBQuery.port | quote }}
+            - name: LEDGER_DB_QUERY_NAME
+              value: {{ .Values.minaPayoutsDataProvider.ledgerDBQuery.name | quote }}
+            - name: LEDGER_DB_QUERY_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mina-payouts-data-provider.fullname" . }}-ledger-db-query
+                  key: LEDGER_DB_QUERY_USER
+            - name: LEDGER_DB_QUERY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mina-payouts-data-provider.fullname" . }}-ledger-db-query
+                  key: LEDGER_DB_QUERY_PASSWORD
+            - name: LEDGER_DB_QUERY_REQUIRE_SSL
+              value: {{ .Values.minaPayoutsDataProvider.ledgerDBQuery.ssl.enabled | quote }}
+            {{- if .Values.minaPayoutsDataProvider.ledgerDBQuery.ssl.enabled }}
+            - name: LEDGER_DB_QUERY_CERTIFICATE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mina-payouts-data-provider.fullname" . }}-ledger-db-query
+                  key: LEDGER_DB_QUERY_CERTIFICATE
+            {{- end }}
+            - name: LEDGER_DB_COMMAND_HOST
+              value: {{ .Values.minaPayoutsDataProvider.ledgerDBCommand.host | quote }}
+            - name: LEDGER_DB_COMMAND_PORT
+              value: {{ .Values.minaPayoutsDataProvider.ledgerDBCommand.port | quote }}
+            - name: LEDGER_DB_COMMAND_NAME
+              value: {{ .Values.minaPayoutsDataProvider.ledgerDBCommand.name | quote }}
+            - name: LEDGER_DB_COMMAND_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mina-payouts-data-provider.fullname" . }}-ledger-db-command
+                  key: LEDGER_DB_COMMAND_USER
+            - name: LEDGER_DB_COMMAND_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mina-payouts-data-provider.fullname" . }}-ledger-db-command
+                  key: LEDGER_DB_COMMAND_PASSWORD
+            - name: LEDGER_DB_COMMAND_REQUIRE_SSL
+              value: {{ .Values.minaPayoutsDataProvider.ledgerDBQuery.ssl.enabled | quote }}
+            {{- if .Values.minaPayoutsDataProvider.ledgerDBCommand.ssl.enabled }}
+            - name: LEDGER_DB_DB_COMMAND_CERTIFICATE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mina-payouts-data-provider.fullname" . }}-ledger-db-command
+                  key: LEDGER_DB_COMMAND_CERTIFICATE
+            {{- end }}
+            - name: CHECK_NODES
+              value: {{ .Values.minaPayoutsDataProvider.checkNodes | join "," | quote}}
+            {{- if .Values.minaPayoutsDataProvider.envVars }}
+            {{- toYaml .Values.minaPayoutsDataProvider.envVars | nindent 12 }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

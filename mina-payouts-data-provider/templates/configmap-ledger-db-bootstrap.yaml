@@ -1,0 +1,12 @@
+{{- if .Values.minaPayoutsDataProvider.ledgerDBQuery.bootstrap.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mina-payouts-data-provider.fullname" . }}-ledger-db-bootstrap
+  labels:
+    {{- include "mina-payouts-data-provider.labels" . | nindent 4 }}
+data:
+  ledger-db-bootstrap.sh: |-
+{{ (.Files.Get "scripts/ledger-db-bootstrap.sh") | indent 4 }}
+{{- end }}
