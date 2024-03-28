@@ -1,0 +1,11 @@
+apiVersion: v2
+name: mina-payouts-data-provider
+description: A Helm chart for Kubernetes
+type: application
+version: 0.1.0
+appVersion: "1.16.0"
+dependencies:
+  - name: postgresql
+    version: "*"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.create
