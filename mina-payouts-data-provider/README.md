@@ -81,10 +81,8 @@ Parameter | Description | Default
 --- | --- | ---
 `minaPayoutsDataProvider.numSlotsInEpoch` | Numbers of Slots in Epoch | `7140`
 `minaPayoutsDataProvider.archiveDBRecencyThreshold` | Archive DB Recency Threshhold | `10`
-
 `minaPayoutsDataProvider.ledgerUploadAPI.user` | Basic Auth username to connect to mina-payouts-data-provider API | `ledger-upload-api-user`
 `minaPayoutsDataProvider.ledgerUploadAPI.password` | Basic Auth Password to connect to mina-payouts-data-provider API | `ledger-upload-api-password`
-
 `minaPayoutsDataProvider.blockDBQuery.version` | Version of the Mina Archive database | `v1`
 `minaPayoutsDataProvider.blockDBQuery.host` | Hostname of the Mina Archive database | `http://localhost`
 `minaPayoutsDataProvider.blockDBQuery.port` | Port of the Mina Archive database | `5432`
@@ -93,7 +91,6 @@ Parameter | Description | Default
 `minaPayoutsDataProvider.blockDBQuery.name` | Name of the Mina Archive database | `database`
 `minaPayoutsDataProvider.blockDBQuery.ssl.enabled` | Enable SSL Connection to the Mina Archive database | `false`
 `minaPayoutsDataProvider.blockDBQuery.ssl.rootCertificate` | Root Certificate required for SSL Connection to the Mina Archive database | ` `
-
 `minaPayoutsDataProvider.ledgerDBQuery.host` | Hostname of the ledger database (Read) | `http://localhost`
 `minaPayoutsDataProvider.ledgerDBQuery.port` | Port of the ledger database (Read) | `5432`
 `minaPayoutsDataProvider.ledgerDBQuery.user` | User of the ledger database (Read) | `user`
@@ -101,7 +98,6 @@ Parameter | Description | Default
 `minaPayoutsDataProvider.ledgerDBQuery.name` | Name of the ledger database (Read) | `database`
 `minaPayoutsDataProvider.ledgerDBQuery.ssl.enabled` | Enable SSL Connection to the ledger database (Read) | `false`
 `minaPayoutsDataProvider.ledgerDBQuery.ssl.rootCertificate` | Root Certificate required for SSL Connection to the ledger database (Read) | ` `
-
 `minaPayoutsDataProvider.ledgerDBCommand.host` | Hostname of the ledger database (Read/Write) | `http://localhost`
 `minaPayoutsDataProvider.ledgerDBCommand.port` | Port of the ledger database (Read/Write) | `5432`
 `minaPayoutsDataProvider.ledgerDBCommand.user` | User of the ledger database (Read/Write) | `user`
