@@ -8,7 +8,7 @@ image:
   repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-payouts-data-provider
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "2.0.4-0e7fe9a"
+  tag: "2.3.0-9a10e51"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -136,14 +136,14 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
-livenessProbe: {}
-  # httpGet:
-  #   path: /
-  #   port: http
-readinessProbe: {}
-  # httpGet:
-  #   path: /
-  #   port: http
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
 
 nodeSelector: {}
 
