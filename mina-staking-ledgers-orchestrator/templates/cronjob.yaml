@@ -1,0 +1,78 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "mina-staking-ledgers-orchestrator.fullname" . }}
+  labels:
+    {{- include "mina-staking-ledgers-orchestrator.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          {{- with .Values.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          {{- with .Values.podLabels }}
+          labels:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+        spec:
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          serviceAccountName: {{ include "mina-staking-ledgers-orchestrator.serviceAccountName" . }}
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+          containers:
+            - name: {{ .Chart.Name }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["/bin/bash", "-c"]
+              args: ["/scripts/entrypoint.sh"]
+              env:
+                - name: NETWORK
+                  value: "{{ .Values.minaStakingLedgersOrchestrator.network }}"
+                - name: S3_BUCKET
+                  value: "{{ .Values.minaStakingLedgersOrchestrator.s3.bucket }}"
+                - name: S3_SUBPATH
+                  value: "{{ .Values.minaStakingLedgersOrchestrator.s3.subpath }}"
+                - name: MINA_NODE_LABEL
+                  value: "{{ .Values.minaStakingLedgersOrchestrator.minaNodeLabel }}"
+                - name: MINA_PAYOUTS_DATA_PROVIDER_URL
+                  value: "{{ .Values.minaStakingLedgersOrchestrator.minaPayoutsDataProvider.url }}"
+                - name: MINA_PAYOUTS_DATA_PROVIDER_USERNAME
+                  value: "{{ .Values.minaStakingLedgersOrchestrator.minaPayoutsDataProvider.username }}"
+                - name: MINA_PAYOUTS_DATA_PROVIDER_PASSWORD
+                  value: "{{ .Values.minaStakingLedgersOrchestrator.minaPayoutsDataProvider.password }}"
+                - name: SLACK_WEBHOOK_URL
+                  value: "{{ .Values.minaStakingLedgersOrchestrator.slackWebhookUrl }}"
+                - name: LOG_LEVEL
+                  value: "{{ .Values.minaStakingLedgersOrchestrator.logLevel }}"
+                - name: PYTHONUNBUFFERED
+                  value: "1"
+              {{- with .Values.nodeSelector }}
+              resources:
+                {{- toYaml .Values.resources | nindent 16 }}
+              nodeSelector:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+              {{- with .Values.affinity }}
+              affinity:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+              {{- with .Values.tolerations }}
+              tolerations:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+          restartPolicy: {{ .Values.restartPolicy }}
+          volumes:
+            - name: scripts
+              configMap:
+                name: {{ include "mina-staking-ledgers-orchestrator.fullname" . }}
+                defaultMode: 0755
