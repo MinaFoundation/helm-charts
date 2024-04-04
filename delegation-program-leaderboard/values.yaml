@@ -58,6 +58,7 @@ ingress:
 
 leaderboard:
   envVars: {}
+    # See Application's README(or source code).
     # - name: FOO
     #   value: FOO
     # - name: BAR
