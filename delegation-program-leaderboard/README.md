@@ -77,7 +77,7 @@ Parameter | Description | Default
 `ingress.tls` | Ingress TLS | `[]`
 `resources` | Resources allocated to the pods | `{}`
 --- | --- | ---
-`leaderboard.envVars` | Environment Variables to pass to the container | `{}`
+`leaderboard.envVars` | Environment Variables to pass to the container. See Application's README(or source) | `{}`
 `leaderboard.dbHost` | Database Host | `localhost`
 `leaderboard.dbPort` | Database Port | `5432`
 `leaderboard.dbUser` | Database User | `postgres`
