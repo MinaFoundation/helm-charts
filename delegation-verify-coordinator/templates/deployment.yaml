@@ -98,8 +98,6 @@ spec:
               value: {{ .platform }}
             - name: NETWORK_NAME
               value: {{ .networkName }}
-            - name: CQLSH
-              value: {{ .cqlsh }}
             {{- if .ssl.certfile }}
             - name: SSL_CERTFILE
               value: {{ .ssl.certfile }}
