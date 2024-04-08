@@ -1,6 +1,6 @@
 # Mina Staking Ledger Orchestrator
 
-mina-staking-ledgers-orchestrator is a tools that generate Mina Staking Ledgers, Publish them on S3 and Mina Payout Data Provider API.
+mina-staking-ledgers-orchestrator is a tools that generate Mina Staking Ledgers, and publish them on S3 and Mina Payout Data Provider API.
 
 ## TL;DR
 
@@ -65,7 +65,8 @@ The command removes all the Kubernetes components associated with the chart and 
 | `minaStakingLedgersOrchestrator.s3.bucket`                        | Bucket to upload the Mina Staking Ledgers                                          | ` `                                                                  |
 | `minaStakingLedgersOrchestrator.s3.subpath`                       | Bucket subpath to upload the Mina Staking Ledgers                                  | ` `                                                                  |
 | `minaStakingLedgersOrchestrator.minaNodeLabel`                    | Label of the Mina Daemon to execute Staking Ledger Generation                      | ` `                                                                  |
-| `minaStakingLedgersOrchestrator.slackWebhookUrl`                  | Slack Webhook URL                                                                  | ` `                                                                  |
+| `minaStakingLedgersOrchestrator.slackWebhookInfoUrl`              | Slack Webhook Info URL                                                             | ` `                                                                  |
+| `minaStakingLedgersOrchestrator.slackWebhookWarnUrl`              | Slack Webhook Warn URL                                                             | ` `                                                                  |
 | `minaStakingLedgersOrchestrator.minaPayoutsDataProvider.url`      | Mina Payouts Data Provider URL                                                     | ` `                                                                  |
 | `minaStakingLedgersOrchestrator.minaPayoutsDataProvider.username` | Mina Payouts Data Provider Username                                                | ` `                                                                  |
 | `minaStakingLedgersOrchestrator.minaPayoutsDataProvider.password` | Mina Payouts Data Provider Password                                                | ` `                                                                  |

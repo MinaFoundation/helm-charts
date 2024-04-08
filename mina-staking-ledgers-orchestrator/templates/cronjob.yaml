@@ -8,6 +8,7 @@ spec:
   schedule: {{ .Values.schedule | quote }}
   jobTemplate:
     spec:
+      #backoffLimit: 0
       template:
         metadata:
           {{- with .Values.podAnnotations }}
@@ -30,43 +31,33 @@ spec:
             - name: {{ .Chart.Name }}
               image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
               imagePullPolicy: {{ .Values.image.pullPolicy }}
-              command: ["/bin/bash", "-c"]
-              args: ["/scripts/entrypoint.sh"]
+              command: ["/scripts/entrypoint.sh"]
+              args: []
               env:
-                - name: NETWORK
+                - name: APP_NETWORK
                   value: "{{ .Values.minaStakingLedgersOrchestrator.network }}"
-                - name: S3_BUCKET
+                - name: APP_S3_BUCKET
                   value: "{{ .Values.minaStakingLedgersOrchestrator.s3.bucket }}"
-                - name: S3_SUBPATH
+                - name: APP_S3_SUBPATH
                   value: "{{ .Values.minaStakingLedgersOrchestrator.s3.subpath }}"
-                - name: MINA_NODE_LABEL
+                - name: APP_MINA_NODE_LABEL
                   value: "{{ .Values.minaStakingLedgersOrchestrator.minaNodeLabel }}"
-                - name: MINA_PAYOUTS_DATA_PROVIDER_URL
+                - name: APP_MINA_PAYOUTS_DATA_PROVIDER_URL
                   value: "{{ .Values.minaStakingLedgersOrchestrator.minaPayoutsDataProvider.url }}"
-                - name: MINA_PAYOUTS_DATA_PROVIDER_USERNAME
+                - name: APP_MINA_PAYOUTS_DATA_PROVIDER_USERNAME
                   value: "{{ .Values.minaStakingLedgersOrchestrator.minaPayoutsDataProvider.username }}"
-                - name: MINA_PAYOUTS_DATA_PROVIDER_PASSWORD
+                - name: APP_MINA_PAYOUTS_DATA_PROVIDER_PASSWORD
                   value: "{{ .Values.minaStakingLedgersOrchestrator.minaPayoutsDataProvider.password }}"
-                - name: SLACK_WEBHOOK_URL
-                  value: "{{ .Values.minaStakingLedgersOrchestrator.slackWebhookUrl }}"
-                - name: LOG_LEVEL
+                - name: APP_SLACK_WEBHOOK_INFO_URL
+                  value: "{{ .Values.minaStakingLedgersOrchestrator.slackWebhookInfoUrl }}"
+                - name: APP_SLACK_WEBHOOK_WARN_URL
+                  value: "{{ .Values.minaStakingLedgersOrchestrator.slackWebhookWarnUrl }}"
+                - name: APP_LOG_LEVEL
                   value: "{{ .Values.minaStakingLedgersOrchestrator.logLevel }}"
                 - name: PYTHONUNBUFFERED
                   value: "1"
-              {{- with .Values.nodeSelector }}
               resources:
                 {{- toYaml .Values.resources | nindent 16 }}
-              nodeSelector:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with .Values.affinity }}
-              affinity:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with .Values.tolerations }}
-              tolerations:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
               volumeMounts:
                 - name: scripts
                   mountPath: /scripts
@@ -76,3 +67,15 @@ spec:
               configMap:
                 name: {{ include "mina-staking-ledgers-orchestrator.fullname" . }}
                 defaultMode: 0755
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

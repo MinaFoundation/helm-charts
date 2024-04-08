@@ -20,4 +20,4 @@ pip3 install -r /scripts/requirements.txt
 
 # Run the Python script
 echo "Running mina-staking-ledgers-orchestrator.py..."
-python3 /scripts/mina-staking-ledgers-orchestrator.py
+exec python3 /scripts/mina-staking-ledgers-orchestrator.py

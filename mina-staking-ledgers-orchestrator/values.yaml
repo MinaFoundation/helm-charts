@@ -22,7 +22,8 @@ minaStakingLedgersOrchestrator:
     bucket:
     subpath:
   minaNodeLabel:
-  slackWebhookUrl:
+  slackWebhookInfoUrl:
+  slackWebhookWarnUrl:
   minaPayoutsDataProvider:
     url:
     username:
