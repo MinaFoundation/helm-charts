@@ -21,7 +21,7 @@ minaPayoutsDataProvider:
     user: "ledger-upload-api-user"
     password: "ledger-upload-api-password"
   blockDBQuery:
-    version: "v1"
+    version: "v1" # v1 => mainnet, v2 => berkeley
     host: http://localhost
     port: 5432
     user: user
@@ -29,17 +29,7 @@ minaPayoutsDataProvider:
     name: database
     ssl:
       enabled: false
-      rootCertificate: ""
-      # e.g.
-      # rootCertificate: |
-      #   -----BEGIN CERTIFICATE-----
-      #   MIICmDCCAYACCQCfJWWkbDANBgkqhkiG9w0BAQsFADAQMQ4wDAYDVQQDDAVz
-      #   ZXJ2aWNlMB4XDTE5MDYxNzA2Mzk1NFoXDTI5MDYxNDA2Mzk1NFowEDEOMAwG
-      #   A1UEAwwFc2VydmljZTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAw4tZ6c
-      #   uE6rJ+CSQwXppsfueFW+nVf9x1yGvWeLdI2Ky8T3F4CRUJtK0LZq3qnSCsRbD
-      #   ...
-      #   UqH8rJvCD+1LlxvrbIXTjwq5
-      #   -----END CERTIFICATE---
+      rootCertificateBase64:
   ledgerDBQuery:
     host: http://localhost
     port: 5432
@@ -48,7 +38,7 @@ minaPayoutsDataProvider:
     name: database
     ssl:
       enabled: false
-      rootCertificate: "" # Same as above
+      rootCertificateBase64:
     bootstrap:
       enabled: false
       schemaURL: "https://raw.githubusercontent.com/jrwashburn/mina-payouts-data-provider/main/deploy/db-setup/stakesDb.sql"
@@ -64,7 +54,7 @@ minaPayoutsDataProvider:
     name: database
     ssl:
       enabled: false
-      rootCertificate: "" # Same as above
+      rootCertificateBase64:
   checkNodes: []
   envVars: {}
     # - name: FOO
