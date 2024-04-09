@@ -12,7 +12,6 @@ fullnameOverride:
 coordinator:
   networkName: ""
   platform: ""
-  cqlsh: ""
   noChecks: ""
   surveyIntervalMinutes: 20
   command:
@@ -45,6 +44,14 @@ coordinator:
     s3Bucket: "673156464838-uptime-service-backend"
   ssl:
     certfile:
+  envVars: {}
+    # - name: FOO
+    #   value: FOO
+    # - name: BAR
+    #   valueFrom:
+    #     secretKeyRef:
+    #       name: mySecret
+    #       key: bar  offline:
 
 serviceAccount:
   coordinator:

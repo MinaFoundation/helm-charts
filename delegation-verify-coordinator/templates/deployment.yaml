@@ -98,8 +98,6 @@ spec:
               value: {{ .platform }}
             - name: NETWORK_NAME
               value: {{ .networkName }}
-            - name: CQLSH
-              value: {{ .cqlsh }}
             {{- if .ssl.certfile }}
             - name: SSL_CERTFILE
               value: {{ .ssl.certfile }}
@@ -115,6 +113,9 @@ spec:
               value: {{ include "delegation-verify-coordinator.fullname" . }}
             - name: AUTH_VOLUME_MOUNT_PATH
               value: /var/mina-delegation-verify-auth
+            {{- if .Values.coordinator.envVars }}
+            {{- toYaml .Values.coordinator.envVars | nindent 12 }}
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}

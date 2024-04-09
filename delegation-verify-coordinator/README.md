@@ -46,10 +46,9 @@ The command removes all the Kubernetes components associated with the chart and 
 | `fullnameOverride`                   | Override Release and Chart Name                           | `""` |
 | `coordinator.networkName`            | Network name in which coordinator should participate      | `""` |
 | `coordinator.platform`               | Kubernetes cluster name where coordinator will run        | `""` |
-| `coordinator.cqlsh`                  | Path to the CQLSH binary to be used                       | `""` |
 | `coordinator.noChecks`               | Whether to use --no-checks for delegation verify. (0 is false, 1 is true)| `""` |
 | `coordinator.surveyIntervalMinutes`  | Survey interval minutes                                   | `20` |
-| `coordinator.command.override`       | Override default command. Use '"command"' notation. List  | `` |
+| `coordinator.command.override`       | Override default command. Use '"command"' notation. Can be a list  | `` |
 | `coordinator.postgres.host`          | Postgres host. Default: templates like postgres helm chart| `{{ .Release.Name }}-postgresql` |
 | `coordinator.postgres.port`          | Postgres port                                             | `` |
 | `coordinator.postgres.db`            | Postgres database name                                    | `` |
@@ -72,6 +71,7 @@ The command removes all the Kubernetes components associated with the chart and 
 | `coordinator.aws.secretAccessKey`    | AWS Secret Access Key                                     | `` |
 | `coordinator.aws.s3Bucket`           | AWS S3 Bucket name that holds submissions                 | `673156464838-uptime-service-backend` |
 | `coordinator.ssl.certfile`           | Path to the certfile for AWS Keyspaces                    | `` |
+| `coordinator.envVars`                | Environment Variables to pass to the container            | `{}` |
 | `serviceAccount.create`              | Create or not Service Account                             | `true` |
 | `serviceAccount.automount`           | Automatically mount ServiceAccount API credentials        | `true` |
 | `serviceAccount.coordinator.annotations`| Annotations for the Coordinator Service Account        | `{}` |
