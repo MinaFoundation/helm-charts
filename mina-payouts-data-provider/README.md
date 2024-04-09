@@ -90,21 +90,21 @@ Parameter | Description | Default
 `minaPayoutsDataProvider.blockDBQuery.password` | Password of the Mina Archive database | `password`
 `minaPayoutsDataProvider.blockDBQuery.name` | Name of the Mina Archive database | `database`
 `minaPayoutsDataProvider.blockDBQuery.ssl.enabled` | Enable SSL Connection to the Mina Archive database | `false`
-`minaPayoutsDataProvider.blockDBQuery.ssl.rootCertificate` | Root Certificate required for SSL Connection to the Mina Archive database | ` `
+`minaPayoutsDataProvider.blockDBQuery.ssl.rootCertificateBase64` | Base64 Encoded Root Certificate required for SSL Connection to the Mina Archive database | ` `
 `minaPayoutsDataProvider.ledgerDBQuery.host` | Hostname of the ledger database (Read) | `http://localhost`
 `minaPayoutsDataProvider.ledgerDBQuery.port` | Port of the ledger database (Read) | `5432`
 `minaPayoutsDataProvider.ledgerDBQuery.user` | User of the ledger database (Read) | `user`
 `minaPayoutsDataProvider.ledgerDBQuery.password` | Password of the ledger database (Read) | `password`
 `minaPayoutsDataProvider.ledgerDBQuery.name` | Name of the ledger database (Read) | `database`
 `minaPayoutsDataProvider.ledgerDBQuery.ssl.enabled` | Enable SSL Connection to the ledger database (Read) | `false`
-`minaPayoutsDataProvider.ledgerDBQuery.ssl.rootCertificate` | Root Certificate required for SSL Connection to the ledger database (Read) | ` `
+`minaPayoutsDataProvider.ledgerDBQuery.ssl.rootCertificateBase64` | Base64 Encoded Root Certificate required for SSL Connection to the ledger database (Read) | ` `
 `minaPayoutsDataProvider.ledgerDBCommand.host` | Hostname of the ledger database (Read/Write) | `http://localhost`
 `minaPayoutsDataProvider.ledgerDBCommand.port` | Port of the ledger database (Read/Write) | `5432`
 `minaPayoutsDataProvider.ledgerDBCommand.user` | User of the ledger database (Read/Write) | `user`
 `minaPayoutsDataProvider.ledgerDBCommand.password` | Password of the ledger database (Read/Write) | `password`
 `minaPayoutsDataProvider.ledgerDBCommand.name` | Name of the ledger database (Read/Write) | `database`
 `minaPayoutsDataProvider.ledgerDBCommand.ssl.enabled` | Enable SSL Connection to the ledger database (Read/Write) | `false`
-`minaPayoutsDataProvider.ledgerDBCommand.ssl.rootCertificate` | Root Certificate required for SSL Connection to the ledger database (Read/Write) | ` `
+`minaPayoutsDataProvider.ledgerDBCommand.ssl.rootCertificateBase64` | Base64 Encoded Root Certificate required for SSL Connection to the ledger database (Read/Write) | ` `
 `minaPayoutsDataProvider.checkNodes` | List of Mina GraphQL Endpoints | `[]`
 `minaPayoutsDataProvider.envVars` | Environment Variables to pass to the container | `{}`
 --- | --- | ---
