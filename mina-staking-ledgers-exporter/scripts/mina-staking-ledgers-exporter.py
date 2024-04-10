@@ -239,7 +239,7 @@ def slack_warn(message):
 def send_slack_notification(webhook_url, message):
     if not message:
         return
-    json = dict(username="Mina Staking Ledgers Orchestrator", text=message)
+    json = dict(username="Mina Staking Ledgers Exporter", text=message)
     try:
         requests.post(webhook_url, json=json).raise_for_status()
     except Exception as e:

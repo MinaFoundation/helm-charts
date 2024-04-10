@@ -1,5 +1,5 @@
 apiVersion: v2
-name: mina-staking-ledgers-orchestrator
+name: mina-staking-ledgers-exporter
 description: A Helm chart for Kubernetes
 
 # A chart can be either an 'application' or a 'library' chart.
