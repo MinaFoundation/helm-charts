@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-worker
+data:
+  entrypoint-worker.sh: |-
+{{ .Files.Get "files/entrypoint_worker.sh" | indent 4 }}
