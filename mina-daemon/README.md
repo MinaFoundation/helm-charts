@@ -167,6 +167,7 @@ Parameter | Description | Default
 `node.shutdownOnDisconnect` | Shutdown Snark Worker if disconnect. Require `node.walletKeys.enabled: false` | false
 `serviceAccount.annotations` | Custom Annotations for the service account | `{}`
 `podAnnotations` | Custom Annotations for the pod | `{}`
+`podLabels` | Custom Labels for the pod | `{}`
 `ingress.enabled` | Enable Ingress | `false`
 `ingress.labels` | Ingress Labels | `{}`
 `ingress.annotations` | Ingress Annotations | `{}`
