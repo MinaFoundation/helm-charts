@@ -169,6 +169,8 @@ service:
 
 podAnnotations: {}
 
+podLabels: {}
+
 updateStrategy:
   type: Recreate
 
