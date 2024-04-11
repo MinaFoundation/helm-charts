@@ -1,0 +1,81 @@
+# Default values for gpt-survey-summarizer.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- The number of pods to be deployed
+replicaCount: 1
+
+image:
+  # image.repository -- The repository of the image
+  repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/gpt-survey-summarizer
+  # image.pullPolicy -- The pullPolicy used when pulling the image
+  pullPolicy: IfNotPresent
+  # image.tag -- The tag of the iamge. Overrides the image tag whose default is the chart appVersion.
+  tag: "0.1.0-b66ffbd"
+
+# -- The secrets used to pull the image
+imagePullSecrets: []
+# -- The release name override
+nameOverride: ""
+# -- The full release name override
+fullnameOverride: ""
+
+# -- Annotations to add to the pods
+podAnnotations: {}
+
+# -- SecurityContext used for the pod
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+backend:
+  # -- Environment variables for the application
+  envVars: {}
+    # - name: FOO
+    #   value: FOO
+    # - name: BAR
+    #   valueFrom:
+    #     secretKeyRef:
+    #       name: mySecret
+    #       key: bar  offline:
+
+# -- Resource limitations for the pods
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  # -- Toggle for autoscaling
+  enabled: false
+  # -- Minimum replicas to be present
+  minReplicas: 1
+  # -- Maximum replicat to be present
+  maxReplicas: 100
+  # -- CPU Utilization threshold
+  targetCPUUtilizationPercentage: 80
+  # -- Memory Utilization threshold
+  # targetMemoryUtilizationPercentage: 80
+
+# -- Node selector labels
+nodeSelector: {}
+
+# -- Tolerations
+tolerations: []
+
+# -- Affinity rules
+affinity: {}
