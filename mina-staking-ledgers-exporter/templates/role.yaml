@@ -1,0 +1,17 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "mina-staking-ledgers-exporter.serviceAccountName" . }}
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]  # Allows querying pods
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get"]  # Allows reading logs from pods
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs: ["create"]  # Allows executing commands in pods
+- apiGroups: [""]
+  resources: ["pods/copy"]
+  verbs: ["create"]  # Allows copying files from pods
