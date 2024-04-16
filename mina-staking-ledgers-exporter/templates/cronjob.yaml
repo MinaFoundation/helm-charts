@@ -1,0 +1,81 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "mina-staking-ledgers-exporter.fullname" . }}
+  labels:
+    {{- include "mina-staking-ledgers-exporter.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  jobTemplate:
+    spec:
+      #backoffLimit: 0
+      template:
+        metadata:
+          {{- with .Values.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          {{- with .Values.podLabels }}
+          labels:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+        spec:
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          serviceAccountName: {{ include "mina-staking-ledgers-exporter.serviceAccountName" . }}
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+          containers:
+            - name: {{ .Chart.Name }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["/scripts/entrypoint.sh"]
+              args: []
+              env:
+                - name: APP_NETWORK
+                  value: "{{ .Values.minaStakingLedgersExporter.network }}"
+                - name: APP_S3_BUCKET
+                  value: "{{ .Values.minaStakingLedgersExporter.s3.bucket }}"
+                - name: APP_S3_SUBPATH
+                  value: "{{ .Values.minaStakingLedgersExporter.s3.subpath }}"
+                - name: APP_MINA_NODE_LABEL
+                  value: "{{ .Values.minaStakingLedgersExporter.minaNodeLabel }}"
+                - name: APP_MINA_PAYOUTS_DATA_PROVIDER_URL
+                  value: "{{ .Values.minaStakingLedgersExporter.minaPayoutsDataProvider.url }}"
+                - name: APP_MINA_PAYOUTS_DATA_PROVIDER_USERNAME
+                  value: "{{ .Values.minaStakingLedgersExporter.minaPayoutsDataProvider.username }}"
+                - name: APP_MINA_PAYOUTS_DATA_PROVIDER_PASSWORD
+                  value: "{{ .Values.minaStakingLedgersExporter.minaPayoutsDataProvider.password }}"
+                - name: APP_SLACK_WEBHOOK_INFO_URL
+                  value: "{{ .Values.minaStakingLedgersExporter.slackWebhookInfoUrl }}"
+                - name: APP_SLACK_WEBHOOK_WARN_URL
+                  value: "{{ .Values.minaStakingLedgersExporter.slackWebhookWarnUrl }}"
+                - name: APP_LOG_LEVEL
+                  value: "{{ .Values.minaStakingLedgersExporter.logLevel }}"
+                - name: PYTHONUNBUFFERED
+                  value: "1"
+              resources:
+                {{- toYaml .Values.resources | nindent 16 }}
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+          restartPolicy: {{ .Values.restartPolicy }}
+          volumes:
+            - name: scripts
+              configMap:
+                name: {{ include "mina-staking-ledgers-exporter.fullname" . }}
+                defaultMode: 0755
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
