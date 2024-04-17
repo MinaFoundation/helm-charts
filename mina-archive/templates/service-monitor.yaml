@@ -1,21 +1,20 @@
-{{- if .Values.archive.metrics.enabled }}
----
+{{- if .Values.node.metrics.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ include "mina-archive.fullname" . }}
   labels:
-    app: {{ .Release.Name }}
+    app: {{ include "mina-archive.fullname" . }}
 spec:
   endpoints:
     - interval: 30s
-      port: metrics-port
+      port: metrics
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
+      app: {{ include "mina-archive.fullname" . }}
   namespaceSelector:
     matchNames:
-    - {{ .Values.archive.testnet }}
+    - {{ .Values.network }}
   targetLabels:
-  - testnet
+  - network
 {{- end }}
