@@ -1,0 +1,38 @@
+on:
+  pull_request:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+
+  get-changed-chart-dir:
+    name: 🗂️ Get Helm Chart Changes
+    uses: MinaFoundation/workflows/.github/workflows/get-changed-directories-workflow.yaml@main
+    with:
+      pattern: '^.*/.*yaml$'
+  
+
+  helm-docs:
+    runs-on: minafoundation-default-runners
+    strategy:
+      matrix:
+        directories: ${{ fromJson(needs.get-changed-chart-dir.outputs.changed_dir_list) }}
+
+    steps:
+      - name: Is changed dir Helm Chart
+        id: is-helm-chart
+        env:
+          CHART_DIR: ${{ matrix.directories }}
+        run: |
+          cd $CHART_DIR
+          if [[ -r Chart.yaml ]]; then
+            echo "is-helm-chart=true" >> $GITHUB_OUTPUT
+          else
+            echo "is-helm-chart=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Generate README with helm-docs
+        uses: MinaFoundation/workflows/.github/workflows/helm-docs.yaml@PM-1506-helm-docs-workflow #test branch change to main when merged
+        if: steps.is-helm-chart.outputs.is-helm-chart == 'true'
+        with:
+          branch: ${{ github.ref_name }}
+          directory: ${{ matrix.directories }}
