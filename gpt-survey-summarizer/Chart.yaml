@@ -15,6 +15,10 @@ type: application
 maintainers:
   - email: marton.szekely@minaprotocol.com
     name: Marton Szekely
+dependencies:
+  - name: redis
+    version: "19.1.0"
+    repository: "https://charts.bitnami.com/bitnami"
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
