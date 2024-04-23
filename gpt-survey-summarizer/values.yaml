@@ -3,7 +3,21 @@
 # Declare variables to be passed into your templates.
 
 # -- The number of pods to be deployed
-replicaCount: 1
+
+config:
+  openAiApiKey: "" 
+  discord:
+    clientId: ""
+    guildId: ""
+    token: ""
+
+# -- Redis chart values (https://github.com/bitnami/charts/tree/main/bitnami/redis#parameters)
+redis:
+  # -- The redis architecture (accepted values are: standalone, replication)
+  architecture: standalone
+  auth:
+    password: ""
+
 
 image:
   # image.repository -- The repository of the image
@@ -11,7 +25,24 @@ image:
   # image.pullPolicy -- The pullPolicy used when pulling the image
   pullPolicy: IfNotPresent
   # image.tag -- The tag of the iamge. Overrides the image tag whose default is the chart appVersion.
-  tag: "0.1.0-b66ffbd"
+  tag: "latest"
+
+bot:
+  replicaCount: 1
+  args:
+    - bot
+  extraEnvVars: 
+    - name: SUMMARIZE_FREQUENCY_SECONDS
+      value: "3600"
+
+server:
+  replicaCount: 1
+  args:
+    - summarizer
+  extraEnvVars: 
+    - name: SUMMARIZE_FREQUENCY_SECONDS
+      value: "3600"
+
 
 # -- The secrets used to pull the image
 imagePullSecrets: []
@@ -35,26 +66,6 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
-# -- Environment variables for the application
-envVars: 
-  summarizer: {}
-  bot: {}
-  # For each
-  # - name: FOO
-  #   value: FOO
-  # - name: BAR
-  #   valueFrom:
-  #     secretKeyRef:
-  #       name: mySecret
-  #       key: bar  offline:
-
-# -- Arguments for the container
-args:
-  summarizer:
-    - summarizer
-  bot: 
-    - bot
-
 # -- Resource limitations for the pods
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -76,29 +87,6 @@ serviceAccount:
   # -- The name of the service account to use. If not set and create is true, a name is generated using the fullname template
   name: ""
 
-autoscaling:
-  summarizer:  
-    # -- Toggle for autoscaling
-    enabled: false
-    # -- Minimum replicas to be present
-    minReplicas: 1
-    # -- Maximum replicat to be present
-    maxReplicas: 100
-    # -- CPU Utilization threshold
-    targetCPUUtilizationPercentage: 80
-    # -- Memory Utilization threshold
-    # targetMemoryUtilizationPercentage: 80
-  bot:
-    # -- Toggle for autoscaling
-    enabled: false
-    # -- Minimum replicas to be present
-    minReplicas: 1
-    # -- Maximum replicat to be present
-    maxReplicas: 100
-    # -- CPU Utilization threshold
-    targetCPUUtilizationPercentage: 80
-    # -- Memory Utilization threshold
-
 # -- Node selector labels
 nodeSelector: {}
 
@@ -107,9 +95,3 @@ tolerations: []
 
 # -- Affinity rules
 affinity: {}
-
-# -- Redis chart values (https://github.com/bitnami/charts/tree/main/bitnami/redis#parameters)
-redis:
-  # -- The redis architecture (accepted values are: standalone, replication)
-  architecture: standalone
-
