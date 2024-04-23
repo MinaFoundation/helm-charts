@@ -17,7 +17,8 @@ redis:
   architecture: standalone
   auth:
     password: ""
-
+  host: ""
+  port: 6379
 
 image:
   # image.repository -- The repository of the image
@@ -42,7 +43,6 @@ server:
   extraEnvVars: 
     - name: SUMMARIZE_FREQUENCY_SECONDS
       value: "3600"
-
 
 # -- The secrets used to pull the image
 imagePullSecrets: []

@@ -1,16 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "gpt-survey-summarizer.fullname" . }}
+  name: {{ include "gpt-survey-summarizer.fullname" . }}-server
   labels:
-    {{- include "gpt-survey-summarizer.labels" . | nindent 4 }}
+    {{- include "gpt-survey-summarizer.labels" . | nindent 4 }}-server
 spec:
-  {{- if not .Values.autoscaling.summarizer.enabled }}
-  replicas: {{ .Values.replicaCount }}
-  {{- end }}
+  replicas: {{ .Values.server.replicaCount }}
   selector:
     matchLabels:
-      {{- include "gpt-survey-summarizer.selectorLabels" . | nindent 6 }}
+      {{- include "gpt-survey-summarizer.selectorLabels" . | nindent 6 }}-server
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,25 +16,34 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "gpt-survey-summarizer.selectorLabels" . | nindent 8 }}
+        {{- include "gpt-survey-summarizer.selectorLabels" . | nindent 8 }}-server
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "gpt-survey-summarizer.serviceAccountName" . }}
+      serviceAccountName: {{ include "gpt-survey-summarizer.serviceAccountName" . }}-server
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: backend
+        - name: server
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
-            {{- toYaml .Values.args.summarizer | nindent 12 }}
+            {{- toYaml .Values.server.args | nindent 12 }}
           env:
-            {{- toYaml .Values.envVars.summarizer | nindent 12 }}
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gpt-survey-summarizer.fullname" . }}
+                  key: openAiApiKey
+            - name: REDIS_URL
+              value: redis://:{{ .Values.redis.auth.password }}@{{ .Values.redis.host }}:{{ .Values.redis.port }}
+          {{- if .Values.server.extraEnvVars }}
+            {{- toYaml .Values.server.extraEnvVars | nindent 12 }}
+          {{- end }}
           {{- with .Values.ports }}
           ports:
             {{- toYaml . | nindent 12 }}

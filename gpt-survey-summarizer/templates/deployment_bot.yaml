@@ -3,14 +3,12 @@ kind: Deployment
 metadata:
   name: {{ include "gpt-survey-summarizer.fullname" . }}-bot
   labels:
-    {{- include "gpt-survey-summarizer.labels" . | nindent 4 }}
+    {{- include "gpt-survey-summarizer.labels" . | nindent 4 }}-bot
 spec:
-  {{- if not .Values.autoscaling.bot.enabled }}
-  replicas: {{ .Values.replicaCount }}
-  {{- end }}
+  replicas: {{ .Values.bot.replicaCount }}
   selector:
     matchLabels:
-      {{- include "gpt-survey-summarizer.selectorLabels" . | nindent 6 }}
+      {{- include "gpt-survey-summarizer.selectorLabels" . | nindent 6 }}-bot
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,25 +16,44 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "gpt-survey-summarizer.selectorLabels" . | nindent 8 }}
+        {{- include "gpt-survey-summarizer.selectorLabels" . | nindent 8 }}-bot
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "gpt-survey-summarizer.serviceAccountName" . }}
+      serviceAccountName: {{ include "gpt-survey-summarizer.serviceAccountName" . }}-bot
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: backend
+        - name: bot
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
-            {{- toYaml .Values.args.bot | nindent 12 }}
+            {{- toYaml .Values.bot.args | nindent 12 }}
           env:
-            {{- toYaml .Values.envVars.bot | nindent 12 }}
+            - name: DISCORD_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gpt-survey-summarizer.fullname" . }}
+                  key: discordToken
+            - name: CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gpt-survey-summarizer.fullname" . }}
+                  key: discordClientId
+            - name: GUILD_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gpt-survey-summarizer.fullname" . }}
+                  key: discordGuildId
+            - name: REDIS_URL
+              value: redis://:{{ .Values.redis.auth.password }}@{{ .Values.redis.host }}:{{ .Values.redis.port }}
+          {{- if .Values.bot.extraEnvVars }}
+            {{- toYaml .Values.bot.extraEnvVars | nindent 12 }}
+          {{- end }}
           {{- with .Values.ports }}
           ports:
             {{- toYaml . | nindent 12 }}
