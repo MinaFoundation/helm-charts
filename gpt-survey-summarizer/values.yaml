@@ -35,16 +35,25 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
-backend:
-  # -- Environment variables for the application
-  envVars: {}
-    # - name: FOO
-    #   value: FOO
-    # - name: BAR
-    #   valueFrom:
-    #     secretKeyRef:
-    #       name: mySecret
-    #       key: bar  offline:
+# -- Environment variables for the application
+envVars: 
+  summarizer: {}
+  bot: {}
+  # For each
+  # - name: FOO
+  #   value: FOO
+  # - name: BAR
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: mySecret
+  #       key: bar  offline:
+
+# -- Arguments for the container
+args:
+  summarizer:
+    - summarizer
+  bot: 
+    - bot
 
 # -- Resource limitations for the pods
 resources: {}
@@ -68,16 +77,27 @@ serviceAccount:
   name: ""
 
 autoscaling:
-  # -- Toggle for autoscaling
-  enabled: false
-  # -- Minimum replicas to be present
-  minReplicas: 1
-  # -- Maximum replicat to be present
-  maxReplicas: 100
-  # -- CPU Utilization threshold
-  targetCPUUtilizationPercentage: 80
-  # -- Memory Utilization threshold
-  # targetMemoryUtilizationPercentage: 80
+  summarizer:  
+    # -- Toggle for autoscaling
+    enabled: false
+    # -- Minimum replicas to be present
+    minReplicas: 1
+    # -- Maximum replicat to be present
+    maxReplicas: 100
+    # -- CPU Utilization threshold
+    targetCPUUtilizationPercentage: 80
+    # -- Memory Utilization threshold
+    # targetMemoryUtilizationPercentage: 80
+  bot:
+    # -- Toggle for autoscaling
+    enabled: false
+    # -- Minimum replicas to be present
+    minReplicas: 1
+    # -- Maximum replicat to be present
+    maxReplicas: 100
+    # -- CPU Utilization threshold
+    targetCPUUtilizationPercentage: 80
+    # -- Memory Utilization threshold
 
 # -- Node selector labels
 nodeSelector: {}
@@ -87,3 +107,9 @@ tolerations: []
 
 # -- Affinity rules
 affinity: {}
+
+# -- Redis chart values (https://github.com/bitnami/charts/tree/main/bitnami/redis#parameters)
+redis:
+  # -- The redis architecture (accepted values are: standalone, replication)
+  architecture: standalone
+

@@ -1,8 +1,8 @@
 apiVersion: v2
 name: gpt-survey-summarizer
 description: A helm chart for the gptSuverySummarizer
-home: "https://github.com/MinaFoundation/gpt-survey-summarizer"
-sources: ["https://github.com/MinaFoundation/gpt-survey-summarizer"]
+home: "https://github.com/MinaFoundation/gptSuverySummarizer"
+sources: ["https://github.com/MinaFoundation/gptSuverySummarizer"]
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives
