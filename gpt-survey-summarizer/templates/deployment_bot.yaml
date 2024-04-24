@@ -54,6 +54,8 @@ spec:
                 secretKeyRef:
                   name: {{ include "gpt-survey-summarizer.fullname" . }}
                   key: redisUrl
+            - name: SUMMARIZE_FREQUENCY_SECONDS
+              value: {{ .Values.config.summarizeFrequencySeconds | quote }}
           {{- if .Values.bot.extraEnvVars }}
             {{- toYaml .Values.bot.extraEnvVars | nindent 12 }}
           {{- end }}

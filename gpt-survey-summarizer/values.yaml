@@ -3,6 +3,8 @@
 # Declare variables to be passed into your templates.
 
 config:
+  # -- Summarize Frequency Seconds
+  summarizeFrequencySeconds: 3600
   # -- Openai API Key
   openAiApiKey: "" 
   discord:
@@ -35,9 +37,7 @@ bot:
   args:
     - bot
   # -- Extra Environment Variables
-  extraEnvVars: 
-    - name: SUMMARIZE_FREQUENCY_SECONDS
-      value: "3600"
+  extraEnvVars: []
 
 server:
   # -- The number of pods to be deployed for server
@@ -46,9 +46,7 @@ server:
   args:
     - summarizer
   # -- Extra Environment Variables
-  extraEnvVars: 
-    - name: SUMMARIZE_FREQUENCY_SECONDS
-      value: "3600"
+  extraEnvVars: [] 
 
 # -- The secrets used to pull the image
 imagePullSecrets: []

@@ -28,12 +28,13 @@ A helm chart for the gptSuverySummarizer
 |-----|------|---------|-------------|
 | affinity | object | `{}` | Affinity rules |
 | bot.args | list | `["bot"]` | Arguments for the bot container |
-| bot.extraEnvVars | list | `[{"name":"SUMMARIZE_FREQUENCY_SECONDS","value":"3600"}]` | Extra Environment Variables |
+| bot.extraEnvVars | list | `[]` | Extra Environment Variables |
 | bot.replicaCount | int | `1` | The number of pods to be deployed for bot |
 | config.discord.clientId | string | `""` | Discord Application ID |
 | config.discord.guildId | string | `""` | Discord Guild/Server ID |
 | config.discord.token | string | `""` | Discord API Token |
 | config.openAiApiKey | string | `""` | Openai API Key |
+| config.summarizeFrequencySeconds | int | `3600` | Summarize Frequency Seconds |
 | fullnameOverride | string | `""` | The full release name override |
 | image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
 | image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/gpt-survey-summarizer"` | The repository of the image |
@@ -48,7 +49,7 @@ A helm chart for the gptSuverySummarizer
 | resources | object | `{}` | Resource limitations for the pods |
 | securityContext | object | `{}` | SecurityContext |
 | server.args | list | `["summarizer"]` | Arguments for the server container |
-| server.extraEnvVars | list | `[{"name":"SUMMARIZE_FREQUENCY_SECONDS","value":"3600"}]` | Extra Environment Variables |
+| server.extraEnvVars | list | `[]` | Extra Environment Variables |
 | server.replicaCount | int | `1` | The number of pods to be deployed for server |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
