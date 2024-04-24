@@ -40,7 +40,10 @@ spec:
                   name: {{ include "gpt-survey-summarizer.fullname" . }}
                   key: openAiApiKey
             - name: REDIS_URL
-              value: redis://:{{ .Values.redis.auth.password }}@{{ .Values.redis.host }}:{{ .Values.redis.port }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gpt-survey-summarizer.fullname" . }}
+                  key: redisUrl
           {{- if .Values.server.extraEnvVars }}
             {{- toYaml .Values.server.extraEnvVars | nindent 12 }}
           {{- end }}

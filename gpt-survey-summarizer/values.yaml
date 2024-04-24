@@ -19,10 +19,6 @@ redis:
   auth:
     # -- Redis password
     password: ""
-  # -- Redis hostname
-  host: ""
-  # -- Redis port
-  port: 6379
 
 image:
   # -- The repository of the image

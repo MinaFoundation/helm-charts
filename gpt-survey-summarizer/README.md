@@ -45,8 +45,6 @@ A helm chart for the gptSuverySummarizer
 | podSecurityContext | object | `{}` | SecurityContext used for the pods |
 | redis.architecture | string | `"standalone"` | The redis architecture (accepted values are: standalone, replication) |
 | redis.auth.password | string | `""` | Redis password |
-| redis.host | string | `""` | Redis hostname |
-| redis.port | int | `6379` | Redis port |
 | resources | object | `{}` | Resource limitations for the pods |
 | securityContext | object | `{}` | SecurityContext |
 | server.args | list | `["summarizer"]` | Arguments for the server container |
