@@ -2,44 +2,54 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# -- The number of pods to be deployed
-
 config:
+  # -- Openai API Key
   openAiApiKey: "" 
   discord:
+    # -- Discord Application ID
     clientId: ""
+    # -- Discord Guild/Server ID
     guildId: ""
+    # -- Discord API Token
     token: ""
 
-# -- Redis chart values (https://github.com/bitnami/charts/tree/main/bitnami/redis#parameters)
 redis:
   # -- The redis architecture (accepted values are: standalone, replication)
   architecture: standalone
   auth:
+    # -- Redis password
     password: ""
+  # -- Redis hostname
   host: ""
+  # -- Redis port
   port: 6379
 
 image:
-  # image.repository -- The repository of the image
+  # -- The repository of the image
   repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/gpt-survey-summarizer
-  # image.pullPolicy -- The pullPolicy used when pulling the image
+  # -- The pullPolicy used when pulling the image
   pullPolicy: IfNotPresent
-  # image.tag -- The tag of the iamge. Overrides the image tag whose default is the chart appVersion.
+  # -- The tag of the iamge. Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
 bot:
+  # -- The number of pods to be deployed for bot
   replicaCount: 1
+  # -- Arguments for the bot container
   args:
     - bot
+  # -- Extra Environment Variables
   extraEnvVars: 
     - name: SUMMARIZE_FREQUENCY_SECONDS
       value: "3600"
 
 server:
+  # -- The number of pods to be deployed for server
   replicaCount: 1
+  # -- Arguments for the server container
   args:
     - summarizer
+  # -- Extra Environment Variables
   extraEnvVars: 
     - name: SUMMARIZE_FREQUENCY_SECONDS
       value: "3600"
@@ -54,10 +64,11 @@ fullnameOverride: ""
 # -- Annotations to add to the pods
 podAnnotations: {}
 
-# -- SecurityContext used for the pod
+# -- SecurityContext used for the pods
 podSecurityContext: {}
   # fsGroup: 2000
 
+# -- SecurityContext
 securityContext: {}
   # capabilities:
   #   drop:

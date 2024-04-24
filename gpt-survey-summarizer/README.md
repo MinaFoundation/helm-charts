@@ -4,7 +4,7 @@
 
 A helm chart for the gptSuverySummarizer
 
-**Homepage:** <https://github.com/MinaFoundation/gpt-survey-summarizer>
+**Homepage:** <https://github.com/MinaFoundation/gptSuverySummarizer>
 
 ## Maintainers
 
@@ -14,63 +14,47 @@ A helm chart for the gptSuverySummarizer
 
 ## Source Code
 
-* <https://github.com/MinaFoundation/gpt-survey-summarizer>
+* <https://github.com/MinaFoundation/gptSuverySummarizer>
 
-## Prerequisites
+## Requirements
 
-Before using this Helm chart, you should have the following prerequisites:
-
-- Access to Kubernetes cluster (If needed contact your friendly neighbourhood DevOps engineer)
-- Helm >= v3.14.3
-- (**Optional**) helmfile >= v0.162.0 to install this chart
-
-## Installation
-
-> Note: **examples** can be found in the repository
-
-To install this Helm chart, the easiest is to create a helmfile.yaml with needed values and run:
-
-```
-helmfile template
-helmfile apply
-```
-
-Or use helmfile only to generate resources and apply them with kubectl like so:
-
-```
-helmfile template | kubectl -f -
-```
-
-Verify that the chart is deployed successfully:
-
-> Note: `kubectl` is a better suited tool for this
-
-```
-helmfile status
-```
+| Repository | Name | Version |
+|------------|------|---------|
+| https://charts.bitnami.com/bitnami | redis | 19.1.0 |
 
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` | Affinity rules |
-| autoscaling.enabled | bool | `false` | Toggle for autoscaling |
-| autoscaling.maxReplicas | int | `100` | Maximum replicat to be present |
-| autoscaling.minReplicas | int | `1` | Minimum replicas to be present |
-| autoscaling.targetCPUUtilizationPercentage | int | `80` | CPU Utilization threshold |
-| backend.envVars | object | `{}` | Environment variables for the application |
+| bot.args | list | `["bot"]` | Arguments for the bot container |
+| bot.extraEnvVars | list | `[{"name":"SUMMARIZE_FREQUENCY_SECONDS","value":"3600"}]` | Extra Environment Variables |
+| bot.replicaCount | int | `1` | The number of pods to be deployed for bot |
+| config.discord.clientId | string | `""` | Discord Application ID |
+| config.discord.guildId | string | `""` | Discord Guild/Server ID |
+| config.discord.token | string | `""` | Discord API Token |
+| config.openAiApiKey | string | `""` | Openai API Key |
 | fullnameOverride | string | `""` | The full release name override |
 | image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
 | image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/gpt-survey-summarizer"` | The repository of the image |
-| image.tag | string | `"0.1.0-b66ffbd"` | The tag of the iamge. Overrides the image tag whose default is the chart appVersion. |
+| image.tag | string | `"latest"` | The tag of the iamge. Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | The secrets used to pull the image |
 | nameOverride | string | `""` | The release name override |
 | nodeSelector | object | `{}` | Node selector labels |
 | podAnnotations | object | `{}` | Annotations to add to the pods |
-| podSecurityContext | object | `{}` | SecurityContext used for the pod |
-| replicaCount | int | `1` | The number of pods to be deployed |
+| podSecurityContext | object | `{}` | SecurityContext used for the pods |
+| redis.architecture | string | `"standalone"` | The redis architecture (accepted values are: standalone, replication) |
+| redis.auth.password | string | `""` | Redis password |
+| redis.host | string | `""` | Redis hostname |
+| redis.port | int | `6379` | Redis port |
 | resources | object | `{}` | Resource limitations for the pods |
-| securityContext | object | `{}` |  |
+| securityContext | object | `{}` | SecurityContext |
+| server.args | list | `["summarizer"]` | Arguments for the server container |
+| server.extraEnvVars | list | `[{"name":"SUMMARIZE_FREQUENCY_SECONDS","value":"3600"}]` | Extra Environment Variables |
+| server.replicaCount | int | `1` | The number of pods to be deployed for server |
+| serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
+| serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
+| serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
 | tolerations | list | `[]` | Tolerations |
 
 ----------------------------------------------
