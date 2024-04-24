@@ -8,7 +8,7 @@ image:
   repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-payouts-data-provider
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "2.4.2-1df80a6"
+  tag: "2.4.3-8796a9a"
 
 imagePullSecrets: []
 nameOverride: ""
