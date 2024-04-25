@@ -44,7 +44,7 @@ coordinator:
     s3Bucket: "673156464838-uptime-service-backend"
   ssl:
     certfile:
-  envVars: {}
+  envVars: []
     # - name: FOO
     #   value: FOO
     # - name: BAR
@@ -52,6 +52,8 @@ coordinator:
     #     secretKeyRef:
     #       name: mySecret
     #       key: bar  offline:
+secret:
+  gcpServiceAccount:
 
 serviceAccount:
   coordinator:
