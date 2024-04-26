@@ -113,9 +113,14 @@ spec:
               value: {{ include "delegation-verify-coordinator.fullname" . }}
             - name: AUTH_VOLUME_MOUNT_PATH
               value: /var/mina-delegation-verify-auth
+            - name: SPREADSHEET_CREDENTIALS_JSON
+              value: /usr/src/app/gcloud/gcp-sa.json
             {{- if .Values.coordinator.envVars }}
             {{- toYaml .Values.coordinator.envVars | nindent 12 }}
             {{- end }}
+          volumeMounts:
+            - name:  {{ .Release.Name }}-gcp-sa
+              mountPath: /usr/src/app/gcloud
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -134,3 +139,10 @@ spec:
             items:
               - key: "entrypoint-initdb.sh"
                 path: "entrypoint-initdb.sh"
+        - name: {{ .Release.Name }}-gcp-sa
+          secret:
+            secretName: {{ .Release.Name }}
+            defaultMode: 0600
+            items:
+              - key: gcp-sa-json
+                path: gcp-sa.json

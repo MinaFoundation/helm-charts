@@ -71,12 +71,13 @@ The command removes all the Kubernetes components associated with the chart and 
 | `coordinator.aws.secretAccessKey`    | AWS Secret Access Key                                     | `` |
 | `coordinator.aws.s3Bucket`           | AWS S3 Bucket name that holds submissions                 | `673156464838-uptime-service-backend` |
 | `coordinator.ssl.certfile`           | Path to the certfile for AWS Keyspaces                    | `` |
-| `coordinator.envVars`                | Environment Variables to pass to the container            | `{}` |
+| `coordinator.envVars`                | Environment Variables to pass to the container            | `[]` |
 | `serviceAccount.create`              | Create or not Service Account                             | `true` |
 | `serviceAccount.automount`           | Automatically mount ServiceAccount API credentials        | `true` |
 | `serviceAccount.coordinator.annotations`| Annotations for the Coordinator Service Account        | `{}` |
 | `serviceAccount.worker.annotations`  | Annotations for the Worker Service Account                | `{}` |
-| `serviceAccount.name`                | If specified, name of the service account                 | ` ` |
+| `serviceAccount.name`                | If specified, name of the service account                 | ` `  |
+| `secret.gcpServiceAccount`           | JSON data of gcp sa credentials                           | ` `  |
 | `podAnnotations`                     | Pod annotations                                           | `{}` |
 | `podLabels`                          | Pod labels                                                | `{}` |
 | `affinity`                           | Pod affinity                                              | `{}` |
