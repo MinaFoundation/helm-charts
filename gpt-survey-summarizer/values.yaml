@@ -1,0 +1,102 @@
+# Default values for gpt-survey-summarizer.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+config:
+  # -- Summarize Frequency Seconds
+  summarizeFrequencySeconds: 3600
+  # -- Openai API Key
+  openAiApiKey: "" 
+  discord:
+    # -- Discord Application ID
+    clientId: ""
+    # -- Discord Guild/Server ID
+    guildId: ""
+    # -- Discord API Token
+    token: ""
+
+redis:
+  # -- The redis architecture (accepted values are: standalone, replication)
+  architecture: standalone
+  auth:
+    # -- Redis password
+    password: ""
+
+image:
+  # -- The repository of the image
+  repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/gpt-survey-summarizer
+  # -- The pullPolicy used when pulling the image
+  pullPolicy: IfNotPresent
+  # -- The tag of the iamge. Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+bot:
+  # -- The number of pods to be deployed for bot
+  replicaCount: 1
+  # -- Arguments for the bot container
+  args:
+    - bot
+  # -- Extra Environment Variables
+  extraEnvVars: []
+
+server:
+  # -- The number of pods to be deployed for server
+  replicaCount: 1
+  # -- Arguments for the server container
+  args:
+    - summarizer
+  # -- Extra Environment Variables
+  extraEnvVars: [] 
+
+# -- The secrets used to pull the image
+imagePullSecrets: []
+# -- The release name override
+nameOverride: ""
+# -- The full release name override
+fullnameOverride: ""
+
+# -- Annotations to add to the pods
+podAnnotations: {}
+
+# -- SecurityContext used for the pods
+podSecurityContext: {}
+  # fsGroup: 2000
+
+# -- SecurityContext
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# -- Resource limitations for the pods
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use. If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# -- Node selector labels
+nodeSelector: {}
+
+# -- Tolerations
+tolerations: []
+
+# -- Affinity rules
+affinity: {}
