@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 config:
-  # -- Summarize Frequency Seconds
+  # -- Summarize Frequency Seconds test
   summarizeFrequencySeconds: 3600
   # -- Openai API Key
   openAiApiKey: "" 

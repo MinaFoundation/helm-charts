@@ -6,9 +6,9 @@ repos:
     hooks:
       - id: helm-docs-container
         args:
-          # Make the tool search for charts only under the `example-charts` directory
-          - --chart-search-root=gpt-survey-summarizer
+          # Comma separated list, no space
+          - --chart-to-generate=gpt-survey-summarizer
 
-          # The `./` makes it relative to the chart-search-root set above
-          - --template-files=./../README.md.gotmpl
+          # The `./` makes it relative to the chart-search-root
+          - --template-files=./README.md.gotmpl
 
