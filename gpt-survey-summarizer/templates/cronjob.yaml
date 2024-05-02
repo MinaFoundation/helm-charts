@@ -1,0 +1,41 @@
+{{- if .Values.databaseDumpExport.enabled }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "gpt-survey-summarizer.fullname" . }}-database-dump-export
+spec:
+  concurrencyPolicy: Replace
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
+  schedule: {{ .Values.databaseDumpExport.schedule | quote }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: {{ include "gpt-survey-summarizer.fullname" . }}-database-dump-export
+          restartPolicy: Never
+          containers:
+            - name: {{ include "gpt-survey-summarizer.fullname" . }}-database-dump-export
+              image: redis:alpine
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["bash", "/scripts/db-dump.sh"]
+              env:
+                - name: S3_BUCKET
+                  value: {{ .Values.databaseDumpExport.s3Bucket | quote }}
+                - name: REDIS_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "gpt-survey-summarizer.fullname" . }}
+                      key: redisPassword
+                - name: MINA_PLATFORM
+                  value: {{ .Values.platform.name | quote }}
+              volumeMounts:
+                - name: scripts
+                  mountPath: "/scripts/"
+          volumes:
+            - name: scripts
+              configMap:
+                name: {{ include "gpt-survey-summarizer.fullname" . }}-scripts
+                defaultMode: 0777
+{{- end -}}

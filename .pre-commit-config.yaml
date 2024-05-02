@@ -1,0 +1,14 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/norwoodj/helm-docs
+    rev: v1.13.1
+    hooks:
+      - id: helm-docs-container
+        args:
+          # Comma separated list, no space
+          - --chart-to-generate=gpt-survey-summarizer
+
+          # The `./` makes it relative to the chart-search-root
+          - --template-files=./README.md.gotmpl
+

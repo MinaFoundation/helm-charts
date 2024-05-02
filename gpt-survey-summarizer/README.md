@@ -30,11 +30,15 @@ A helm chart for the gptSuverySummarizer
 | bot.args | list | `["bot"]` | Arguments for the bot container |
 | bot.extraEnvVars | list | `[]` | Extra Environment Variables |
 | bot.replicaCount | int | `1` | The number of pods to be deployed for bot |
+| bot.serviceAccountAnnotations | object | `{}` | Annotations for the bot serviceAccount |
 | config.discord.clientId | string | `""` | Discord Application ID |
 | config.discord.guildId | string | `""` | Discord Guild/Server ID |
 | config.discord.token | string | `""` | Discord API Token |
 | config.openAiApiKey | string | `""` | Openai API Key |
 | config.summarizeFrequencySeconds | int | `3600` | Summarize Frequency Seconds |
+| databaseDumpExport.enabled | bool | `true` | Whether to enable exporting of the database dump |
+| databaseDumpExport.s3Bucket | string | `"673156464838-gpt-survey-summarizer-backups"` | Full name of the S3 bucket for backups |
+| databaseDumpExport.serviceAccountAnnotations | object | `{}` | Annotations to add to the cronjob serviceAccount |
 | fullnameOverride | string | `""` | The full release name override |
 | image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
 | image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/gpt-survey-summarizer"` | The repository of the image |
@@ -42,16 +46,18 @@ A helm chart for the gptSuverySummarizer
 | imagePullSecrets | list | `[]` | The secrets used to pull the image |
 | nameOverride | string | `""` | The release name override |
 | nodeSelector | object | `{}` | Node selector labels |
+| platform.name | string | `"sandbox"` |  |
 | podAnnotations | object | `{}` | Annotations to add to the pods |
 | podSecurityContext | object | `{}` | SecurityContext used for the pods |
 | redis.architecture | string | `"standalone"` | The redis architecture (accepted values are: standalone, replication) |
 | redis.auth.password | string | `""` | Redis password |
+| redis.commonConfiguration | string | `"# Enable AOF https://redis.io/topics/persistence#append-only-file\nappendonly yes\n#\n#   Backups:\n#   * After 14400 seconds (4 hours) if at least 1 change was performed\n#   * After 3600 seconds (1 hour) if at least 100 changes were performed\n# \nsave 14400 1 300 100 60 10000"` | Configuration to add to redis.conf |
 | resources | object | `{}` | Resource limitations for the pods |
 | securityContext | object | `{}` | SecurityContext |
 | server.args | list | `["summarizer"]` | Arguments for the server container |
 | server.extraEnvVars | list | `[]` | Extra Environment Variables |
 | server.replicaCount | int | `1` | The number of pods to be deployed for server |
-| serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
+| server.serviceAccountAnnotations | object | `{}` | Annotations for the summarizer serviceAccount |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
 | tolerations | list | `[]` | Tolerations |
