@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 platform:
-  name: "sandbox"
+  name: sandbox
 
 config:
   # -- Summarize Frequency Seconds
@@ -29,17 +29,24 @@ redis:
     # Enable AOF https://redis.io/topics/persistence#append-only-file
     appendonly yes
     #
-    #   Backups:
-    #   * After 14400 seconds (4 hours) if at least 1 change was performed
-    #   * After 3600 seconds (1 hour) if at least 100 changes were performed
+    # Backups:
+    # * After 14400 seconds (4 hours) if at least 1 change was performed
+    # * After 3600 seconds (1 hour) if at least 100 changes were performed
+    # * After 600 seconds (10 minutes) if at least 10.000 changes were performed
     # 
-    save 14400 1 300 100 60 10000
+    save 14400 1 3600 100 600 10000
+    # Workdir of redis
+    dir /data
+    # Database file name
+    dbfilename dump.rdb
 
 databaseDumpExport:
   # -- Whether to enable exporting of the database dump
   enabled: true
   # -- Full name of the S3 bucket for backups
   s3Bucket: "673156464838-gpt-survey-summarizer-backups"
+  # -- Schedule of the automated export in crontab notation
+  schedule: "@daily"
   # -- Annotations to add to the cronjob serviceAccount
   serviceAccountAnnotations: {}
 
@@ -49,7 +56,7 @@ image:
   # -- The pullPolicy used when pulling the image
   pullPolicy: IfNotPresent
   # -- The tag of the iamge. Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: "0.2.0-4a6bee4"
 
 bot:
   # -- The number of pods to be deployed for bot

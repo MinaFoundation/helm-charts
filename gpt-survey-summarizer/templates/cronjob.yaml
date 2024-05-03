@@ -19,7 +19,7 @@ spec:
             - name: {{ include "gpt-survey-summarizer.fullname" . }}-database-dump-export
               image: redis:alpine
               imagePullPolicy: {{ .Values.image.pullPolicy }}
-              command: ["bash", "/scripts/db-dump.sh"]
+              command: ["sh", "/scripts/database-dump-export.sh"]
               env:
                 - name: S3_BUCKET
                   value: {{ .Values.databaseDumpExport.s3Bucket | quote }}
