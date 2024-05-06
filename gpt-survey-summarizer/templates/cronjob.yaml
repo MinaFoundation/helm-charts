@@ -3,7 +3,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ include "gpt-survey-summarizer.fullname" . }}-database-dump-export
+  name: {{ include "gpt-survey-summarizer.fullname" . }}-database-dump-exporter
 spec:
   concurrencyPolicy: Replace
   failedJobsHistoryLimit: 1
@@ -23,6 +23,8 @@ spec:
               env:
                 - name: S3_BUCKET
                   value: {{ .Values.databaseDumpExport.s3Bucket | quote }}
+                - name: REDIS_HOST
+                  value: {{ include "gpt-survey-summarizer.fullname" .}}-redis-master
                 - name: REDIS_PASSWORD
                   valueFrom:
                     secretKeyRef:

@@ -9,7 +9,7 @@ echo "INFO: Installing tools"
 apk add aws-cli >/dev/null;
 
 echo "INFO: Exporting dump of database"
-redis-cli -h gpt-survey-summarizer-redis-master --pass $REDIS_PASSWORD --rdb $FILENAME
+redis-cli -h $REDIS_HOST --pass $REDIS_PASSWORD --rdb $FILENAME
 
 echo "INFO: Creating tar archive"
 tar -czvf "$FILENAME.tar.gz" "$FILENAME"
