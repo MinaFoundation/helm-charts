@@ -46,7 +46,6 @@ This command installs the `leaderboard` chart using the local files in the `lead
 
 ```
 pre-commit >= 3.6.2
-docker
 ```
 
 ### README generation
