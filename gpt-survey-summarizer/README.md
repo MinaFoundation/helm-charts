@@ -67,7 +67,7 @@ helmfile status
 | config.discord.guildId | string | `""` | Discord Guild/Server ID |
 | config.discord.token | string | `""` | Discord API Token |
 | config.openAiApiKey | string | `""` | Openai API Key |
-| config.summarizeFrequencySeconds | int | `3600` | Summarize Frequency Seconds test |
+| config.summarizeFrequencySeconds | int | `3600` | Summarize Frequency Seconds |
 | fullnameOverride | string | `""` | The full release name override |
 | image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
 | image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/gpt-survey-summarizer"` | The repository of the image |
