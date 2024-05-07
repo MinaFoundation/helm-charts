@@ -69,10 +69,11 @@ helmfile status
 | config.discord.token | string | `""` | Discord API Token |
 | config.openAiApiKey | string | `""` | Openai API Key |
 | config.summarizeFrequencySeconds | int | `3600` | Summarize Frequency Seconds |
-| databaseDumpExport.enabled | bool | `true` | Whether to enable exporting of the database dump |
-| databaseDumpExport.s3Bucket | string | `"673156464838-gpt-survey-summarizer-backups"` | Full name of the S3 bucket for backups |
-| databaseDumpExport.schedule | string | `"@daily"` | Schedule of the automated export in crontab notation |
-| databaseDumpExport.serviceAccountAnnotations | object | `{}` | Annotations to add to the cronjob serviceAccount |
+| databaseDumpExporter.enabled | bool | `true` | Whether to enable exporting of the database dump |
+| databaseDumpExporter.s3Bucket | string | `"673156464838-gpt-survey-summarizer-backups"` | Full name of the S3 bucket for backups |
+| databaseDumpExporter.schedule | string | `"@daily"` | Schedule of the automated exporter in crontab notation |
+| databaseDumpExporter.serviceAccountAnnotations | object | `{}` | Annotations to add to the cronjob serviceAccount |
+| databaseDumpExporter.suspended | bool | `false` | Suspend the automatic execution |
 | fullnameOverride | string | `""` | The full release name override |
 | image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
 | image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/gpt-survey-summarizer"` | The repository of the image |

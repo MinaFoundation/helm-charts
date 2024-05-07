@@ -40,14 +40,14 @@ redis:
     # Database file name
     dbfilename dump.rdb
 
-databaseDumpExport:
+databaseDumpExporter:
   # -- Whether to enable exporting of the database dump
   enabled: true
   # -- Suspend the automatic execution
   suspended: false
   # -- Full name of the S3 bucket for backups
   s3Bucket: "673156464838-gpt-survey-summarizer-backups"
-  # -- Schedule of the automated export in crontab notation
+  # -- Schedule of the automated exporter in crontab notation
   schedule: "@daily"
   # -- Annotations to add to the cronjob serviceAccount
   serviceAccountAnnotations: {}
