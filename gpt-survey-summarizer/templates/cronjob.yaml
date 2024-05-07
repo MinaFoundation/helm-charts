@@ -9,11 +9,11 @@ spec:
   failedJobsHistoryLimit: 1
   successfulJobsHistoryLimit: 3
   schedule: {{ .Values.databaseDumpExporter.schedule | quote }}
+  suspend: {{ .Values.databaseDumpExporter.suspended }}
   jobTemplate:
     spec:
       template:
         spec:
-          suspend: {{ .Values.databaseDumpExporter.suspended }}
           serviceAccountName: {{ include "gpt-survey-summarizer.fullname" . }}-database-dump-exporter
           restartPolicy: Never
           containers:
