@@ -146,8 +146,8 @@ spec:
             - name: AWS_SSL_CERTIFICATE_PATH
               value: /uptime/cert/{{ .Values.secret.keyspaceCert.name }}
             {{- end }}
-            {{- if .Values.coordinator.envVars }}
-            {{- toYaml .Values.coordinator.envVars | nindent 12 }}
+            {{- if .Values.coordinator.extraEnvVars }}
+            {{- toYaml .Values.coordinator.extraEnvVars | nindent 12 }}
             {{- end }}
           volumeMounts:
             - name:  {{ .Release.Name }}-gcp-sa

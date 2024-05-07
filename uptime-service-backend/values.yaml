@@ -29,7 +29,7 @@ backend:
       path:
   metrics:
     enabled: false
-  envVars: []
+  extraEnvVars: []
     # See Application's README(or source code).
     # - name: FOO
     #   value: FOO
