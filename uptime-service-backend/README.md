@@ -125,6 +125,7 @@ The following table lists the configurable parameters of the `uptime-service-bac
 | `backend.verifySignatureDisabled`| Specifies if the backend signature verification is enabled or not| `false |
 | `backend.logLevel`             | Application log level                                  | `info`          |
 | `backend.metrics.enabled`      | Toggle for prometheus metrics                          | `false`         |
+| `backend.envVars`              | Environment Variables to pass to the container         | `[]`            |
 
 ### Google spreadsheet to read whitelist from
 
