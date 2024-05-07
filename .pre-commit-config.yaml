@@ -4,7 +4,7 @@ repos:
   - repo: https://github.com/norwoodj/helm-docs
     rev: v1.13.1
     hooks:
-      - id: helm-docs-container
+      - id: helm-docs-built
         args:
           # Comma separated list, no space
           - --chart-to-generate=gpt-survey-summarizer
