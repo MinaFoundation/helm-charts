@@ -2,6 +2,9 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+platform:
+  name: sandbox
+
 config:
   # -- Summarize Frequency Seconds
   summarizeFrequencySeconds: 3600
@@ -21,6 +24,33 @@ redis:
   auth:
     # -- Redis password
     password: ""
+  # -- Configuration to add to redis.conf
+  commonConfiguration: |-
+    # Enable AOF https://redis.io/topics/persistence#append-only-file
+    appendonly yes
+    #
+    # Backups:
+    # * After 14400 seconds (4 hours) if at least 1 change was performed
+    # * After 3600 seconds (1 hour) if at least 100 changes were performed
+    # * After 600 seconds (10 minutes) if at least 10.000 changes were performed
+    # 
+    save 14400 1 3600 100 600 10000
+    # Workdir of redis
+    dir /data
+    # Database file name
+    dbfilename dump.rdb
+
+databaseDumpExporter:
+  # -- Whether to enable exporting of the database dump
+  enabled: true
+  # -- Suspend the automatic execution
+  suspended: false
+  # -- Full name of the S3 bucket for backups
+  s3Bucket: "673156464838-gpt-survey-summarizer-backups"
+  # -- Schedule of the automated exporter in crontab notation
+  schedule: "@daily"
+  # -- Annotations to add to the cronjob serviceAccount
+  serviceAccountAnnotations: {}
 
 image:
   # -- The repository of the image
@@ -28,7 +58,7 @@ image:
   # -- The pullPolicy used when pulling the image
   pullPolicy: IfNotPresent
   # -- The tag of the iamge. Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: "0.2.0-4a6bee4"
 
 bot:
   # -- The number of pods to be deployed for bot
@@ -38,6 +68,8 @@ bot:
     - bot
   # -- Extra Environment Variables
   extraEnvVars: []
+  # -- Annotations for the bot serviceAccount
+  serviceAccountAnnotations: {}
 
 server:
   # -- The number of pods to be deployed for server
@@ -47,6 +79,8 @@ server:
     - summarizer
   # -- Extra Environment Variables
   extraEnvVars: [] 
+  # -- Annotations for the summarizer serviceAccount
+  serviceAccountAnnotations: {}
 
 # -- The secrets used to pull the image
 imagePullSecrets: []
@@ -87,8 +121,6 @@ resources: {}
 serviceAccount:
   # -- Specifies whether a service account should be created
   create: true
-  # -- Annotations to add to the service account
-  annotations: {}
   # -- The name of the service account to use. If not set and create is true, a name is generated using the fullname template
   name: ""
 
