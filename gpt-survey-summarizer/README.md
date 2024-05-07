@@ -21,6 +21,7 @@ A helm chart for the gptSuverySummarizer
 | Repository | Name | Version |
 |------------|------|---------|
 | https://charts.bitnami.com/bitnami | redis | 19.1.0 |
+| https://heywood8.github.io/helm-charts | redisinsight | 0.4.5 |
 
 ## Prerequisites
 

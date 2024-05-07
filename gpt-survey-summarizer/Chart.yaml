@@ -19,6 +19,9 @@ dependencies:
   - name: redis
     version: "19.1.0"
     repository: "https://charts.bitnami.com/bitnami"
+  - name: redisinsight
+    version: "0.4.5"
+    repository: "https://heywood8.github.io/helm-charts"
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
