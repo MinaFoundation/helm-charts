@@ -2,7 +2,7 @@
 
 set -e
 
-DATE="$(date +%Y_%m_%d_%H_%M)"
+DATE="$(date +%Y_%m_%d)"
 FILENAME="$MINA_PLATFORM-gpt-survey-summarizer-dump-$DATE.rdb"
 
 echo "INFO: Installing tools"
