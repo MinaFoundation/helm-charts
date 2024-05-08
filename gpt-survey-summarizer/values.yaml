@@ -45,6 +45,8 @@ databaseDumpExporter:
   enabled: true
   # -- Suspend the automatic execution
   suspended: false
+  # -- Time To Live after job finished in seconds
+  ttlSecondsAfterFinished: 3600
   # -- Full name of the S3 bucket for backups
   s3Bucket: "673156464838-gpt-survey-summarizer-backups"
   # -- Schedule of the automated exporter in crontab notation
