@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "submission-report.fullname" . }}
+  labels:
+    {{- include "submission-report.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "submission-report.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "submission-report.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "submission-report.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          env:
+            {{- if .Values.app.postgresHost }}
+            - name: POSTGRES_HOST
+              value: {{ .Values.app.postgresHost | quote }}
+            {{- end }}
+            {{- if .Values.app.postgresPort }}
+            - name: POSTGRES_PORT
+              value: {{ .Values.app.postgresPort | quote }}
+            {{- end }}
+            {{- if .Values.app.postgresDatabase }}
+            - name: POSTGRES_DB
+              value: {{ .Values.app.postgresDatabase | quote }}
+            {{- end }}
+            {{- if .Values.app.postgresUsername }}
+            - name: POSTGRES_USER
+              value: {{ .Values.app.postgresUsername | quote }}
+            {{- end }}
+            {{- if .Values.app.postgresPassword }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.app.postgresPassword | quote }}
+            {{- end }}
+            {{- if .Values.app.extraEnvVars }}
+            {{- toYaml .Values.backend.extraEnvVars | nindent 12 }}
+            {{- end }}
+
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

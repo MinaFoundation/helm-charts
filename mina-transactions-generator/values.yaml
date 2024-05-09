@@ -2,44 +2,67 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# -- The number of replicas
 replicaCount: 1
 
 image:
+  # -- The repository of the image
   repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-transactions-generator
+  # -- The pullPolicy used when pulling the image
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: 0.1.2-5b82cae
+  # -- The tag of the image. Overrides the image tag whose default is the chart appVersion.
+  tag: 0.2.3-fb4474e
 
+# -- The secrets used to pull the image
 imagePullSecrets: []
+# -- The release name override
 nameOverride: ""
+# -- The full release name override
 fullnameOverride: ""
 
 generator:
+  # -- The graphql URL to send transactions to
   minaGraphqlUrl: "http://localhost:3085/graphql"
+  # -- The private key of the sender
   senderPrivateKey: ""
+  # -- The list of recipient wallets
   recipientWalletList: []
+  # -- The Network Profile to use (accepted values are: mainnet, testnet)
+  networkProfile: "testnet"
   transaction:
-    type: regular
+    # -- The type of transaction to send (accepted values are: regular, zkApp, mixed)
+    type: mixed
+    # -- The interval in milliseconds between each transaction
     interval: 5000
+    # -- The amount of the transaction
     amount: 2
+    # -- The fee of the transaction
     fee: 0.1
+  # -- Extra Environment Variables
+  extraEnvVars: []
+
 serviceAccount:
-  # Specifies whether a service account should be created
+  # -- Specifies whether a service account should be created
   create: true
-  # Automatically mount a ServiceAccount's API credentials?
+  # -- Automatically mount a ServiceAccount's API credentials?
   automount: true
-  # Annotations to add to the service account
+  # -- Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # -- The name of the service account to use.
+  # -- If not set and create is true, a name is generated using the fullname template
   name: ""
 
+# -- Annotations to add to the pods
 podAnnotations: {}
+
+# -- The labels to add to the pods
 podLabels: {}
 
+# -- The Pod Security Context
 podSecurityContext: {}
   # fsGroup: 2000
 
+# -- The Security Context
 securityContext: {}
   # capabilities:
   #   drop:
@@ -48,6 +71,7 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
+# -- Resource limitations for the pods
 resources:
   limits:
     cpu: 1
@@ -56,8 +80,11 @@ resources:
     cpu: 500m
     memory: 256Mi
 
+# -- Node selector labels
 nodeSelector: {}
 
+# -- Tolerations
 tolerations: []
 
+# -- Affinity rules
 affinity: {}

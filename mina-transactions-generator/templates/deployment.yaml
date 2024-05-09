@@ -51,6 +51,11 @@ spec:
               value: {{ .Values.generator.transaction.amount | quote }}
             - name: TRANSACTION_FEE
               value: {{ .Values.generator.transaction.fee | quote }}
+            - name: NETWORK_PROFILE
+              value: {{ .Values.generator.networkProfile | quote }}
+            {{- if .Values.generator.extraEnvVars }}
+            {{- toYaml .Values.generator.extraEnvVars | nindent 12 }}
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
@@ -72,4 +77,3 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-
