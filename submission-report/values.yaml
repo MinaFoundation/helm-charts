@@ -1,0 +1,121 @@
+# Default values for submission-report.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- The number of pods to be deployed for bot
+replicaCount: 1
+
+image:
+  # -- The repository of the image
+  repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/submission-report
+  # -- The pullPolicy used when pulling the image
+  pullPolicy: IfNotPresent
+  # -- The tag of the iamge. Overrides the image tag whose default is the chart appVersion.
+  tag: "2.0.0rc1"
+
+# -- The secrets used to pull the image
+imagePullSecrets: []
+# -- The release name override
+nameOverride: ""
+# -- The full release name override
+fullnameOverride: ""
+
+app:
+  # -- Postgres host
+  postgresHost: ""
+  # -- Postgres port
+  postgresPort: ""
+  # -- Postgres database name
+  postgresDatabase: ""
+  # -- Postgres username
+  postgresUsername: ""
+  # -- Postgres password
+  postgresPassword: ""
+  # -- List of extra environment variables
+  extraEnvVars: []
+    # See Application's README(or source code).
+    # - name: FOO
+    #   value: FOO
+    # - name: BAR
+    #   valueFrom:
+    #     secretKeyRef:
+    #       name: mySecret
+    #       key: bar  offline:
+
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use.
+  # -- If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# -- Annotations to add to the pods
+podAnnotations: {}
+# -- Labels to add to the pods
+podLabels: {}
+
+# -- SecurityContext used for the pods
+podSecurityContext: {}
+  # fsGroup: 2000
+
+# -- SecurityContext
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  # -- Service type
+  type: ClusterIP
+  # -- Service port
+  port: 5000
+
+ingress:
+  # -- Whether ingress should be enabled for the app
+  enabled: false
+  # -- Ingress type
+  className: alb
+  # -- Ingress annotations
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  # -- A list of host configurations
+  hosts: []
+    # - host: chart-example.local
+    #   paths:
+    #     - path: /
+    #       pathType: ImplementationSpecific
+  # -- A list of tls configurations
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+# -- Resource limitations for the pods
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# -- Node selector labels
+nodeSelector: {}
+
+# -- Tolerations
+tolerations: []
+
+# -- Affinity rules
+affinity: {}
