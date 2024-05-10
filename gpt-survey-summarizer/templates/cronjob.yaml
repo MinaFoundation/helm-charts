@@ -12,6 +12,7 @@ spec:
   suspend: {{ .Values.databaseDumpExporter.suspended }}
   jobTemplate:
     spec:
+      ttlSecondsAfterFinished: {{ .Values.databaseDumpExporter.ttlSecondsAfterFinished }}
       template:
         spec:
           serviceAccountName: {{ include "gpt-survey-summarizer.fullname" . }}-database-dump-exporter
