@@ -1,60 +1,72 @@
-# Mina Transactions Generator
+# mina-transactions-generator
 
-A chart bootstraping a transactions generating script job.
+![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
 
-## TL;DR
-
-```console
-git clone https://github.com/MinaFoundation/helm-charts
-cd helm-charts/mina-transactions-generator
-helm install RELEASE_NAME ./ --namespace NAMESPACE
-```
+A Helm chart for Kubernetes
 
 ## Prerequisites
 
-- Kubernetes 1.12+
-- Helm 3.1.0
+Before using this Helm chart, you should have the following prerequisites:
 
-## Installing the Chart
+- Access to Kubernetes cluster (If needed contact your friendly neighbourhood DevOps engineer)
+- Helm >= v3.14.3
+- (**Optional**) helmfile >= v0.162.0 to install this chart
 
-To install the chart with the release name `RELEASE_NAME`:
+## Installation
 
-```console
-helm install RELEASE_NAME ./ --namespace NAMESPACE
+> Note: **examples** can be found in the repository
+
+To install this Helm chart, the easiest is to create a helmfile.yaml with needed values and run:
+
+```
+helmfile template
+helmfile apply
 ```
 
-The command deploys `mina-transactions-generator` on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
+Or use helmfile only to generate resources and apply them with kubectl like so:
 
-## Uninstalling the Chart
-
-To uninstall/delete the `RELEASE_NAME` deployment:
-
-```console
-helm delete RELEASE_NAME
+```
+helmfile template | kubectl -f -
 ```
 
-The command removes all the Kubernetes components associated with the chart and deletes the release.
+Verify that the chart is deployed successfully:
 
-### Parameters
+> Note: `kubectl` is a better suited tool for this
 
-| Name                             | Description                                            | Value |
-| -------------------------------- | ------------------------------------------------------ | ----- |
-| `image.repository`               | `mina-transactions-generator` docker image url         | `673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-transactions-generator` |
-| `image.tag`                      | Docker image tag                                       | `0.1.2-5b82cae` |
-| `image.pullPolicy`               | Docker image pull policy                               | `IfNotPresent` |
-| `nameOverride`                   | Name override                                          | `""` |
-| `fullnameOverride`               | Full name override                                     | `""` |
-| `generator.minaGraphqlUrl`       | Graphql endpoint url to connect to.                    | `""` |
-| `generator.senderPrivateKey`     | A private key of a sender                              | `""` |
-| `generator.recipientWalletList`  | A list of wallet public keys to send transactions to.  | `[]` |
-| `generator.transaction.type`     | Transaction type: `regular`, `zkApp` or `mixed`.       | `"regular"` |
-| `generator.transaction.interval` | Time delay in ms between transactions.                 | `"5000"` |
-| `generator.transaction.amount`   | Amount(per transaction) to send.                       | `"2"` |
-| `generator.transaction.fee`      | Transaction fee.                                       | `"0.1"` |
-| `resources.request.memory`       | Memory requested for the application pod               | `256Mi` |
-| `resources.request.cpu`          | CPU resources requested for the application pod        | `500m` |
-| `resources.limit.memory`         | Maximum memory allowed for the application pod         | `512Mi` |
-| `resources.limit.cpu`            | Maximum CPU resources allowed for the application pod  | `1` |
-| `serviceAccount.create`          | Specifies whether a service account should be created  | `true` |
-| `serviceAccount.automount`       | Automatically mount a ServiceAccount's API credentials | `true` |
-| `serviceAccount.annotations`     | Annotations to add to the service account              | `{}` |
+```
+helmfile status
+```
+
+## Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| affinity | object | `{}` | Affinity rules |
+| fullnameOverride | string | `""` | The full release name override |
+| generator.extraEnvVars | list | `[]` | Extra Environment Variables |
+| generator.minaGraphqlUrl | string | `"http://localhost:3085/graphql"` | The graphql URL to send transactions to |
+| generator.networkProfile | string | `"testnet"` | The Network Profile to use (accepted values are: mainnet, testnet) |
+| generator.recipientWalletList | list | `[]` | The list of recipient wallets |
+| generator.senderPrivateKey | string | `""` | The private key of the sender |
+| generator.transaction.amount | int | `2` | The amount of the transaction |
+| generator.transaction.fee | float | `0.1` | The fee of the transaction |
+| generator.transaction.interval | int | `5000` | The interval in milliseconds between each transaction |
+| generator.transaction.type | string | `"mixed"` | The type of transaction to send (accepted values are: regular, zkApp, mixed) |
+| image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
+| image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-transactions-generator"` | The repository of the image |
+| image.tag | string | `"0.2.3-fb4474e"` | The tag of the image. Overrides the image tag whose default is the chart appVersion. |
+| imagePullSecrets | list | `[]` | The secrets used to pull the image |
+| nameOverride | string | `""` | The release name override |
+| nodeSelector | object | `{}` | Node selector labels |
+| podAnnotations | object | `{}` | Annotations to add to the pods |
+| podLabels | object | `{}` | The labels to add to the pods |
+| podSecurityContext | object | `{}` | The Pod Security Context |
+| replicaCount | int | `1` | The number of replicas |
+| resources | object | `{"limits":{"cpu":1,"memory":"512Mi"},"requests":{"cpu":"500m","memory":"256Mi"}}` | Resource limitations for the pods |
+| securityContext | object | `{}` | The Security Context |
+| serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
+| serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
+| serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
+| serviceAccount.name | string | `""` | If not set and create is true, a name is generated using the fullname template |
+| tolerations | list | `[]` | Tolerations |
+
