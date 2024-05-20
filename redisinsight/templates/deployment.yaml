@@ -1,11 +1,10 @@
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: {{ include "redisinsight.fullname" . }}
   labels:
     {{- include "redisinsight.labels" . | nindent 4 }}
 spec:
-  serviceName: {{ include "redisinsight.fullname" . }}-headless
   replicas: {{ .Values.server.replicas }}
   selector:
     matchLabels:

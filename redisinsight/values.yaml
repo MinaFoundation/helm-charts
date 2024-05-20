@@ -2,16 +2,13 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# -- The name of the environment
-platform: sandbox
-
 image:
   # -- The repository of the image
   repository: redis/redisinsight
   # -- The pullPolicy used when pulling the image
   pullPolicy: IfNotPresent
   # -- The tag of the iamge. Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: "2.48.0"
 
 server:
   # -- The number of pods to be deployed for server
@@ -21,12 +18,6 @@ server:
     # -- Service labels
     labels: {}
     # -- Service annotations
-    annotations: {}
-  # -- Specific values for the headless service resource
-  headless:
-    # -- Headless service labels
-    labels: {}
-    # -- Headless service annotations
     annotations: {}
   
   # -- Collection of ports
@@ -62,8 +53,7 @@ persistence:
   # -- Size of the Persistent Volume
   size: 100Mi
   # -- Annotations for the Persistent Volume Claim
-  annotations:
-    helm.sh/resource-policy: "keep"
+  annotations: {}
 
 # -- The secrets used to pull the image
 imagePullSecrets: []

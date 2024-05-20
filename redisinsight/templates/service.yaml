@@ -9,7 +9,6 @@ metadata:
   {{- end }}
   {{- end }}
     app: {{ include "redisinsight.fullname" . }}
-    platform: {{ .Values.platform }}
   {{- if .Values.server.service.annotations }}
   {{- with .Values.server.service.annotations }}
   annotations:
