@@ -2,61 +2,100 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# -- The number of replicas
 replicaCount: 1
 
 image:
+  # -- The repository of the image
   repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-payouts-data-provider
+  # -- The pullPolicy used when pulling the image
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "2.4.3-8796a9a"
+  # -- The tag of the image. Overrides the image tag whose default is the chart appVersion.
+  tag: "2.5.0-efd39bf"
 
+# -- The secrets used to pull the image
 imagePullSecrets: []
+# -- The release name override
 nameOverride: ""
+# -- The full release name override
 fullnameOverride: ""
 
 minaPayoutsDataProvider:
+  # -- The number of slots in an epoch
   numSlotsInEpoch: 7140
+  # -- The Archive DB Recency Threshold
   archiveDBRecencyThreshold: 10
   ledgerUploadAPI:
+    # -- The User for the Ledger Upload API
     user: "ledger-upload-api-user"
+    # -- The Password for the Ledger Upload API
     password: "ledger-upload-api-password"
   blockDBQuery:
-    version: "v1" # v1 => mainnet, v2 => berkeley
+    # -- The Version used to query the Archive DB (accepted values are: v1 (mainnet), v2 (berkeley))
+    version: "v1"
+    # -- The Host of the Archive DB
     host: http://localhost
+    # -- The Port of the Archive DB
     port: 5432
+    # -- The User for the Archive DB
     user: user
+    # -- The Password for the Archive DB
     password: password
+    # -- The Name of the Archive DB
     name: database
     ssl:
+      # -- Whether SSL is enabled
       enabled: false
+      # -- The Root Certificate Base64
       rootCertificateBase64:
   ledgerDBQuery:
+    # -- The Host of the Ledger DB (Read-Only)
     host: http://localhost
+    # -- The Port of the Ledger DB (Read-Only)
     port: 5432
+    # -- The User for the Ledger DB (Read-Only)
     user: user
+    # -- The Password for the Ledger DB (Read-Only)
     password: password
+    # -- The Name of the Ledger DB (Read-Only)
     name: database
     ssl:
+      # -- Whether SSL is enabled
       enabled: false
+      # -- The Root Certificate Base64
       rootCertificateBase64:
     bootstrap:
+      # -- Whether to bootstrap the Ledger DB
       enabled: false
+      # -- The Schema URL to bootstrap the Ledger DB
       schemaURL: "https://raw.githubusercontent.com/jrwashburn/mina-payouts-data-provider/main/deploy/db-setup/stakesDb.sql"
-      delay: 30 # seconds
+      # -- The Delay in seconds before bootstrapping the Ledger DB in seconds
+      delay: 30
       image:
+        # -- The Repository of the bootstrap image
         repository: "postgres"
+        # -- The Tag of the bootstrap image
         tag: "latest"
   ledgerDBCommand:
+    # -- The Host of the Ledger DB (Read-Write)
     host: http://localhost
+    # -- The Port of the Ledger DB (Read-Write)
     port: 5432
+    # -- The User for the Ledger DB (Read-Write)
     user: user
+    # -- The Password for the Ledger DB (Read-Write)
     password: password
+    # -- The Name of the Ledger DB (Read-Write)
     name: database
     ssl:
+      # -- Whether SSL is enabled
       enabled: false
+      # -- The Root Certificate Base64
       rootCertificateBase64:
+  # -- List of GraphQL Endpoints to query
   checkNodes: []
-  envVars: {}
+  # -- Environment Variables
+  envVars: []
     # - name: FOO
     #   value: FOO
     # - name: BAR
@@ -66,19 +105,22 @@ minaPayoutsDataProvider:
     #       key: bar  offline:
 
 serviceAccount:
-  # Specifies whether a service account should be created
+  # -- Specifies whether a service account should be created
   create: true
-  # Annotations to add to the service account
+  # -- Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # -- The name of the service account to use.
+  # -- If not set and create is true, a name is generated using the fullname template
   name: ""
 
+# -- Annotations to add to the pods
 podAnnotations: {}
 
+# -- The Pod Security Context
 podSecurityContext: {}
   # fsGroup: 2000
 
+# -- The Security Context
 securityContext: {}
   # capabilities:
   #   drop:
@@ -88,25 +130,33 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
+  # -- The type of service to create
   type: ClusterIP
+  # -- The port of the service
   port: 8080
 
 ingress:
+  # -- Whether to create an Ingress
   enabled: false
+  # -- The Ingress Class Name to use
   className: ""
+  # -- The Ingress Annotations
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
+  # -- The Ingress Hosts
+  hosts: []
+    # - host: chart-example.local
+    #   paths:
+    #     - path: /
+    #       pathType: ImplementationSpecific
+  # -- The TLS configuration
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
 
+# -- Resource limitations for the pods
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
@@ -120,27 +170,37 @@ resources: {}
   #   memory: 128Mi
 
 autoscaling:
+  # -- Whether to enable autoscaling
   enabled: false
+  # -- The minimum number of pods
   minReplicas: 1
-  maxReplicas: 100
+  # -- The maximum number of pods
+  maxReplicas: 3
+  # -- The metrics to use for autoscaling
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
+# -- The Liveness Probe
 livenessProbe:
   httpGet:
     path: /health
     port: http
+# -- The Readiness Probe
 readinessProbe:
   httpGet:
     path: /health
     port: http
 
+# -- Node selector labels
 nodeSelector: {}
 
+# -- Tolerations
 tolerations: []
 
+# -- Affinity rules
 affinity: {}
 
 postgresql:
+  # -- Whether to use the PostgreSQL chart
   create: false
   # Ref: https://raw.githubusercontent.com/bitnami/charts/main/bitnami/postgresql/values.yaml
