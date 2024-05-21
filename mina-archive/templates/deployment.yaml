@@ -1,118 +1,128 @@
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ include "mina-archive.fullname" . }}-node
   labels:
-    app: {{ .Release.Name }}
+    {{- include "mina-archive.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.archive.replicas }}
+  replicas: {{ .Values.node.replicas }}
+  {{- if gt (.Values.node.replicas | int) 1 }}
+  {{- fail "Mina archive should run one process per database maximum" }}
+  {{- end}}
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
+      {{- include "mina-archive.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      labels:
-        app: {{ .Release.Name }}
-        testnet: {{ .Values.archive.testnet }}
-        role: archive
       annotations:
-      {{- with .Values.podAnnotations }}
-      {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- if .Values.archive.metrics.enabled }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmap-scripts.yaml") . | sha256sum }}
+        {{- if .Values.node.metrics.enabled }}
         prometheus.io/scrape: 'true'
-        prometheus.io/port: {{ .Values.archive.metrics.port | quote }}
+        prometheus.io/port: {{ .Values.node.ports.metrics | quote }}
         prometheus.io/path: '/metrics'
-      {{- end }}
+        {{- end }}
+        {{- with .Values.node.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "mina-archive.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        # legacy labels backward compatible
+        app: {{ include "mina-archive.fullname" . }}
+        network: {{ .Values.network }}
+        role: archive
     spec:
-      serviceAccountName: {{ .Release.Name }}
-      containers:
-        # Archive Process
-        - name: archive
-          resources:
-            limits:
-              memory: {{ .Values.resource.memoryLimit }}
-              cpu: {{ .Values.resource.cpuLimit }}
-            requests:
-              memory: {{ .Values.resource.memoryRequest }}
-              cpu: {{ .Values.resource.cpuRequest }}
-          image: {{ .Values.archive.image }}
-          args: [
-            "mina-archive",
-            "run",
-            {{- if .Values.archive.metrics.enabled }}
-            "-metrics-port", "{{ .Values.archive.metrics.port }}",
-            {{- end }}
-            "-postgres-uri", "{{ tpl .Values.archive.postgresUri . }}",
-            {{- if .Values.archive.runtimeConfig }}
-            "-config-file", "/config/daemon.json",
-            {{- end }}
-            "-server-port", "{{ .Values.archive.ports.server }}"
-          ]
+      serviceAccountName: {{ include "mina-archive.fullname" . }}
+      initContainers:
+        - name: archive-init
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["bash", "/scripts/archive-command-init.sh"]
+          args: []
           env:
-          imagePullPolicy: Always
-          {{- if .Values.archive.runtimeConfig }}
-          volumeMounts:
-            - name: {{ .Release.Name }}-runtime-config
-              mountPath: "/config/"
+            {{- include "pgEnvVars" . | nindent 12 }}
+            - name: DB_BOOTSTRAP_LOCKING_DATABASE_NAME
+              value: {{ include "bootstrapLockingDatabaseName" . }}
+            - name: DB_BOOTSTRAP_TIMEOUT_SEC
+              value: {{ .Values.dbBootstrap.maxExpectedDurationInSeconds | quote }}
+          {{- if .Values.node.configFileUrl }}
+            - name: ARCHIVE_CONFIG_FILE_URL
+              value: {{ .Values.node.configFileUrl }}
           {{- end }}
-          ports:
-            - name: archive-port
-              protocol: TCP
-              containerPort: {{ .Values.archive.ports.server }}
-            {{- if .Values.archive.metrics.enabled }}
-            - name: metrics-port
-              protocol: TCP
-              containerPort: {{ .Values.archive.metrics.port }}
-            {{- end }}
-{{- $postgresHost := tpl .Values.archive.postgresHost . }}
-{{- $data := dict "postgresHost" $postgresHost "healthcheck" $.Values.healthcheck }}
-{{- include "healthcheck.archive.allChecks" $data | indent 10 }}
-        {{- if .Values.archive.missingBlocksGuardian.enabled }}
-        - name: missing-blocks-guardian
-          image: {{ .Values.archive.image }}
-          env:
-            - name: DB_USERNAME
-              value: {{ .Values.postgresql.auth.username | quote }}
-            - name: PGPASSWORD
-              value: {{ .Values.postgresql.auth.password | quote }}
-            - name: DB_HOST
-              value: {{ tpl .Values.archive.postgresHost . | quote }}
-            - name: DB_PORT
-              value: {{ .Values.archive.ports.postgres | quote }}
-            - name: DB_NAME
-              value: {{ .Values.postgresql.auth.database | quote }}
-            - name: MINA_NETWORK
-              value: {{ .Values.archive.testnet | quote }}
-            - name: PRECOMPUTED_BLOCKS_URL
-              value: {{ .Values.archive.missingBlocksGuardian.precomputedBlocksURL| quote }}
-            - name: MISSING_BLOCKS_GUARDIAN_WAIT_TIME
-              value: {{ .Values.archive.missingBlocksGuardian.waitTime| quote }}
-          command: ["bash", "-c"]
-          args:
-            - 'sleep ${MISSING_BLOCKS_GUARDIAN_WAIT_TIME} && bash /scripts/missing-blocks-guardian.sh'
-          resources:
-            limits:
-              memory: 512Mi
-              cpu: 500m
-            requests:
-              memory: 256Mi
-              cpu: 250m
           volumeMounts:
-            - name: {{ .Release.Name }}-missing-blocks-guardian
+            - name: scripts
               mountPath: "/scripts/"
-        {{- end }}
+            - name: config
+              mountPath: /config/
+      containers:
+        - name: archive
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - mina-archive
+            - run
+            - --postgres-uri
+            - {{ include "postgresUri" . }}
+            - --server-port
+            - {{ .Values.node.ports.rpc | quote}}
+          {{- if .Values.node.metrics.enabled }}
+            - --metrics-port
+            - {{ .Values.node.ports.metrics | quote }}
+          {{- end }}
+          {{- if .Values.node.configFileUrl }}
+            - --config-file
+            - /config/config-file.json
+          {{- end }}
+          {{- with .Values.node.extraArgs }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            {{- include "pgEnvVars" . | nindent 12 }}
+            - name: ARCHIVE_node_PORT_RPC
+              value: {{ .Values.node.ports.rpc | quote }}
+            {{- if .Values.node.extraEnvVars }}
+            {{- toYaml .Values.node.extraEnvVars | nindent 12 }}
+            {{- end }}
+          ports:
+            - name: rpc
+              protocol: TCP
+              containerPort: {{ .Values.node.ports.rpc }}
+            {{- if .Values.node.metrics.enabled }}
+            - name: metrics
+              protocol: TCP
+              containerPort: {{ .Values.node.ports.metrics }}
+            {{- end }}
+          {{- with .Values.node.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.node.resources | nindent 12 }}
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts/
+            - name: config
+              mountPath: /config/
       volumes:
-        - name: {{ .Release.Name }}-config-dir
+        - name: scripts
+          configMap:
+            name: {{ include "mina-archive.fullname" . }}-scripts
+            defaultMode: 0777
+        - name: config
           emptyDir: {}
-        {{- if .Values.archive.runtimeConfig }}
-        - name: {{ .Release.Name }}-runtime-config
-          configMap:
-            name: {{ .Release.Name }}-runtime-config
-        {{- end }}
-        {{- if .Values.archive.missingBlocksGuardian.enabled }}
-        - name: {{ .Release.Name }}-missing-blocks-guardian
-          configMap:
-            name: {{ .Release.Name }}-missing-blocks-guardian
-        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

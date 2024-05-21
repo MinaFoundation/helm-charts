@@ -1,72 +1,162 @@
-archive:
-  testnet:
-  replicas: 1
-  image:
-  runtimeConfig:
-  # `remoteSchemaFile` needs to be just the script name, not a url.  `remoteSchemaAuxFiles` needs to be a list of urls of sqls, one of these urls needs to be the url of the main sql script that invokes the other ones.
-  remoteSchemaFile: "create_schema.sql"
-  remoteSchemaAuxFiles: []
-  postgresHost:  '{{ .Release.Name }}-postgresql'
-  postgresUri: postgres://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password }}@{{ tpl .Values.archive.postgresHost . }}:{{ .Values.archive.ports.postgres }}/{{ .Values.postgresql.auth.database }}
-  metrics:
-    enabled: false
-    port: 10002
-  ports:
-    server: 3086
-    postgres: 5432
-  enablePostgresDB: true
-  dumpCronjob:
-    enabled: false
-    s3Bucket: 673156464838-mina-archive-node-backups
-  bootstrapDB: true
-  initFromDump:
-    enabled: false
-    archiveDumpURL: https://storage.googleapis.com/mina-archive-dumps
-  missingBlocksGuardian:
-    enabled: false
-    precomputedBlocksURL: https://storage.googleapis.com/mina_network_block_data
-    waitTime: 1800  # 30 minutes
-  service:
-    labels: {}
-    annotations: {}
 
-resource:
-  memoryRequest: "6.0Gi"
-  cpuRequest: "3"
-  memoryLimit: "8.0Gi"
-  cpuLimit: "4"
+# -- Mina network name (e.g.: `mainnet`, `devnet`)
+network: network
 
-postgresql:
-  global:
-    storageClass: ebs-gp3-encrypted
-  primary:
-    name: "archive"
-    persistence:
-      enabled: false
-      size: 8Gi
-    initdb:
-      user: "mina"
-      password: "zo3moong7moog4Iep7eNgo3iecaesahH"
-  auth:
-    username: "mina"
-    password: "zo3moong7moog4Iep7eNgo3iecaesahH"
-    database: "archive"
-    enablePostgresUser: false
+# -- Database name of the archive node
+databaseName: archive
 
-nodeSelector:
-  preemptible: true
+image:
+  # -- Docker image repository
+  repository: gcr.io/o1labs-192920/mina-archive
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Docker image tag
+  tag: 2.0.0berkeley-rc1-1551e2f-focal
 
 serviceAccount:
+  # -- Service account annotations
   annotations: {}
 
-podAnnotations: {}
-
-healthcheck:
+postgresql:
+  # -- Enable local postgresql database server
   enabled: true
-  startup:
-    periodSeconds: 30
-    failureThreshold: 10
-  failureThreshold: 5
-  periodSeconds: 5
-  initialDelaySeconds: 10
-  timeoutSeconds: 10
+  primary:
+    # -- Resources preset to set resource requests and limits
+    resourcesPreset: "nano"
+    # -- Extended configuration to configure postgresql server
+    extendedConfiguration: |
+      max_wal_size=2048
+    persistence:
+      # -- Enable the persistence for the postgresql server
+      enabled: true
+      # -- Storage class for the postgresql server volume
+      storageClass: ""
+      # -- Size of the postgresql server volume
+      size: 8Gi
+  auth:
+    # -- Username for the database
+    username: username
+    # -- Password for the database
+    password: password
+    # -- Enable the default postgres user
+    enablePostgresUser: false
+
+externalDatabase:
+  # To use an existing external database server, set enabled to true.
+  # This would ignore the local postgresql server connection.
+  enabled: false
+  # -- Host for external database connection
+  host: host
+  # -- Port of external database connection
+  port: 5432
+  # -- Username of external database connection
+  username: username
+  # -- Password of external database connection
+  password: password
+
+# -- Image to use as postgresql client, to export dumps for example
+postgresClientDockerImage: bitnami/postgresql:16.2.0-debian-12-r18
+# postgresClientDockerImage: postgres:16-alpine
+
+dbBootstrap:
+  # -- Enable to dbBootstrap job to populate the database schema or dump
+  enabled: false
+
+  # -- Instanciate the database on the database server
+  createDatabase: true
+
+  # -- SQL file urls to execute
+  sqlFileUrls: []
+    # - https://673156464838-mina-archive-node-backups.s3.us-west-2.amazonaws.com/mainnet/mainnet-archive-dump-2024-04-29_0000.sql.tar.gz
+    # - https://raw.githubusercontent.com/MinaProtocol/mina/develop/src/app/archive/create_schema.sql
+
+  # -- SQL file urls to pre-download before executing the SQL file urls
+  extraSqlFileUrls: []
+    # - https://raw.githubusercontent.com/MinaProtocol/mina/develop/src/app/archive/zkapp_tables.sql
+    # - https://storage.googleapis.com/mina-archive-dumps
+
+  # -- Execute SQL inline command before loading the SQL file urls
+  # preCustomSql: SELECT session_user, current_database()
+
+  # -- Execute SQL inline command after loading the SQL file urls
+  postCustomSql: ALTER DATABASE {{ .Values.databaseName }} SET DEFAULT_TRANSACTION_ISOLATION TO SERIALIZABLE
+
+  # -- Set the bootstrap duration expected to be used by other pods when waiting for the bootstrap to complete, before reaching timeout
+  maxExpectedDurationInSeconds: 1800 # 30 minutes
+
+  # -- Annotations to apply to the job
+  annotations: {}
+  
+  # -- Annotations to apply to the pod 
+  podAnnotations: {}
+
+node:
+  # -- Replicas number for the archive node deployment
+  replicas: 1
+  # -- Config file url to be downloaded and used as config file before the server starts
+  configFileUrl: ""
+  metrics:
+    # -- Enable metric service
+    enabled: true
+  ports:
+    # -- Mina archive RPC port number
+    rpc: 3086
+    # -- Mina archive metric port number
+    metrics: 10002
+  # -- Extra environment variables for the mina archive process
+  extraEnvVars: []
+  # -- Extra arguments for the mina archive process
+  extraArgs: []
+  service:
+    # -- Labels to the mina archive service
+    labels: {}
+    # -- Annotations to the mina archive service
+    annotations: {}
+  # -- Annotations to the mina archive pods
+  podAnnotations: {}
+
+  # -- Readiness probe configuration
+  readinessProbe:
+    exec:
+      command: ["bash", "/scripts/archive-readiness.sh"]
+
+  # -- Resources for the mina archive pods
+  resources: {}
+
+missingBlocksGuardian:
+  # -- Enabled missing blocks guardian
+  enabled: false
+  # -- Suspend the missing blocks guardian execution
+  suspend: false
+  # -- Frequency to execute the missing blocks guardian
+  schedule: "@hourly"
+  # -- Annotations to the missing blocks guardian 
+  podAnnotations: {}
+  # -- Seconds before cleaning up the missing blocks guardian execution
+  ttlSecondsAfterFinished: 86400
+  # -- URL to fetch the pre-computed blocks from
+  precomputedBlocksUrl: ""
+  # -- URL to auto import a block when running the missing blocks guardian
+  autoImportBlockUrl: ""
+
+dumpExporter:
+  # -- Enabled dump exporter 
+  enabled: true
+  # -- Suspend the  dump exporter execution
+  suspend: false
+  # -- Frequency to execute the  dump exporter
+  schedule: "@midnight"
+  # -- Annotations to the  dump exporter 
+  podAnnotations: {}
+  # -- Seconds before cleaning up the  dump exporter execution
+  ttlSecondsAfterFinished: 86400
+  s3:
+    # -- S3 bucket to export the dump to
+    bucket: ""
+
+# -- Node selector for all the pods
+nodeSelector: {}
+# -- Toleration for all the pods
+tolerations: []
+# Affinity for all the pods
+affinity: {}

@@ -7,7 +7,13 @@ repos:
       - id: helm-docs-built
         args:
           # Comma separated list, no space
-          - --chart-to-generate=gpt-survey-summarizer,submission-report,mina-transactions-generator,mina-payouts-data-provider,redisinsight
+          - --chart-to-generate=gpt-survey-summarizer,submission-report,mina-transactions-generator,mina-payouts-data-provider,mina-archive,redisinsight
 
           # The `./` makes it relative to the chart-search-root
           - --template-files=./README.md.gotmpl
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        files: mina-archive

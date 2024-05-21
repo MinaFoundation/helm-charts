@@ -1,0 +1,73 @@
+{{- if .Values.dumpExporter.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "mina-archive.fullname" . }}-dump-exporter
+spec:
+  concurrencyPolicy: Replace
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
+  schedule: {{ .Values.dumpExporter.schedule | quote }}
+  suspend: {{ .Values.dumpExporter.suspend }}
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: {{ .Values.dumpExporter.ttlSecondsAfterFinished }}
+      template:
+        metadata:
+          {{- with .Values.dumpExporter.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        spec:
+          serviceAccountName: {{ include "mina-archive.fullname" . }}
+          restartPolicy: Never
+          initContainers:
+            - name: dump-exporter-init
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["bash", "/scripts/dump-exporter-command-init.sh"]
+              args: []
+              volumeMounts:
+                - name: scripts
+                  mountPath: "/scripts/"
+              env:
+                  {{- include "pgEnvVars" . | nindent 16 }}
+                - name: DB_BOOTSTRAP_LOCKING_DATABASE_NAME
+                  value: {{ include "bootstrapLockingDatabaseName" . }}
+                - name: DB_BOOTSTRAP_TIMEOUT_SEC
+                  value: {{ .Values.dbBootstrap.maxExpectedDurationInSeconds | quote }}
+          containers:
+            - name: dump-exporter
+              image: {{ .Values.postgresClientDockerImage }}
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["bash", "/scripts/dump-exporter-command.sh"]
+              env:
+                  {{- include "pgEnvVars" . | nindent 16 }}
+                - name: MINA_NETWORK
+                  value: {{ .Values.network | quote }}
+                - name: DUMP_EXPORTER_S3_BUCKET
+                  value: {{ .Values.dumpExporter.s3.bucket | quote }}
+              volumeMounts:
+                - name: scripts
+                  mountPath: "/scripts/"
+              securityContext:
+                runAsUser: 0
+                runAsGroup: 0
+          volumes:
+            - name: scripts
+              configMap:
+                name: {{ include "mina-archive.fullname" . }}-scripts
+                defaultMode: 0777
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end -}}

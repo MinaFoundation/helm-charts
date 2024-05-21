@@ -1,85 +1,59 @@
-{{- if .Values.archive.bootstrapDB }}
----
+{{- if .Values.dbBootstrap.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ .Release.Name }}-db-bootstrap
+  name: {{ include "mina-archive.fullname" . }}-db-bootstrap
+  annotations:
+  {{- with .Values.dbBootstrap.annotations }}
+  {{- toYaml . | nindent 8 }}
+  {{- end }}
 spec:
   template:
+    metadata:
+      annotations:
+      {{- with .Values.dbBootstrap.podAnnotations }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
-      containers:
-        {{- if .Values.archive.initFromDump.enabled }}
-        - name: import-dump
-          image: {{ .Values.archive.image }}
-          env:
-            - name: DB_USERNAME
-              value: {{ .Values.postgresql.auth.username | quote }}
-            - name: PGPASSWORD
-              value: {{ .Values.postgresql.auth.password | quote }}
-            - name: DB_HOST
-              value: {{ tpl .Values.archive.postgresHost . | quote }}
-            - name: DB_PORT
-              value: {{ .Values.archive.ports.postgres | quote }}
-            - name: DB_NAME
-              value: {{ .Values.postgresql.auth.database | quote }}
-            - name: ARCHIVE_DUMP_URL
-              value: {{ .Values.archive.initFromDump.archiveDumpURL | quote }}
-            - name: MINA_NETWORK
-              value: {{ .Values.archive.testnet | quote }}
-          command: ["bash", "-c"]
-          args:
-            - 'sleep 30
-            && cd /tmp
-            && curl ${ARCHIVE_DUMP_URL}/${MINA_NETWORK}-archive-dump-$(date -Idate)_0000.sql.tar.gz -o archive-dump.tar.gz
-            && tar -xvf archive-dump.tar.gz
-            && echo "DEBUG==== --username ${DB_USERNAME} ## --host ${DB_HOST} ## --port ${DB_PORT} ## --dbname ${DB_NAME}"
-            && psql
-            --username ${DB_USERNAME}
-            --host ${DB_HOST}
-            --port ${DB_PORT}
-            --dbname ${DB_NAME}
-            -f $MINA_NETWORK-archive-dump-$(date -Idate)_0000.sql
-            && rm -f $MINA_NETWORK-archive-dump-$(date -Idate)_0000.sql
-            && psql
-            --username ${DB_USERNAME}
-            --host ${DB_HOST}
-            --port ${DB_PORT}
-            --dbname ${DB_NAME}
-            -c "ALTER DATABASE ${DB_NAME} SET DEFAULT_TRANSACTION_ISOLATION TO SERIALIZABLE;"
-            '
-        {{- else }}
-        - name: import-schema
-          image: {{ .Values.archive.image }}
-          env:
-            - name: DB_USERNAME
-              value: {{ .Values.postgresql.auth.username | quote }}
-            - name: PGPASSWORD
-              value: {{ .Values.postgresql.auth.password | quote }}
-            - name: DB_HOST
-              value: {{ tpl .Values.archive.postgresHost . | quote }}
-            - name: DB_PORT
-              value: {{ .Values.archive.ports.postgres | quote }}
-            - name: DB_NAME
-              value: {{ .Values.postgresql.auth.database | quote }}
-          command: ["bash", "-c"]
-          args:
-            - 'sleep 30
-            && cd /tmp
-            && {{ range .Values.archive.remoteSchemaAuxFiles }} curl -O {{.}} && {{ end }}
-            psql
-            --username ${DB_USERNAME}
-            --host ${DB_HOST}
-            --port ${DB_PORT}
-            --dbname ${DB_NAME}
-            -f /tmp/{{ .Values.archive.remoteSchemaFile }}
-            && rm -f /tmp/*.sql
-            && psql
-            --username ${DB_USERNAME}
-            --host ${DB_HOST}
-            --port ${DB_PORT}
-            --dbname ${DB_NAME}
-            -c "ALTER DATABASE ${DB_NAME} SET DEFAULT_TRANSACTION_ISOLATION TO SERIALIZABLE;"'
-        {{- end }}
+      serviceAccountName: {{ include "mina-archive.fullname" . }}
       restartPolicy: Never
-  backoffLimit: 10
+      containers:
+        - name: db-bootstrap
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - name: scripts
+              mountPath: "/scripts/"
+          command: ["bash", "/scripts/db-bootstrap-command.sh"]
+          env:
+              {{- include "pgEnvVars" . | nindent 12 }}
+            - name: DB_BOOTSTRAP_CREATE_DATABASE
+              value: {{ .Values.dbBootstrap.createDatabase | quote }}
+            - name: DB_BOOTSTRAP_CSV_EXTRA_SQL_FILE_URLS
+              value: {{ join "," .Values.dbBootstrap.extraSqlFileUrls | quote }}
+            - name: DB_BOOTSTRAP_CSV_SQL_FILE_URLS
+              value: {{ join "," .Values.dbBootstrap.sqlFileUrls | quote }}
+            - name: DB_BOOTSTRAP_POST_CUSTOM_SQL
+              value: {{ tpl (default "" .Values.dbBootstrap.postCustomSql) . | quote }}
+            - name: DB_BOOTSTRAP_PRE_CUSTOM_SQL
+              value: {{ tpl (default "" .Values.dbBootstrap.preCustomSql) . | quote }}
+            - name: DB_BOOTSTRAP_LOCKING_DATABASE_NAME
+              value: {{ include "bootstrapLockingDatabaseName" . }}
+      volumes:
+        - name: scripts
+          configMap:
+            name: {{ include "mina-archive.fullname" . }}-scripts
+            defaultMode: 0777
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 {{- end }}
