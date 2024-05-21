@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "redisinsight.fullname" . }}
+  labels:
+  {{- if .Values.server.service.labels }}
+  {{- with .Values.server.service.labels }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+    app: {{ include "redisinsight.fullname" . }}
+  {{- if .Values.server.service.annotations }}
+  {{- with .Values.server.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+spec:
+  type: ClusterIP
+  publishNotReadyAddresses: true
+  selector:
+    {{- include "redisinsight.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http-ui
+      port: {{ .Values.server.ports.ui }}
+      protocol: TCP
+      targetPort: http-ui

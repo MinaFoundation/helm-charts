@@ -1,0 +1,21 @@
+{{- if .Values.persistence.enabled -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "redisinsight.fullname" . }}
+  labels:
+    app: {{ include "redisinsight.fullname" . }}
+  {{- with .Values.persistence.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.persistence.className }}
+  storageClassName: {{ .Values.persistence.className }}
+  {{- end }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage:  {{ .Values.persistence.size }}
+{{- end }}

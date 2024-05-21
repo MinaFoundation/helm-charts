@@ -1,0 +1,115 @@
+# Default values for redisinsight.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  # -- The repository of the image
+  repository: redis/redisinsight
+  # -- The pullPolicy used when pulling the image
+  pullPolicy: IfNotPresent
+  # -- The tag of the iamge. Overrides the image tag whose default is the chart appVersion.
+  tag: "2.48.0"
+
+server:
+  # -- The number of pods to be deployed for server
+  replicas: 1
+  # -- Specific values for the service resource
+  service:
+    # -- Service labels
+    labels: {}
+    # -- Service annotations
+    annotations: {}
+  
+  # -- Collection of ports
+  ports:
+    # -- Port through which the UI is exposed
+    ui: 5540
+
+  # -- Extra environment variables to inject
+  extraEnvVars: {}
+
+# -- Ingress related values
+ingress:
+  # -- Whether to enable the ingress or not
+  enabled: false
+  # -- IngressClass used for the ingress
+  className: ""
+  # -- Ingress annotations
+  annotations: {}
+  hosts:
+    - host: redisinsight.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  # -- Tls settings
+  tls: []
+
+# -- Presistence related values
+persistence:
+  # -- Whether to enable persistence or not
+  enabled: true
+  # -- The name of the storageclass
+  className: ""
+  # -- Size of the Persistent Volume
+  size: 100Mi
+  # -- Annotations for the Persistent Volume Claim
+  annotations: {}
+
+# -- The secrets used to pull the image
+imagePullSecrets: []
+
+# -- The release name override
+nameOverride: ""
+
+# -- The full release name override
+fullnameOverride: ""
+
+# -- The time to wait before terminating the process
+terminationGracePeriodSeconds: 30
+
+# -- Annotations to add to the pods
+podAnnotations: {}
+
+# -- SecurityContext used for the pods
+podSecurityContext:
+  # Needed to fix permissions
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+# -- SecurityContext
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# -- Resource limitations for the pods
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- The name of the service account to use. If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# -- Node selector labels
+nodeSelector: {}
+
+# -- Tolerations
+tolerations: []
+
+# -- Affinity rules
+affinity: {}
