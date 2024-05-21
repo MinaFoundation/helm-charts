@@ -90,6 +90,8 @@ dbBootstrap:
   # -- Annotations to apply to the pod 
   podAnnotations: {}
 
+  newFieldsNotDocumented: {}
+
 node:
   # -- Replicas number for the archive node deployment
   replicas: 1

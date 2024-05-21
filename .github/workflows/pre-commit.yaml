@@ -3,7 +3,7 @@ name: pre-commit
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, jm-test-PM-1643-pre-commit-ci]
 
 jobs:
   pre-commit:
