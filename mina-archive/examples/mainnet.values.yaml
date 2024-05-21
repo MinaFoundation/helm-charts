@@ -1,0 +1,36 @@
+network: mainnet
+databaseName: archive_balances_migrated
+image:
+  repository: minaprotocol/mina-archive
+  tag: 1.4.1-e76fc1c-bullseye
+
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::673156464838:role/MinaNodesS3_sandbox
+
+postgresql:
+  enabled: true
+  primary:
+    resourcesPreset: "2xlarge"
+    persistence:
+      enabled: true
+      storageClass: "ebs-gp3-encrypted"
+      size: 48Gi
+
+dbBootstrap:
+  enabled: true
+
+  createDatabase: false
+  sqlFileUrls:
+    # - https://673156464838-mina-archive-node-backups.s3-us-west-2.amazonaws.com/mainnet/mainnet-archive-dump-[DATE]_0000.sql.tar.gz
+    - https://673156464838-mina-archive-node-backups.s3.us-west-2.amazonaws.com/mainnet/mainnet-archive-dump-2024-04-28_0000.sql.tar.gz
+    # - https://storage.googleapis.com/mina-archive-dumps/backup-mainnet-pre-hf-dry-run-2-migrated-dump-2024-05-02_0700.sql.tar.gz
+
+node:
+  replicas: 1
+
+missingBlocksGuardian:
+  enabled: true
+  suspend: true
+  precomputedBlocksUrl: https://673156464838-mina-precomputed-blocks.s3.us-west-2.amazonaws.com/mainnet
+  autoImportBlockUrl: https://673156464838-mina-precomputed-blocks.s3.us-west-2.amazonaws.com/mainnet/mainnet-350000-3NLGassgPE49SrxMtvz5buEukiAZJjNHSJaqo3cmUjbUfDC8Jrm3.json

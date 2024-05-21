@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mina-archive.fullname" . }}
+  labels:
+  {{- if .Values.node.service.labels }}
+  {{- with .Values.node.service.labels }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+    app: {{ include "mina-archive.fullname" . }}
+    network: {{ .Values.network }}
+  {{- if .Values.node.service.annotations }}
+  {{- with .Values.node.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+spec:
+  type: ClusterIP
+  publishNotReadyAddresses: true
+  selector:
+    app: {{ include "mina-archive.fullname" . }}
+  ports:
+    - name: rpc
+      port: {{ .Values.node.ports.rpc }}
+      targetPort: rpc
+    {{- if .Values.node.metrics.enabled }}
+    - name: metrics
+      port: {{ .Values.node.ports.metrics }}
+      targetPort: metrics
+    {{- end }}

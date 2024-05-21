@@ -1,0 +1,73 @@
+{{- if .Values.missingBlocksGuardian.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "mina-archive.fullname" . }}-guardian
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
+  schedule: {{ .Values.missingBlocksGuardian.schedule | quote }}
+  suspend: {{ .Values.missingBlocksGuardian.suspend }}
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: {{ .Values.missingBlocksGuardian.ttlSecondsAfterFinished }}
+      template:
+        metadata:
+          {{- with .Values.missingBlocksGuardian.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        spec:
+          serviceAccountName: {{ include "mina-archive.fullname" . }}
+          restartPolicy: Never
+          initContainers:
+            - name: guardian-init
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["bash", "/scripts/missing-blocks-guardian-command-init.sh"]
+              args: []
+              volumeMounts:
+                - name: scripts
+                  mountPath: "/scripts/"
+              env:
+                  {{- include "pgEnvVars" . | nindent 16 }}
+                - name: DB_BOOTSTRAP_LOCKING_DATABASE_NAME
+                  value: {{ include "bootstrapLockingDatabaseName" . }}
+                - name: DB_BOOTSTRAP_TIMEOUT_SEC
+                  value: {{ .Values.dbBootstrap.maxExpectedDurationInSeconds | quote }}
+          containers:
+            - name: missing-blocks-guardian
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["bash", "/scripts/missing-blocks-guardian-command.sh"]
+              args: []
+              env:
+                  {{- include "pgEnvVars" . | nindent 16 }}
+                - name: MINA_NETWORK
+                  value: {{ .Values.network | quote }}
+                - name: GUARDIAN_PRECOMPUTED_BLOCKS_URL
+                  value: {{ .Values.missingBlocksGuardian.precomputedBlocksUrl }}
+                - name: GUARDIAN_AUTO_IMPORT_URL
+                  value: {{ .Values.missingBlocksGuardian.autoImportBlockUrl }}
+              volumeMounts:
+                - name: scripts
+                  mountPath: "/scripts/"
+          volumes:
+            - name: scripts
+              configMap:
+                name: {{ include "mina-archive.fullname" . }}-scripts
+                defaultMode: 0777
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end -}}
