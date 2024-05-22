@@ -55,7 +55,7 @@ helmfile status
 | fullnameOverride | string | `""` | The full release name override |
 | image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
 | image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-payouts-data-provider"` | The repository of the image |
-| image.tag | string | `"2.5.0-efd39bf"` | The tag of the image. Overrides the image tag whose default is the chart appVersion. |
+| image.tag | string | `"2.5.1-da23d50"` | The tag of the image. Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | The secrets used to pull the image |
 | ingress.annotations | object | `{}` | The Ingress Annotations |
 | ingress.className | string | `""` | The Ingress Class Name to use |
