@@ -73,7 +73,6 @@ dbBootstrap:
   # -- SQL file urls to pre-download before executing the SQL file urls
   extraSqlFileUrls: []
     # - https://raw.githubusercontent.com/MinaProtocol/mina/develop/src/app/archive/zkapp_tables.sql
-    # - https://storage.googleapis.com/mina-archive-dumps
 
   # -- Execute SQL inline command before loading the SQL file urls
   # preCustomSql: SELECT session_user, current_database()
