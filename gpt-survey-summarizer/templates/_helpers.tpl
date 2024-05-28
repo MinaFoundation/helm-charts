@@ -61,6 +61,3 @@ Create the name of the service account to use
 {{- end }}
 {{- end }}
 
-{{- define "redisUrl" -}}
-  redis://:{{ .Values.redis.auth.password }}@{{ include "gpt-survey-summarizer.fullname" . }}-redis-master:6379
-{{- end -}}

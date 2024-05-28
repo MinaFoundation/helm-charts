@@ -53,11 +53,15 @@ spec:
                 secretKeyRef:
                   name: {{ include "gpt-survey-summarizer.fullname" . }}
                   key: discordGuildId
-            - name: REDIS_URL
+            - name: REDIS_HOST
+              value: {{ include "gpt-survey-summarizer.fullname" . }}-redis-master
+            - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "gpt-survey-summarizer.fullname" . }}
-                  key: redisUrl
+                  key: redisPassword
+            - name: REDIS_PORT
+              value: {{ .Values.redis.master.service.ports.redis | quote }}
             - name: SUMMARIZE_FREQUENCY_SECONDS
               value: {{ .Values.config.summarizeFrequencySeconds | quote }}
           {{- if .Values.bot.extraEnvVars }}
