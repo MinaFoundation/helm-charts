@@ -30,8 +30,8 @@ spec:
       {{- end }}
     spec:
       serviceAccountName: {{ include "uptime-service-backend.serviceAccountName" . }}
+      {{- if .Values.backend.storage.keyspace.awsKeyspaceName }}
       initContainers:
-        {{- if .Values.backend.storage.keyspace }}
         - name: dbmigration
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           command: [ "db_migration" ]
