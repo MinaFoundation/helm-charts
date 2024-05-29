@@ -7,7 +7,7 @@ repos:
       - id: helm-docs-built
         args:
           # Comma separated list, no space
-          - --chart-to-generate=gpt-survey-summarizer,submission-report,mina-transactions-generator,mina-payouts-data-provider,mina-archive,redisinsight,uptime-service-backend
+          - --chart-to-generate=gpt-survey-summarizer,submission-report,mina-transactions-generator,mina-payouts-data-provider,mina-archive,redisinsight,uptime-service-backend,liminal-manual
 
           # The `./` makes it relative to the chart-search-root
           - --template-files=./README.md.gotmpl
