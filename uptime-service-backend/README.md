@@ -1,157 +1,101 @@
-# Uptime service backend
+# uptime-service-backend
 
-A backend service for delegation program where participating nodes report stats about their activity.
+![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
 
+A Helm chart for uptime-service-backend AKA Delegation Program Backend
 
-> **Note** Currently MF does not have chart repository. To install this chart i.e. with helmfile you need to reffer to it following ways:
+**Homepage:** <https://docs.minaprotocol.com/node-operators/foundation-delegation-program>
 
-```console
-# helmfile.yaml
-<..>
-releases:
-  - name: network_name
-    chart: git::ssh://git@github.com/MinaFoundation/helm-charts.git@uptime-service-backend?ref=main
-<..>
-```
+## Source Code
+
+* <https://github.com/MinaFoundation/uptime-service-backend/tree/main/src/delegation_backend>
 
 ## Prerequisites
 
-Before installing this Helm chart, you should have the following prerequisites:
+Before using this Helm chart, you should have the following prerequisites:
 
- - Access to Kubernetes cluster
- - Helm installed on your local machine
- - Basic knowledge of Kubernetes and Helm
- - Access to https://github.com/MinaFoundation/helm-charts
- - Optional: helmfile to install this chart
+- Access to Kubernetes cluster (If needed contact your friendly neighbourhood DevOps engineer)
+- Helm >= v3.14.3
+- (**Optional**) helmfile >= v0.162.0 to install this chart
 
 ## Installation
 
+> Note: **examples** can be found in the repository
+
 To install this Helm chart, the easiest is to create a helmfile.yaml with needed values and run:
-```bash
-$ helmfile template
-$ helmfile apply
- ```
+
+```
+helmfile template
+helmfile apply
+```
 
 Or use helmfile only to generate resources and apply them with kubectl like so:
 
-```bash
-$ helmfile template | kubectl -f -
 ```
-
-You can get some inspiration from helmfiles in `examples` folder.
+helmfile template | kubectl -f -
+```
 
 Verify that the chart is deployed successfully:
 
-```bash
-helmfile status #although kubectl probably would give better insights.
+> Note: `kubectl` is a better suited tool for this
+
+```
+helmfile status
 ```
 
-## Configuration
+## Values
 
-To get all available values in cloned `helm-charts` do:
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| affinity | object | `{}` | Affinity rules |
+| autoscaling.enabled | bool | `false` | Whether to enable HPA |
+| autoscaling.maxReplicas | int | `10` | Maximum HPA replicas |
+| autoscaling.minReplicas | int | `1` | Minimum HPA replicas |
+| autoscaling.targetCPUUtilizationPercentage | int | `80` | Target threshold of CPU utilization |
+| autoscaling.targetMemoryUtilizationPercentage | int | `80` | Target threshold of RAM utilization |
+| backend.affinity | object | `{}` |  |
+| backend.awsConfig.accountId | string | `nil` | AWS Account ID |
+| backend.awsConfig.region | string | `nil` | AWS Region |
+| backend.extraEnvVars | list | `[]` | Extra Environment Variables |
+| backend.logLevel | string | `"info"` |  |
+| backend.metrics.enabled | bool | `false` | Whether to enable prometheus metrics |
+| backend.network | string | `nil` | Name of a testnet |
+| backend.requestsPerPkHourly | int | `120` | Hourly rate limit per Mina node |
+| backend.storage.keyspace.awsKeyspaceName | string | `nil` | Name of AWS Keyspace |
+| backend.storage.local.path | string | `nil` | Path for storing submissions locally |
+| backend.storage.s3.awsBucketNameSuffix | string | `nil` | Buckets are named `awsConfig.AccountId`-`awsBucketNameSuffix` |
+| backend.verifySignatureDisabled | bool | `false` | Disable submission signature verification |
+| backend.whitelistConfig.column | string | `nil` | Google spreadsheet column name |
+| backend.whitelistConfig.enabled | bool | `false` | Whether to verify participants with Google sheet whitelist |
+| backend.whitelistConfig.sheet | string | `nil` | Google spreadsheet sheet name |
+| backend.whitelistConfig.spreadsheetId | string | `nil` | Google spreadsheet ID |
+| fullnameOverride | string | `""` | The full release name override |
+| image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
+| image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/uptime-service-backend"` | The repository of the image |
+| image.tag | string | `"2.0.0rc5-cb6524c"` | The tag of the image. Overrides the image tag whose default is the chart appVersion. |
+| imagePullSecrets | list | `[]` | The secrets used to pull the image |
+| ingress.annotations | object | `{}` | Ingress Annotations |
+| ingress.className | string | `"alb"` | Ingress class name |
+| ingress.enabled | bool | `false` | Whether to enable ingress |
+| ingress.hosts | list | `[]` |  |
+| ingress.tls | list | `[]` |  |
+| nameOverride | string | `""` | The release name override |
+| nodeSelector | object | `{}` | Node selector labels |
+| podAnnotations | object | `{}` | Annotations to add to the pods |
+| podLabels | object | `{}` | The labels to add to the pods |
+| podSecurityContext | object | `{}` | The Pod Security Context |
+| replicaCount | int | `1` | The number of pods to be deployed for bot |
+| resources | object | `{}` | Resource limitations for the pods |
+| secret.gcpServiceAccount | string | `nil` | GCP service account json |
+| secret.keyspaceCert.content | string | `nil` | Certificate content |
+| secret.keyspaceCert.name | string | `nil` | Certificate file name(i.e. cert.crt) |
+| secret.keyspaceCert.override | bool | `false` | Whether to override default certificate |
+| securityContext | object | `{}` | The Security Context |
+| service.port | int | `8080` | Kubernetes Service port |
+| service.type | string | `"ClusterIP"` | Kubernetes Service type |
+| serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
+| serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
+| serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
+| serviceAccount.name | string | `""` | If not set and create is true, a name is generated using the fullname template |
+| tolerations | list | `[]` | Tolerations |
 
-```bash
-helm show values ./uptime-service-backend
-```
-
-The following table lists the configurable parameters of the `uptime-service-backend` chart and its common default values.
-
-### Common parameters
-
-| Name                           | Description                                            | Value           |
-| ------------------------------ | ------------------------------------------------------ | --------------- |
-| `image.repository`               | `uptime-service-backend` docker image url                | `673156464838.dkr.ecr.us-west-2.amazonaws.com/block-producers-uptime` |
-| `image.tag`                      | Docker image tag                                       | `1.0.0itn1`       |
-| `image.pullPolicy`               | Docker image pull policy                               | `IfNotPresent`    |
-| `affinity`                       | Determines affinity https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity | `{}` |
-| `nodeSelector`                   | Override Node Selector                                 | `{}`              |
-| `tolerations`                    | Set Tolerations                                        | `[]`              |
-| `nameOverride`                   | Name override                                          | `""`              |
-| `fullnameOverride`               | Fullname override                                      | `""`              |
-| `podAnnotations`                 | Annotations to add to the pods                         | `{}`              |
-| `podSecurityContext`             | Pod Security Context                                   | `{}`              |
-| `securityContext`                | Security Context                                       | `{}`              |
-
-
-### Secrets
-
-| Name                           | Description                                            | Value           |
-| ------------------------------ | ------------------------------------------------------ | --------------- |
-| `secret.gcpServiceAccount`       | Json Content of GCP Service Account                    | `""`              |
-| `secret.keyspaceCert.override`   | Whether to override default certificate                | `false`           |
-| `secret.keyspaceCert.name`       | Name of certificate placed in `/uptime/certs`            | `""`              |
-| `secret.keyspaceCert.content`    | Contents of certificate used by AWS Keyspaces          | `""`              |
-
-### Service and Ingress
-
-| Name                           | Description                                            | Value           |
-| ------------------------------ | ------------------------------------------------------ | --------------- |
-| `service.type`                   | Kubernetes Service type                                | `ClusterIP`       |
-| `service.port`                   | Kubernetes Service port                                | `8080`            |
-| `ingress.enabled`                | Whether to enable ingress                              | `false`           |
-| `ingress.className`              | Ingress class name                                     | `alb`             |
-| `ingress.labels`                 | Ingress Labels                                         | `{}`              |
-| `ingress.annotations`            | Ingress Annotations                                    | `{}`              |
-| `ingress.hosts`                  | Ingress Hosts                                          | `[]`              |
-
-### Serviceaccount
-
-| Name                           | Description                                            | Value           |
-| ------------------------------ | ------------------------------------------------------ | --------------- |
-| `serviceAccount.create`          | Specifies whether a Service Account should be created  | `true`            |
-| `serviceaccount.annotations`     | K8s Service Account Annotations                        | `{}`              |
-
-### Resources and scaling
-
-| Name                           | Description                                            | Value           |
-| ------------------------------ | ------------------------------------------------------ | --------------- |
-| `replicaCount`                   | Amount of replicas to deploy                           | `1`               |
-| `resources.request.memory`       | Memory requested for the application pod               | `256Mi`           |
-| `resources.request.cpu`          | CPU resources requested for the application pod        | `500m`            |
-| `resources.limit.memory`         | Maximum memory allowed for the application pod         | `512Mi`           |
-| `resources.limit.cpu`            | Maximum CPU resources allowed for the application pod  | `1`               |
-| `autoscaling.enabled`            | Autoscaling toggle                                     | `false`           |
-| `autoscaling.minReplicas`        | Autoscaling minimum replicas                           | `1`               |
-| `autoscaling.maxReplicas`        | Autoscaling maximum replicas                           | `10`              |
-| `autoscaling.targetCPUUtilizationPercentage`| Autoscaling cpu utilization threshold in precentage| `80`       |
-| `autoscaling.targetMemoryUtilizationPercentage`| Autoscaling memory utilization threshold in precentage| `80` |
-
-### Application parameters
-
-| Name                           | Description                                            | Value           |
-| ------------------------------ | ------------------------------------------------------ | --------------- |
-| `backend.network`              | Testnet name                                           | `""`            |
-| `backend.requestsPerPkHourly`  | Number of requests accepted per hour                   | `1000`          |
-| `backend.verifySignatureDisabled`| Specifies if the backend signature verification is enabled or not| `false |
-| `backend.logLevel`             | Application log level                                  | `info`          |
-| `backend.metrics.enabled`      | Toggle for prometheus metrics                          | `false`         |
-| `backend.extraEnvVars`         | Environment Variables to pass to the container         | `[]`            |
-
-### Google spreadsheet to read whitelist from
-
-| Name                           | Description                                            | Value           |
-| ------------------------------ | ------------------------------------------------------ | --------------- |
-| `backend.whitelistConfig.enabled`| Whitelisting toggle. If enabled will configure other variables if not will omit| `false`|
-| `backend.whitelistConfig.spreadsheetId`| Google spreadsheet ID                            | `""`              |
-| `backend.whitelistConfig.sheet`  | Google sheet name                                      | `""`              |
-| `backend.whitelistConfig.column` | Google document                                        | `""`              |
-
-### AWS Account Parameters
-
-| Name                           | Description                                            | Value           |
-| ------------------------------ | ------------------------------------------------------ | --------------- |
-| `backend.awsConfig.accountId`    | AWS Account ID                                         | `""`  |
-| `backend.awsConfig.region`       | AWS Region                                             | `""`  |
-| `backend.awsConfig.accessKeyId`  | AWS Access Key ID                                      | `""`  |
-| `backend.awsConfig.secretAccessKey`| AWS Secret Access Key                                | `""`  |
-
-### Storage Backend Parameters
-
-> **Note:** Multiple storage types can be enabled.
-
-| Name                           | Description                                            | Value           |
-| ------------------------------ | ------------------------------------------------------ | --------------- |
-| `backend.storage.type`           | One of the 3 available types: `s3`,`keyspace` or `local`.    | `""`              |
-| `backend.storage.s3.awsBucketNameSuffix`| Buckets are named `awsAccountId`-`awsBucketNameSuffix`| `""`            |
-| `backend.storage.keyspace.awsKeyspaceName`| Name of AWS Keyspace program should be using  | `""`              |
-| `backend.storage.local.path`     | Local path to store data                               | `""`              |

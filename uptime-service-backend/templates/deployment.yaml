@@ -1,8 +1,3 @@
-# One of the authentication methods has to be provided
-{{- if not (and .Values.backend.awsConfig.accessKeyId .Values.backend.awsConfig.secretAccessKey) }}
-{{- required "Both .Values.backend.awsConfig.accessKeyId .Values.backend.awsConfig.secretAccessKey are required. Cannot authenticate without them" .Values.backend.awsConfig.accessKeyId -}}
-{{- end }}
-
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -75,10 +70,6 @@ spec:
             - name: AWS_SSL_CERTIFICATE_PATH
               value: /uptime/cert/{{ .Values.secret.keyspaceCert.name }}
             {{- end }}
-            - name: AWS_ACCESS_KEY_ID
-              value: {{ .Values.backend.awsConfig.accessKeyId | quote }}
-            - name: AWS_SECRET_ACCESS_KEY
-              value: {{ .Values.backend.awsConfig.secretAccessKey | quote }}
             - name: AWS_REGION
               value: {{ .Values.backend.awsConfig.region | quote }}
           volumeMounts:
@@ -126,10 +117,6 @@ spec:
             {{- end }}
             {{- end }}
             # AWS related variables
-            - name: AWS_ACCESS_KEY_ID
-              value: {{ .Values.backend.awsConfig.accessKeyId | quote }}
-            - name: AWS_SECRET_ACCESS_KEY
-              value: {{ .Values.backend.awsConfig.secretAccessKey | quote }}
             - name: AWS_REGION
               value: {{ .Values.backend.awsConfig.region | quote }}
             {{- if and .Values.backend.storage.s3 .Values.backend.storage.s3.awsBucketNameSuffix }}
