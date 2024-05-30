@@ -118,7 +118,7 @@ fetch_extra_sql_files() {
 
   for URL in $URLS; do
     info "Downloading $URL"
-    curl "$URL" -sO
+    curl "$URL" -sO --fail || { error "Unable to download the URL $URL"; return 1; }
   done
 }
 
@@ -128,14 +128,20 @@ run_sql_files() {
 
   for URL in $URLS; do
     info "Executing $URL"
+    curl --fail -s "$URL" -o download.sql || { error "Unable to download the URL $URL"; return 1; }
     if [[ "$URL" == *.sql ]]; then
-      curl "$URL" -s | psql --set=ON_ERROR_STOP=1 -f -
+      psql --set=ON_ERROR_STOP=1 -f download.sql
     elif [[ "$URL" == *.sql.tar.gz ]]; then
+      tmpdir=$(mktemp -d)
+      tar -xzvf download.sql -C "$tmpdir" || { error "Unable to untar the URL $URL"; return 1; }
       if [[ $DB_BOOTSTRAP_CREATE_DATABASE == "true" ]]; then
-        curl "$URL" -s | tar -xz -O | psql --set=ON_ERROR_STOP=1 -f -
+        PSQL_DEFAULT_DB="$PGDATABASE"
       else
-        curl "$URL" -s | tar -xz -O | psql postgres --set=ON_ERROR_STOP=1 -f -
+        PSQL_DEFAULT_DB="postgres"
       fi
+      for file in "$tmpdir"/*; do
+        psql "$PSQL_DEFAULT_DB" --set=ON_ERROR_STOP=1 -f "$file"
+      done
     else
       error "URL extension not supported, error"
     fi
