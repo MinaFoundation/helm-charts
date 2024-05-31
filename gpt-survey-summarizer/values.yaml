@@ -91,6 +91,9 @@ nameOverride: ""
 # -- The full release name override
 fullnameOverride: ""
 
+# -- Annotations to add to deployments
+deploymentAnnotations: {}
+
 # -- Annotations to add to the pods
 podAnnotations: {}
 

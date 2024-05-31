@@ -75,6 +75,7 @@ helmfile status
 | databaseDumpExporter.serviceAccountAnnotations | object | `{}` | Annotations to add to the cronjob serviceAccount |
 | databaseDumpExporter.suspended | bool | `false` | Suspend the automatic execution |
 | databaseDumpExporter.ttlSecondsAfterFinished | int | `3600` | Time To Live after job finished in seconds |
+| deploymentAnnotations | object | `{}` | Annotations to add to deployments |
 | fullnameOverride | string | `""` | The full release name override |
 | image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
 | image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/gpt-survey-summarizer"` | The repository of the image |
