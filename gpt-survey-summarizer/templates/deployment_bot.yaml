@@ -4,6 +4,10 @@ metadata:
   name: {{ include "gpt-survey-summarizer.fullname" . }}-bot
   labels:
     {{- include "gpt-survey-summarizer.labels" . | nindent 4 }}-bot
+  {{- with .Values.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 8 }}
+  {{- end }}
 spec:
   replicas: {{ .Values.bot.replicaCount }}
   selector:
