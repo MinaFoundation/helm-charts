@@ -43,6 +43,12 @@ spec:
                 secretKeyRef:
                   name: {{ include "gpt-survey-summarizer.fullname" . }}
                   key: openAiApiKey
+            # WARN: `REDIS_URL` is a deprecated environment variable
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  key: redisUrl
+                  name: gpt-survey-summarizer-01
             - name: REDIS_HOST
               value: {{ include "gpt-survey-summarizer.fullname" . }}-redis-master
             - name: REDIS_PASSWORD
