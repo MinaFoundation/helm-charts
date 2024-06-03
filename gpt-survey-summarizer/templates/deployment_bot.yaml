@@ -6,7 +6,7 @@ metadata:
     {{- include "gpt-survey-summarizer.labels" . | nindent 4 }}-bot
   {{- with .Values.deploymentAnnotations }}
   annotations:
-    {{- toYaml . | nindent 8 }}
+    {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
   replicas: {{ .Values.bot.replicaCount }}
@@ -53,11 +53,21 @@ spec:
                 secretKeyRef:
                   name: {{ include "gpt-survey-summarizer.fullname" . }}
                   key: discordGuildId
+            # WARN: `REDIS_URL` is a deprecated environment variable
             - name: REDIS_URL
               valueFrom:
                 secretKeyRef:
                   name: {{ include "gpt-survey-summarizer.fullname" . }}
                   key: redisUrl
+            - name: REDIS_HOST
+              value: {{ include "gpt-survey-summarizer.fullname" . }}-redis-master
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gpt-survey-summarizer.fullname" . }}
+                  key: redisPassword
+            - name: REDIS_PORT
+              value: {{ .Values.redis.master.service.ports.redis | quote }}
             - name: SUMMARIZE_FREQUENCY_SECONDS
               value: {{ .Values.config.summarizeFrequencySeconds | quote }}
           {{- if .Values.bot.extraEnvVars }}
