@@ -55,7 +55,7 @@ helmfile status
 | fullnameOverride | string | `""` | The full release name override |
 | image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
 | image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-payouts-data-provider"` | The repository of the image |
-| image.tag | string | `"2.5.1-da23d50"` | The tag of the image. Overrides the image tag whose default is the chart appVersion. |
+| image.tag | string | `"2.5.2-b3d5407"` | The tag of the image. Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | The secrets used to pull the image |
 | ingress.annotations | object | `{}` | The Ingress Annotations |
 | ingress.className | string | `""` | The Ingress Class Name to use |
@@ -71,7 +71,7 @@ helmfile status
 | minaPayoutsDataProvider.blockDBQuery.ssl.enabled | bool | `false` | Whether SSL is enabled |
 | minaPayoutsDataProvider.blockDBQuery.ssl.rootCertificateBase64 | string | `nil` | The Root Certificate Base64 |
 | minaPayoutsDataProvider.blockDBQuery.user | string | `"user"` | The User for the Archive DB |
-| minaPayoutsDataProvider.blockDBQuery.version | string | `"v1"` | The Version used to query the Archive DB (accepted values are: v1 (mainnet), v2 (berkeley)) |
+| minaPayoutsDataProvider.blockDBQuery.version | string | `"v2"` | The Version used to query the Archive DB (accepted values are: v2 (mainnet), v3 (izmir)) |
 | minaPayoutsDataProvider.checkNodes | list | `[]` | List of GraphQL Endpoints to query |
 | minaPayoutsDataProvider.envVars | list | `[]` | Environment Variables |
 | minaPayoutsDataProvider.ledgerDBCommand.host | string | `"http://localhost"` | The Host of the Ledger DB (Read-Write) |
