@@ -11,7 +11,7 @@ image:
   # -- The pullPolicy used when pulling the image
   pullPolicy: IfNotPresent
   # -- The tag of the image. Overrides the image tag whose default is the chart appVersion.
-  tag: "2.5.1-da23d50"
+  tag: "2.5.2-b3d5407"
 
 # -- The secrets used to pull the image
 imagePullSecrets: []
@@ -31,8 +31,8 @@ minaPayoutsDataProvider:
     # -- The Password for the Ledger Upload API
     password: "ledger-upload-api-password"
   blockDBQuery:
-    # -- The Version used to query the Archive DB (accepted values are: v1 (mainnet), v2 (berkeley))
-    version: "v1"
+    # -- The Version used to query the Archive DB (accepted values are: v2 (mainnet), v3 (izmir))
+    version: "v2"
     # -- The Host of the Archive DB
     host: http://localhost
     # -- The Port of the Archive DB
