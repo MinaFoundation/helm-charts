@@ -124,7 +124,7 @@ node:
 
 missingBlocksGuardian:
   # -- Enabled missing blocks guardian
-  enabled: false
+  enabled: true
   # -- Suspend the missing blocks guardian execution
   suspend: false
   # -- Frequency to execute the missing blocks guardian
@@ -140,7 +140,7 @@ missingBlocksGuardian:
 
 dumpExporter:
   # -- Enabled dump exporter 
-  enabled: true
+  enabled: false
   # -- Suspend the  dump exporter execution
   suspend: false
   # -- Frequency to execute the  dump exporter

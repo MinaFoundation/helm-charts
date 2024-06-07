@@ -82,7 +82,7 @@ spec:
           {{- end }}
           env:
             {{- include "pgEnvVars" . | nindent 12 }}
-            - name: ARCHIVE_node_PORT_RPC
+            - name: ARCHIVE_NODE_PORT_RPC
               value: {{ .Values.node.ports.rpc | quote }}
             {{- if .Values.node.extraEnvVars }}
             {{- toYaml .Values.node.extraEnvVars | nindent 12 }}
