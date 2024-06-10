@@ -1,8 +1,8 @@
-network: qanet
+network: mainnet
 databaseName: archive
 image:
-  repository: gcr.io/o1labs-192920/mina-archive
-  tag: 2.0.0berkeley-rc1-1551e2f-focal
+  repository: minaprotocol/mina-archive
+  tag: 3.0.0-93e0279-bullseye
 
 serviceAccount:
   annotations:
@@ -19,30 +19,23 @@ postgresql:
 
 dbBootstrap:
   enabled: true
-
   createDatabase: true
   sqlFileUrls:
     - https://raw.githubusercontent.com/MinaProtocol/mina/develop/src/app/archive/create_schema.sql
   extraSqlFileUrls:
     - https://raw.githubusercontent.com/MinaProtocol/mina/develop/src/app/archive/zkapp_tables.sql
 
-  # createDatabase: false
-  # sqlFileUrls:
-  #  - https://673156464838-mina-archive-node-backups.s3-us-west-2.amazonaws.com/qanet/qanet-archive-dump-[DATE]_0000.sql.tar.gz
-
 node:
   replicas: 1
-  configFileUrl: http://673156464838-mina-genesis-ledgers.s3-us-west-2.amazonaws.com/qanet/genesis_ledger.json
+  configFileUrl: http://673156464838-mina-genesis-ledgers.s3-us-west-2.amazonaws.com/mainnet/genesis_ledger.json
 
 missingBlocksGuardian:
   enabled: true
   suspend: true
-  precomputedBlocksUrl: https://673156464838-mina-precomputed-blocks.s3-us-west-2.amazonaws.com/qanet
-  autoImportBlockUrl: https://673156464838-mina-precomputed-blocks.s3-us-west-2.amazonaws.com/qanet/qanet-500-3NKA1RcRkYrPmASYvhRuW68N8a9p6kRjpCaWxUj67nKwShZ76ZHB.json
-  # autoImportBlockUrl: https://673156464838-mina-precomputed-blocks.s3.us-west-2.amazonaws.com/qanet/qanet-34205-3NKnu7LiJ627UWpT3g7y4xFQSCAQnYHQehyRQ51eibam53XgpQFh.json
+  precomputedBlocksUrl: https://673156464838-mina-precomputed-blocks.s3-us-west-2.amazonaws.com/mainnet
 
 dumpExporter:
-  enabled: false
+  enabled: true
   suspend: true
   s3:
     bucket: 673156464838-mina-archive-node-backups

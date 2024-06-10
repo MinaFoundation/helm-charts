@@ -1,8 +1,8 @@
 network: mainnet
-databaseName: archive_balances_migrated
+databaseName: archive
 image:
   repository: minaprotocol/mina-archive
-  tag: 1.4.1-e76fc1c-bullseye
+  tag: 3.0.0-93e0279-bullseye
 
 serviceAccount:
   annotations:
@@ -22,15 +22,14 @@ dbBootstrap:
 
   createDatabase: false
   sqlFileUrls:
-    # - https://673156464838-mina-archive-node-backups.s3-us-west-2.amazonaws.com/mainnet/mainnet-archive-dump-[DATE]_0000.sql.tar.gz
-    - https://673156464838-mina-archive-node-backups.s3.us-west-2.amazonaws.com/mainnet/mainnet-archive-dump-2024-04-28_0000.sql.tar.gz
-    # - https://storage.googleapis.com/mina-archive-dumps/backup-mainnet-pre-hf-dry-run-2-migrated-dump-2024-05-02_0700.sql.tar.gz
-
-node:
-  replicas: 1
+    - https://673156464838-mina-archive-node-backups.s3-us-west-2.amazonaws.com/mainnet/mainnet-archive-dump-[DATE]_0000.sql.tar.gz
 
 missingBlocksGuardian:
   enabled: true
-  suspend: true
   precomputedBlocksUrl: https://673156464838-mina-precomputed-blocks.s3.us-west-2.amazonaws.com/mainnet
   autoImportBlockUrl: https://673156464838-mina-precomputed-blocks.s3.us-west-2.amazonaws.com/mainnet/mainnet-350000-3NLGassgPE49SrxMtvz5buEukiAZJjNHSJaqo3cmUjbUfDC8Jrm3.json
+
+dumpExporter:
+  enabled: true
+  s3:
+    bucket: 673156464838-mina-archive-node-backups

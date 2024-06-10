@@ -17,7 +17,7 @@ main() {
   info "Locking database: $DB_BOOTSTRAP_LOCKING_DATABASE_NAME"
 
   info "Checking if database server is online"
-  retry_while check_database_is_online 60 1 # 1 min
+  retry_while check_database_is_online 120 1 # 2 min
   info "Database is online"
 
   info "Checking if bootstrap is done"

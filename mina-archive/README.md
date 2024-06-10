@@ -59,7 +59,7 @@ helmfile status
 | dbBootstrap.podAnnotations | object | `{}` | Annotations to apply to the pod  |
 | dbBootstrap.postCustomSql | string | `"ALTER DATABASE {{ .Values.databaseName }} SET DEFAULT_TRANSACTION_ISOLATION TO SERIALIZABLE"` | Execute SQL inline command after loading the SQL file urls |
 | dbBootstrap.sqlFileUrls | list | `[]` | SQL file urls to execute |
-| dumpExporter.enabled | bool | `true` | Enabled dump exporter  |
+| dumpExporter.enabled | bool | `false` | Enabled dump exporter  |
 | dumpExporter.podAnnotations | object | `{}` | Annotations to the  dump exporter  |
 | dumpExporter.s3.bucket | string | `""` | S3 bucket to export the dump to |
 | dumpExporter.schedule | string | `"@midnight"` | Frequency to execute the  dump exporter |
@@ -74,7 +74,7 @@ helmfile status
 | image.repository | string | `"gcr.io/o1labs-192920/mina-archive"` | Docker image repository |
 | image.tag | string | `"2.0.0berkeley-rc1-1551e2f-focal"` | Docker image tag |
 | missingBlocksGuardian.autoImportBlockUrl | string | `""` | URL to auto import a block when running the missing blocks guardian |
-| missingBlocksGuardian.enabled | bool | `false` | Enabled missing blocks guardian |
+| missingBlocksGuardian.enabled | bool | `true` | Enabled missing blocks guardian |
 | missingBlocksGuardian.podAnnotations | object | `{}` | Annotations to the missing blocks guardian  |
 | missingBlocksGuardian.precomputedBlocksUrl | string | `""` | URL to fetch the pre-computed blocks from |
 | missingBlocksGuardian.schedule | string | `"@hourly"` | Frequency to execute the missing blocks guardian |
