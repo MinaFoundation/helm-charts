@@ -53,6 +53,11 @@ spec:
                 secretKeyRef:
                   name: {{ include "gpt-survey-summarizer.fullname" . }}
                   key: discordGuildId
+            - name: POST_CHANNEL_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gpt-survey-summarizer.fullname" . }}
+                  key: postChannelId
             # WARN: `REDIS_URL` is a deprecated environment variable
             - name: REDIS_URL
               valueFrom:

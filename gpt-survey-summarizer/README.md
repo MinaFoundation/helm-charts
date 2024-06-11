@@ -66,6 +66,7 @@ helmfile status
 | bot.serviceAccountAnnotations | object | `{}` | Annotations for the bot serviceAccount |
 | config.discord.clientId | string | `""` | Discord Application ID |
 | config.discord.guildId | string | `""` | Discord Guild/Server ID |
+| config.discord.postChannelId | string | `""` | Discord Post channel ID (optional) |
 | config.discord.token | string | `""` | Discord API Token |
 | config.openAiApiKey | string | `""` | Openai API Key |
 | config.summarizeFrequencySeconds | int | `3600` | Summarize Frequency Seconds |
