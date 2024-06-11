@@ -2,32 +2,41 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# -- The number of replicas
 replicaCount: 1
 
 image:
+  # -- The repository of the image
   repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/delegation-program-leaderboard
+  # -- The pullPolicy used when pulling the image
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.1.0-b66ffbd"
+  # -- The tag of the image. Overrides the image tag whose default is the chart appVersion.
+  tag: "2.0.2"
 
+# -- The secrets used to pull the image
 imagePullSecrets: []
+# -- The release name override
 nameOverride: ""
+# -- The full release name override
 fullnameOverride: ""
 
 serviceAccount:
-  # Specifies whether a service account should be created
+  # -- Specifies whether a service account should be created
   create: true
-  # Annotations to add to the service account
+  # -- Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # -- The name of the service account to use.
+  # -- If not set and create is true, a name is generated using the fullname template
   name: ""
 
+# -- Annotations to add to the pods
 podAnnotations: {}
 
+# -- The Pod Security Context
 podSecurityContext: {}
   # fsGroup: 2000
 
+# -- The Security Context
 securityContext: {}
   # capabilities:
   #   drop:
@@ -37,26 +46,34 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
+  # -- The type of service to create
   type: ClusterIP
+  # -- The port of the service
   port: 80
 
 ingress:
+  # -- Whether to create an Ingress
   enabled: false
+  # -- The Ingress Class Name to use
   className: ""
+  # -- The Ingress Annotations
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
+  # -- The Ingress Hosts
   hosts:
     - host: chart-example.local
       paths:
         - path: /
           pathType: ImplementationSpecific
+  # -- The TLS configuration
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
 
 leaderboard:
+  # -- Extra Environment Variables
   envVars: {}
     # See Application's README(or source code).
     # - name: FOO
@@ -66,12 +83,18 @@ leaderboard:
     #     secretKeyRef:
     #       name: mySecret
     #       key: bar  offline:
+  # -- Leaderboard Database Host
   dbHost: "localhost"
+  # -- Leaderboard Database Port
   dbPort: "5432"
+  # -- Leaderboard Database User
   dbUser: "postgres"
+  # -- Leaderboard Database Password
   dbPassword: "postgres"
+  # -- Leaderboard Database Name
   dbName: "postgres"
 
+# -- Resource limitations for the pods
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
@@ -85,14 +108,21 @@ resources: {}
   #   memory: 128Mi
 
 autoscaling:
+  # -- Whether to enable autoscaling
   enabled: false
+  # -- The minimum number of pods
   minReplicas: 1
+  # -- The maximum number of pods
   maxReplicas: 100
+  # -- The metrics to use for autoscaling
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
+# -- Node selector labels
 nodeSelector: {}
 
+# -- Tolerations
 tolerations: []
 
+# -- Affinity rules
 affinity: {}
