@@ -17,6 +17,8 @@ config:
     guildId: ""
     # -- Discord API Token
     token: ""
+    # -- Discord Post channel ID (optional)
+    postChannelId: ""
 
 redis:
   # -- The redis architecture (accepted values are: standalone, replication)
