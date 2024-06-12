@@ -99,7 +99,7 @@ helmfile status
 | postgresql.auth.password | string | `"password"` | Password for the database |
 | postgresql.auth.username | string | `"username"` | Username for the database |
 | postgresql.enabled | bool | `true` | Enable local postgresql database server |
-| postgresql.primary.extendedConfiguration | string | `"max_wal_size=2048\n"` | Extended configuration to configure postgresql server |
+| postgresql.primary.extendedConfiguration | string | `"max_connections=500\nmax_locks_per_transaction=100\nmax_pred_locks_per_relation=100\nmax_pred_locks_per_transaction=5000\nmax_wal_size=2048\n"` | Extended configuration to configure postgresql server |
 | postgresql.primary.persistence.enabled | bool | `true` | Enable the persistence for the postgresql server |
 | postgresql.primary.persistence.size | string | `"8Gi"` | Size of the postgresql server volume |
 | postgresql.primary.persistence.storageClass | string | `""` | Storage class for the postgresql server volume |
