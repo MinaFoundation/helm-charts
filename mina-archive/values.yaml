@@ -25,6 +25,10 @@ postgresql:
     resourcesPreset: "nano"
     # -- Extended configuration to configure postgresql server
     extendedConfiguration: |
+      max_connections=500
+      max_locks_per_transaction=100
+      max_pred_locks_per_relation=100
+      max_pred_locks_per_transaction=5000
       max_wal_size=2048
     persistence:
       # -- Enable the persistence for the postgresql server
