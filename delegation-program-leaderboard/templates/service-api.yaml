@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "delegation-program-leaderboard.fullname" . }}-api
+  labels:
+    {{- include "delegation-program-leaderboard.labels" . | nindent 4 }}-api
+spec:
+  type: {{ .Values.leaderboardApi.service.type }}
+  ports:
+    - port: {{ .Values.leaderboardApi.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "delegation-program-leaderboard.selectorLabels" . | nindent 4 }}-api
