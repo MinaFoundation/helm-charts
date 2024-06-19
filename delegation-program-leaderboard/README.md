@@ -52,7 +52,7 @@ helmfile status
 | ingress.enabled | bool | `false` | Whether to create an Ingress |
 | ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}]` | The Ingress Hosts |
 | ingress.tls | list | `[]` | The TLS configuration |
-| leaderboardApi | object | `{"affinity":{},"cacheTimeout":300,"extraEnvVars":{},"image":{"pullPolicy":"IfNotPresent","repository":"673156464838.dkr.ecr.us-west-2.amazonaws.com/delegation-program-leaderboard-api","tag":"2.1.0"},"imagePullSecrets":[],"logFile":"./application.log","nodeSelector":{},"podAnnotations":{},"podSecurityContext":{},"replicaCount":1,"resources":{},"securityContext":{},"service":{"port":5000,"type":"ClusterIP"},"tolerations":[]}` | configuration options for leaderboard api deployment |
+| leaderboardApi | object | `{"affinity":{},"cacheTimeout":300,"extraEnvVars":{},"image":{"pullPolicy":"IfNotPresent","repository":"673156464838.dkr.ecr.us-west-2.amazonaws.com/delegation-program-leaderboard-api","tag":"2.1.0"},"imagePullSecrets":[],"logFile":"./application.log","nodeSelector":{},"podAnnotations":{},"podSecurityContext":{},"replicaCount":1,"resources":{},"securityContext":{},"service":{"port":5000,"type":"ClusterIP"},"swaggerUrl":"localhost:5000","tolerations":[]}` | configuration options for leaderboard api deployment |
 | leaderboardApi.affinity | object | `{}` | Affinity rules |
 | leaderboardApi.cacheTimeout | int | `300` | Application cache timeout in seconds |
 | leaderboardApi.extraEnvVars | object | `{}` | Extra Environment Variables |
@@ -69,6 +69,7 @@ helmfile status
 | leaderboardApi.securityContext | object | `{}` | The Security Context |
 | leaderboardApi.service.port | int | `5000` | The port of the service |
 | leaderboardApi.service.type | string | `"ClusterIP"` | The type of service to create |
+| leaderboardApi.swaggerUrl | string | `"localhost:5000"` | Swagger host URL |
 | leaderboardApi.tolerations | list | `[]` | Tolerations |
 | leaderboardWeb | object | `{"affinity":{},"autoscaling":{"enabled":false,"maxReplicas":100,"minReplicas":1,"targetCPUUtilizationPercentage":80},"extraEnvVars":{},"image":{"pullPolicy":"IfNotPresent","repository":"673156464838.dkr.ecr.us-west-2.amazonaws.com/delegation-program-leaderboard","tag":"2.1.0"},"imagePullSecrets":[],"nodeSelector":{},"podAnnotations":{},"podSecurityContext":{},"replicaCount":1,"resources":{},"securityContext":{},"service":{"port":80,"type":"ClusterIP"},"tolerations":[]}` | configuration options for leaderboard web deployment |
 | leaderboardWeb.affinity | object | `{}` | Affinity rules |

@@ -52,7 +52,7 @@ spec:
             - name: LOGGING_LOCATION
               value: {{ .logFile }}
             - name: SWAGGER_HOST
-              value: 0.0.0.0:{{ .service.port }}
+              value: {{ .swaggerUrl | quote }}
             {{- if .extraEnvVars }}
             {{- toYaml .extraEnvVars | nindent 12 }}
             {{- end }}

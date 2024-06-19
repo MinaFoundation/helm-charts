@@ -133,6 +133,9 @@ leaderboardWeb:
 
 # -- configuration options for leaderboard api deployment
 leaderboardApi:
+  # -- Swagger host URL
+  swaggerUrl: "localhost:5000"
+
   # -- Application cache timeout in seconds
   cacheTimeout: 300
 
