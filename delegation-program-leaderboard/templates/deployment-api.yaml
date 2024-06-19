@@ -46,9 +46,9 @@ spec:
             - name: API_HOST
               value: localhost
             - name: API_PORT
-              value: {{ .service.port }}
+              value: {{ .service.port | quote }}
             - name: CACHE_TIMEOUT
-              value: {{ .cacheTimeout }}
+              value: {{ .cacheTimeout | quote }}
             - name: LOGGING_LOCATION
               value: {{ .logFile }}
             - name: SWAGGER_HOST
