@@ -44,7 +44,7 @@ spec:
             - name: SNARK_DB
               value: {{ $.Values.delegationProgramDB.name | quote }}
             - name: API_HOST
-              value: localhost
+              value: 0.0.0.0
             - name: API_PORT
               value: {{ .service.port | quote }}
             - name: CACHE_TIMEOUT
@@ -52,7 +52,7 @@ spec:
             - name: LOGGING_LOCATION
               value: {{ .logFile }}
             - name: SWAGGER_HOST
-              value: localhost:{{ .service.port }}
+              value: 0.0.0.0:{{ .service.port }}
             {{- if .extraEnvVars }}
             {{- toYaml .extraEnvVars | nindent 12 }}
             {{- end }}
@@ -62,11 +62,11 @@ spec:
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /
+              path: /apidocs
               port: http
           readinessProbe:
             httpGet:
-              path: /
+              path: /apidocs
               port: http
           resources:
             {{- toYaml .resources | nindent 12 }}
