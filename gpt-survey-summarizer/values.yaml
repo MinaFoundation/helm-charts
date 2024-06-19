@@ -8,6 +8,8 @@ platform:
 config:
   # -- Summarize Frequency Seconds
   summarizeFrequencySeconds: 3600
+  # -- Gpt Surver Summarizer Log Level
+  gssLogLevel: INFO
   # -- Openai API Key
   openAiApiKey: "" 
   discord:

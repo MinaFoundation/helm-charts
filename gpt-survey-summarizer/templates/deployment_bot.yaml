@@ -75,6 +75,8 @@ spec:
               value: {{ .Values.redis.master.service.ports.redis | quote }}
             - name: SUMMARIZE_FREQUENCY_SECONDS
               value: {{ .Values.config.summarizeFrequencySeconds | quote }}
+            - name: GSS_LOG_LEVEL
+              value: {{ .Values.config.gssLogLevel | quote }}
           {{- if .Values.bot.extraEnvVars }}
             {{- toYaml .Values.bot.extraEnvVars | nindent 12 }}
           {{- end }}

@@ -68,6 +68,7 @@ helmfile status
 | config.discord.guildId | string | `""` | Discord Guild/Server ID |
 | config.discord.postChannelId | string | `""` | Discord Post channel ID (optional) |
 | config.discord.token | string | `""` | Discord API Token |
+| config.gssLogLevel | string | `"INFO"` | Gpt Surver Summarizer Log Level |
 | config.openAiApiKey | string | `""` | Openai API Key |
 | config.summarizeFrequencySeconds | int | `3600` | Summarize Frequency Seconds |
 | databaseDumpExporter.enabled | bool | `true` | Whether to enable exporting of the database dump |
