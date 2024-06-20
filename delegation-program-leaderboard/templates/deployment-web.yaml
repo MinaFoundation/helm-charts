@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "delegation-program-leaderboard.fullname" . }}-web
+  labels:
+    {{- include "delegation-program-leaderboard.labels" . | nindent 4 }}-web
+spec:
+  {{- with .Values.leaderboardWeb }}
+  {{- if not .autoscaling.enabled }}
+  replicas: {{ .replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "delegation-program-leaderboard.selectorLabels" $ | nindent 6 }}-web
+  template:
+    metadata:
+      {{- with .podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "delegation-program-leaderboard.selectorLabels" $ | nindent 8 }}-web
+    spec:
+      {{- with .imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "delegation-program-leaderboard.serviceAccountName" $ }}
+      securityContext:
+        {{- toYaml .podSecurityContext | nindent 8 }}
+      containers:
+        - name: leaderboard-web
+          securityContext:
+            {{- toYaml .securityContext | nindent 12 }}
+          image: "{{ .image.repository }}:{{ .image.tag | default $.Chart.AppVersion }}"
+          imagePullPolicy: {{ .image.pullPolicy }}
+          env:
+            - name: DB_SNARK_HOST
+              value: {{ $.Values.delegationProgramDB.host | quote }}
+            - name: DB_SNARK_PORT
+              value: {{ $.Values.delegationProgramDB.port | quote }}
+            - name: DB_SNARK_USER
+              value: {{ $.Values.delegationProgramDB.user | quote }}
+            - name: DB_SNARK_PWD
+              value: {{ $.Values.delegationProgramDB.password | quote }}
+            - name: DB_SNARK_DB
+              value: {{ $.Values.delegationProgramDB.name | quote }}
+            {{- if .extraEnvVars }}
+            {{- toYaml .extraEnvVars | nindent 12 }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .resources | nindent 12 }}
+      {{- with .nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- end }}

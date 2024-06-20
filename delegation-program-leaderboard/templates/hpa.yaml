@@ -1,32 +1,32 @@
-{{- if .Values.autoscaling.enabled }}
+{{- if .Values.leaderboardWeb.autoscaling.enabled }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "delegation-program-leaderboard.fullname" . }}
+  name: {{ include "delegation-program-leaderboard.fullname" . }}-web
   labels:
-    {{- include "delegation-program-leaderboard.labels" . | nindent 4 }}
+    {{- include "delegation-program-leaderboard.labels" . | nindent 4 }}-web
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "delegation-program-leaderboard.fullname" . }}
-  minReplicas: {{ .Values.autoscaling.minReplicas }}
-  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+    name: {{ include "delegation-program-leaderboard.fullname" . }}-web
+  minReplicas: {{ .Values.leaderboardWeb.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.leaderboardWeb.autoscaling.maxReplicas }}
   metrics:
-    {{- if .Values.autoscaling.targetCPUUtilizationPercentage }}
+    {{- if .Values.leaderboardWeb.autoscaling.targetCPUUtilizationPercentage }}
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
+          averageUtilization: {{ .Values.leaderboardWeb.autoscaling.targetCPUUtilizationPercentage }}
     {{- end }}
-    {{- if .Values.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- if .Values.leaderboardWeb.autoscaling.targetMemoryUtilizationPercentage }}
     - type: Resource
       resource:
         name: memory
         target:
           type: Utilization
-          averageUtilization: {{ .Values.autoscaling.targetMemoryUtilizationPercentage }}
+          averageUtilization: {{ .Values.leaderboardWeb.autoscaling.targetMemoryUtilizationPercentage }}
     {{- end }}
 {{- end }}

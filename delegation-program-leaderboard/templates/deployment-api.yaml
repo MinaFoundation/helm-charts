@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "delegation-program-leaderboard.fullname" . }}-api
+  labels:
+    {{- include "delegation-program-leaderboard.labels" . | nindent 4 }}-api
+spec:
+  {{- with .Values.leaderboardApi }}
+  replicas: {{ .replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "delegation-program-leaderboard.selectorLabels" $ | nindent 6 }}-api
+  template:
+    metadata:
+      {{- with .podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "delegation-program-leaderboard.selectorLabels" $ | nindent 8 }}-api
+    spec:
+      {{- with .imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "delegation-program-leaderboard.serviceAccountName" $ }}
+      securityContext:
+        {{- toYaml .podSecurityContext | nindent 8 }}
+      containers:
+        - name: leaderboard-api
+          securityContext:
+            {{- toYaml .securityContext | nindent 12 }}
+          image: "{{ .image.repository }}:{{ .image.tag | default $.Chart.AppVersion }}"
+          imagePullPolicy: {{ .image.pullPolicy }}
+          env:
+            - name: SNARK_HOST
+              value: {{ $.Values.delegationProgramDB.host | quote }}
+            - name: SNARK_PORT
+              value: {{ $.Values.delegationProgramDB.port | quote }}
+            - name: SNARK_USER
+              value: {{ $.Values.delegationProgramDB.user | quote }}
+            - name: SNARK_PASSWORD
+              value: {{ $.Values.delegationProgramDB.password | quote }}
+            - name: SNARK_DB
+              value: {{ $.Values.delegationProgramDB.name | quote }}
+            - name: API_HOST
+              value: 0.0.0.0
+            - name: API_PORT
+              value: {{ .service.port | quote }}
+            - name: CACHE_TIMEOUT
+              value: {{ .cacheTimeout | quote }}
+            - name: LOGGING_LOCATION
+              value: {{ .logFile }}
+            - name: SWAGGER_HOST
+              value: {{ .swaggerUrl | quote }}
+            {{- if .extraEnvVars }}
+            {{- toYaml .extraEnvVars | nindent 12 }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /apidocs
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /apidocs
+              port: http
+          resources:
+            {{- toYaml .resources | nindent 12 }}
+      {{- with .nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- end }}
