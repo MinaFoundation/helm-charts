@@ -40,21 +40,40 @@ spec:
     - host: {{ .host | quote }}
       http:
         paths:
-          {{- range .paths }}
-          - path: {{ .path }}
-            {{- if and .pathType (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion) }}
-            pathType: {{ .pathType }}
-            {{- end }}
+          - path: /apidocs
+            pathType: Prefix
             backend:
-              {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
               service:
-                name: {{ .backend.service.name }}
+                name: {{ include "delegation-program-leaderboard.fullname" $ }}-api
                 port:
-                  number: {{ .backend.service.port.number }}
-              {{- else }}
-              serviceName: {{ .backend.service.name }}
-              servicePort: {{ .backend.service.port.number }}
-              {{- end }}
-          {{- end }}
+                  number: {{ $.Values.leaderboardApi.service.port }}
+          - path: /uptimescore
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "delegation-program-leaderboard.fullname" $ }}-api
+                port:
+                  number: {{ $.Values.leaderboardApi.service.port }}
+          - path: /flasgger_static
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "delegation-program-leaderboard.fullname" $ }}-api
+                port:
+                  number: {{ $.Values.leaderboardApi.service.port }}
+          - path: /apispec_1.json
+            pathType: Exact
+            backend:
+              service:
+                name: {{ include "delegation-program-leaderboard.fullname" $ }}-api
+                port:
+                  number: {{ $.Values.leaderboardApi.service.port }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "delegation-program-leaderboard.fullname" $ }}-web
+                port:
+                  number: {{ $.Values.leaderboardWeb.service.port }}
     {{- end }}
 {{- end }}

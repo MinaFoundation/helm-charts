@@ -16,12 +16,9 @@ ingress:
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
-  # -- The Ingress Hosts
+  # -- A list of DNS names to create for leaderboard service
   hosts:
     - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
   # -- The TLS configuration
   tls: []
   #  - secretName: chart-example-tls

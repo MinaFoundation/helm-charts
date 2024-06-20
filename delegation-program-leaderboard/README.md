@@ -50,7 +50,7 @@ helmfile status
 | ingress.annotations | object | `{}` | The Ingress Annotations |
 | ingress.className | string | `""` | The Ingress Class Name to use |
 | ingress.enabled | bool | `false` | Whether to create an Ingress |
-| ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}]` | The Ingress Hosts |
+| ingress.hosts | list | `[{"host":"chart-example.local"}]` | A list of DNS names to create for leaderboard service |
 | ingress.tls | list | `[]` | The TLS configuration |
 | leaderboardApi | object | `{"affinity":{},"cacheTimeout":300,"extraEnvVars":{},"image":{"pullPolicy":"IfNotPresent","repository":"673156464838.dkr.ecr.us-west-2.amazonaws.com/delegation-program-leaderboard-api","tag":"2.1.0"},"imagePullSecrets":[],"logFile":"./application.log","nodeSelector":{},"podAnnotations":{},"podSecurityContext":{},"replicaCount":1,"resources":{},"securityContext":{},"service":{"port":5000,"type":"ClusterIP"},"swaggerUrl":"localhost:5000","tolerations":[]}` | configuration options for leaderboard api deployment |
 | leaderboardApi.affinity | object | `{}` | Affinity rules |
