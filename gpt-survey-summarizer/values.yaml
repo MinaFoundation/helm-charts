@@ -64,7 +64,7 @@ image:
   # -- The pullPolicy used when pulling the image
   pullPolicy: IfNotPresent
   # -- The tag of the iamge. Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "0.3.2"
 
 bot:
   # -- The number of pods to be deployed for bot
