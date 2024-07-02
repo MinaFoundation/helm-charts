@@ -17,7 +17,9 @@ spec:
         testnet: {{ .Values.deployment.testnet }}
         role: {{ default "undefined" .Values.node.role }}
         version: {{ trunc 8 (split ":" .Values.deployment.image)._1 | trimSuffix "-" }}
-        syncStatus: INIT
+        {{- if .Values.node.exposeGraphql }}
+        exposeGraphql: "true"
+        {{- end -}}
       {{- with .Values.podLabels }}
       {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -419,9 +421,6 @@ spec:
             - name: client-port
               protocol: TCP
               containerPort: {{ .Values.node.ports.client }}
-            - name: graphql-port
-              protocol: TCP
-              containerPort: {{ .Values.node.ports.graphql }}
             {{- if .Values.node.metrics.enabled }}
             - name: metrics-port
               protocol: TCP
@@ -470,6 +469,17 @@ spec:
               mountPath: /usr/bin/gcloud
               subPath: gcloud-impersonator.sh
             {{- end }}
+
+        {{- if .Values.node.exposeGraphql }}
+        - name: graphql-public-proxy
+          image: minafoundation/graphql-public-proxy:latest
+          imagePullPolicy: Always
+          ports:
+            - name: graphql-port
+              protocol: TCP
+              containerPort: {{ .Values.node.ports.graphql }}
+        {{- end -}}
+
         {{- if .Values.deployment.storeBlocks.aws.enabled }}
         - name: s3-blocks-uploader
           image: "{{ .Values.s3BlocksUploader.image.repository }}:{{ .Values.s3BlocksUploader.image.tag }}"
