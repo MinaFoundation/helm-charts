@@ -98,6 +98,7 @@ node:
   ports:
     client: 8301
     graphql: 3085
+    proxy: 3000
     p2p: 10801
   statsUrl:
   errorsUrl:
@@ -204,3 +205,16 @@ s3BlocksUploader:
     memoryLimit: "256Mi"
     cpuLimit: "2"
     ephemeralStorageLimit:
+
+graphqlPublicProxy:
+  image:
+    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-graphql-public-proxy
+    pullPolicy: IfNotPresent
+    tag: "0.0.10"
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
