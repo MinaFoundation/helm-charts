@@ -85,7 +85,8 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           ports:
-            - containerPort: {{ .Values.service.port }}
+            - name: http
+              containerPort: {{ .Values.service.port }}
           env:
             # Backend related variables
             - name: REQUESTS_PER_PK_HOURLY
@@ -136,6 +137,14 @@ spec:
             {{- if .Values.backend.extraEnvVars }}
             {{- toYaml .Values.backend.extraEnvVars | nindent 12 }}
             {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
           volumeMounts:
             - name:  {{ .Release.Name }}-gcp-sa
               mountPath: /uptime/gcloud

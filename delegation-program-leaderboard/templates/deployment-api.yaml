@@ -62,11 +62,11 @@ spec:
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /apidocs
+              path: /apidocs/
               port: http
           readinessProbe:
             httpGet:
-              path: /apidocs
+              path: /apidocs/
               port: http
           resources:
             {{- toYaml .resources | nindent 12 }}
