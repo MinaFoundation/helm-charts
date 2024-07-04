@@ -17,7 +17,9 @@ spec:
         testnet: {{ .Values.deployment.testnet }}
         role: {{ default "undefined" .Values.node.role }}
         version: {{ trunc 8 (split ":" .Values.deployment.image)._1 | trimSuffix "-" }}
-        syncStatus: INIT
+        {{- if .Values.node.exposeGraphql }}
+        exposeGraphql: "true"
+        {{- end -}}
       {{- with .Values.podLabels }}
       {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -419,9 +421,6 @@ spec:
             - name: client-port
               protocol: TCP
               containerPort: {{ .Values.node.ports.client }}
-            - name: graphql-port
-              protocol: TCP
-              containerPort: {{ .Values.node.ports.graphql }}
             {{- if .Values.node.metrics.enabled }}
             - name: metrics-port
               protocol: TCP
@@ -430,6 +429,11 @@ spec:
             - name: external-port
               protocol: TCP
               containerPort: {{ .Values.node.ports.p2p }}
+            {{- if .Values.node.exposeGraphql }}
+            - name: graphql-port
+              protocol: TCP
+              containerPort: {{ .Values.node.ports.graphql }}
+            {{- end -}}
 {{- $data := dict "name" .Values.node.name "healthcheck" .Values.healthcheck }}
 {{- include "healthcheck.node.allChecks" $data | indent 10 }}
           imagePullPolicy: Always
@@ -470,6 +474,24 @@ spec:
               mountPath: /usr/bin/gcloud
               subPath: gcloud-impersonator.sh
             {{- end }}
+
+        {{- if .Values.node.exposeGraphql }}
+        - name: graphql-public-proxy
+          image: "{{ .Values.graphqlPublicProxy.image.repository }}:{{ .Values.graphqlPublicProxy.image.tag }}"
+          imagePullPolicy: {{ .Values.graphqlPublicProxy.image.pullPolicy }}
+          env:
+            - name: MINA_GRAPHQL_PORT
+              value: {{ .Values.node.ports.graphql | quote }}
+            - name: EXTERNAL_PORT
+              value: {{ .Values.node.ports.proxy | quote }}
+          ports:
+            - name: proxy
+              protocol: TCP
+              containerPort: {{ .Values.node.ports.proxy }}
+          resources:
+            {{- toYaml .Values.graphqlPublicProxy.resources | nindent 12 }}
+        {{- end -}}
+
         {{- if .Values.deployment.storeBlocks.aws.enabled }}
         - name: s3-blocks-uploader
           image: "{{ .Values.s3BlocksUploader.image.repository }}:{{ .Values.s3BlocksUploader.image.tag }}"

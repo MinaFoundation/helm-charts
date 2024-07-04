@@ -21,8 +21,12 @@ spec:
   selector:
     app: {{ .Release.Name }}
   ports:
-  - name: http-graphql
+  - name: graphql
     protocol: TCP
     port: {{ .Values.node.ports.graphql }}
     targetPort: {{ .Values.node.ports.graphql }}
+  - name: proxy
+    protocol: TCP
+    port: {{ .Values.node.ports.proxy }}
+    targetPort: {{ .Values.node.ports.proxy }}
 {{- end }}
