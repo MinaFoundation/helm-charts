@@ -38,6 +38,10 @@ spec:
               value: {{ .postgres.user | quote }}
             - name: POSTGRES_PASSWORD
               value: {{ .postgres.password | quote }}
+            - name: POSTGRES_RO_USER
+              value: {{ .postgres.roUser | quote }}
+            - name: POSTGRES_RO_PASSWORD
+              value: {{ .postgres.roPassword | quote }}
             {{- end }}
           command: ["/bin/entrypoint/entrypoint-initdb.sh"]
           volumeMounts:

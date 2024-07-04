@@ -22,6 +22,8 @@ coordinator:
     db: ""
     user: ""
     password: ""
+    roUser: ""
+    roPassword: ""
   miniBatchNumber: 2
   uptimeDaysForScore: ""
   worker:
@@ -83,4 +85,3 @@ service:
   port: 80
 
 resources: {}
-
