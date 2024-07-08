@@ -210,7 +210,7 @@ graphqlPublicProxy:
   image:
     repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-graphql-public-proxy
     pullPolicy: IfNotPresent
-    tag: "0.0.10"
+    tag: "0.0.11"
   resources:
     limits:
       cpu: 200m
