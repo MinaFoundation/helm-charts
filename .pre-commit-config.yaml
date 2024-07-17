@@ -2,12 +2,12 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
   - repo: https://github.com/norwoodj/helm-docs
-    rev: v1.13.1
+    rev: v1.14.2
     hooks:
       - id: helm-docs-built
         args:
           # Comma separated list, no space
-          - --chart-to-generate=gpt-survey-summarizer,submission-report,mina-transactions-generator,mina-payouts-data-provider,mina-archive,redisinsight,uptime-service-backend,liminal-manual,delegation-program-leaderboard
+          - --chart-to-generate=gpt-survey-summarizer,submission-report,mina-transactions-generator,mina-payouts-data-provider,mina-archive,redisinsight,uptime-service-backend,liminal-manual,delegation-program-leaderboard,matterbridge-bot
 
           # The `./` makes it relative to the chart-search-root
           - --template-files=./README.md.gotmpl
