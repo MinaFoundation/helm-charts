@@ -1,72 +1,74 @@
-# Mina Staking Ledger Exporter
+# mina-staking-ledgers-exporter
 
-mina-staking-ledgers-exporter is a tools that generate Mina Staking Ledgers, and publish them on S3 and Mina Payout Data Provider API.
+![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
 
-## TL;DR
-
-```console
-git clone https://github.com/MinaFoundation/helm-charts
-cd helm-charts/mina-staking-ledgers-exporter
-helm install RELEASE_NAME ./ --namespace NAMESPACE
-```
+A Helm chart for Kubernetes
 
 ## Prerequisites
 
-- Kubernetes 1.12+
-- Helm 3.1.0
+Before using this Helm chart, you should have the following prerequisites:
 
-## Installing the Chart
+- Access to Kubernetes cluster (If needed contact your friendly neighbourhood DevOps engineer)
+- Helm >= v3.14.3
+- (**Optional**) helmfile >= v0.162.0 to install this chart
 
-To install the chart with the release name `RELEASE_NAME`:
+## Installation
 
-```console
-helm install RELEASE_NAME ./ --namespace NAMESPACE
+> Note: **examples** can be found in the repository
+
+To install this Helm chart, the easiest is to create a helmfile.yaml with needed values and run:
+
+```
+helmfile template
+helmfile apply
 ```
 
-The command deploys mina-staking-ledgers-exporter on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
+Or use helmfile only to generate resources and apply them with kubectl like so:
 
-## Uninstalling the Chart
-
-To uninstall/delete the `RELEASE_NAME` deployment:
-
-```console
-helm delete RELEASE_NAME
+```
+helmfile template | kubectl -f -
 ```
 
-The command removes all the Kubernetes components associated with the chart and deletes the release.
+Verify that the chart is deployed successfully:
 
-## Parameters
+> Note: `kubectl` is a better suited tool for this
 
-| Name                                                              | Description                                                                        | Value                                                                |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `image.repository`                                                | mina-staking-ledgers-exporter image name                                       | `673156464838.dkr.ecr.us-west-2.amazonaws.com/github-actions-runner` |
-| `image.pullPolicy`                                                | mina-staking-ledgers-exporter image pull policy                                | `IfNotPresent`                                                       |
-| `image.pullSecrets`                                               | Specify docker-registry secret names as an array                                   | `[]`                                                                 |
-| `nameOverride`                                                    | String to partially override common.names.fullname                                 | ""                                                                   |
-| `fullnameOverride`                                                | String to fully override common.names.fullname                                     | ""                                                                   |
-| `serviceAccount.create`                                           | Enable the creation of a ServiceAccount for mina-staking-ledgers-exporter pods | `true`                                                               |
-| `serviceAccount.annotations`                                      | Annotations for the created ServiceAccount                                         | {}                                                                   |
-| `serviceAccount.name`                                             | Name of the created ServiceAccount                                                 | ""                                                                   |
-| `podAnnotations`                                                  | Annotations for mina-staking-ledgers-exporter pods                             | {}                                                                   |
-| `podLabels`                                                       | Extra labels for mina-staking-ledgers-exporter pods                            | {}                                                                   |
-| `podRegexPattern`                                                 | Regex pattern to match pods                                                        | ".*"                                                                 |
-| `schedule`                                                        | Schedule to run pod rotation, runs every 6 hours                                   | "0 */6 * * *"                                                        |
-| `restartPolicy`                                                   | Restart Policy when the job fails, can be OnFailure, Never, Always                 | "OnFailure"                                                          |
-| `podSecurityContext`                                              | Set mina-staking-ledgers-exporter Pod's Security Context                       | {}                                                                   |
-| `securityContext`                                                 | Set mina-staking-ledgers-exporter Security Context                             | {}                                                                   |
-| `resources.limits`                                                | The resources limits for the mina-staking-ledgers-exporter container           | {}                                                                   |
-| `resources.requests`                                              | The resources requests for the mina-staking-ledgers-exporter container         | {}                                                                   |
-| `nodeSelector`                                                    | Node labels for pod assignment                                                     | {}                                                                   |
-| `tolerations`                                                     | Tolerations for pod assignment                                                     | {}                                                                   |
-| `affinity`                                                        | Affinity for pod assignment                                                        | {}                                                                   |
-| `schedule`                                                        | Frequency to run the job                                                           | `0 0 * * *`                                                          |
-| `restartPolicy`                                                   | Restart Policy                                                                     | `Never`                                                              |
-| `minaStakingLedgersExporter.network`                          | Network to run the Exporter against                                            | ` `                                                                  |
-| `minaStakingLedgersExporter.s3.bucket`                        | Bucket to upload the Mina Staking Ledgers                                          | ` `                                                                  |
-| `minaStakingLedgersExporter.s3.subpath`                       | Bucket subpath to upload the Mina Staking Ledgers                                  | ` `                                                                  |
-| `minaStakingLedgersExporter.minaNodeLabel`                    | Label of the Mina Daemon to execute Staking Ledger Generation                      | ` `                                                                  |
-| `minaStakingLedgersExporter.slackWebhookInfoUrl`              | Slack Webhook Info URL                                                             | ` `                                                                  |
-| `minaStakingLedgersExporter.slackWebhookWarnUrl`              | Slack Webhook Warn URL                                                             | ` `                                                                  |
-| `minaStakingLedgersExporter.minaPayoutsDataProvider.url`      | Mina Payouts Data Provider URL                                                     | ` `                                                                  |
-| `minaStakingLedgersExporter.minaPayoutsDataProvider.username` | Mina Payouts Data Provider Username                                                | ` `                                                                  |
-| `minaStakingLedgersExporter.minaPayoutsDataProvider.password` | Mina Payouts Data Provider Password                                                | ` `                                                                  |
+```
+helmfile status
+```
+
+## Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| affinity | object | `{}` | Affinity rules |
+| fullnameOverride | string | `""` | The full release name override |
+| image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
+| image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/github-actions-runner"` | The repository of the image |
+| image.tag | string | `"default-2024.03"` | The tag of the image. Overrides the image tag whose default is the chart appVersion. |
+| imagePullSecrets | list | `[]` | The secrets used to pull the image |
+| minaStakingLedgersExporter.logLevel | string | `"info"` | The log level |
+| minaStakingLedgersExporter.minaNodeLabel | string | `nil` | The Mina node label used to query the ledger |
+| minaStakingLedgersExporter.minaPayoutsDataProvider.enable | bool | `true` | Enable upload to Mina payouts data provider |
+| minaStakingLedgersExporter.minaPayoutsDataProvider.password | string | `nil` | The Mina payouts data provider password |
+| minaStakingLedgersExporter.minaPayoutsDataProvider.url | string | `nil` | The Mina payouts data provider URL |
+| minaStakingLedgersExporter.minaPayoutsDataProvider.username | string | `nil` | The Mina payouts data provider username |
+| minaStakingLedgersExporter.network | string | `nil` | The network (mainnet | devnet) |
+| minaStakingLedgersExporter.s3.bucket | string | `nil` | The S3 bucket |
+| minaStakingLedgersExporter.s3.enable | bool | `true` | Enable upload to S3 |
+| minaStakingLedgersExporter.s3.subpath | string | `nil` | The S3 subpath |
+| minaStakingLedgersExporter.slackWebhookInfoUrl | string | `nil` | The Slack webhook URL for info messages |
+| minaStakingLedgersExporter.slackWebhookWarnUrl | string | `nil` | The Slack webhook URL for warn messages |
+| nameOverride | string | `""` | The release name override |
+| nodeSelector | object | `{}` | Node selector labels |
+| podAnnotations | object | `{}` | Annotations to add to the pods |
+| podSecurityContext | object | `{}` | The Pod Security Context |
+| resources | object | `{}` | Resource limitations for the pods |
+| restartPolicy | string | `"Never"` | The restart policy |
+| schedule | string | `"0 0 * * *"` | The cronjob schedule |
+| securityContext | object | `{}` | The Security Context |
+| serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
+| serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
+| serviceAccount.name | string | `""` | If not set and create is true, a name is generated using the fullname template |
+| tolerations | list | `[]` | Tolerations |
+

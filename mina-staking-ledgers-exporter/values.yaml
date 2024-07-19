@@ -3,46 +3,70 @@
 # Declare variables to be passed into your templates.
 
 image:
+  # -- The repository of the image
   repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/github-actions-runner
+  # -- The pullPolicy used when pulling the image
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
+  # -- The tag of the image. Overrides the image tag whose default is the chart appVersion.
   tag: "default-2024.03"
 
+# -- The secrets used to pull the image
 imagePullSecrets: []
+# -- The release name override
 nameOverride: ""
+# -- The full release name override
 fullnameOverride: ""
 
+# -- The cronjob schedule
 schedule: "0 0 * * *"
+# -- The restart policy
 restartPolicy: "Never"
 
 minaStakingLedgersExporter:
+  # -- The log level
   logLevel: "info"
+  # -- The network (mainnet | devnet)
   network:
   s3:
+    # -- Enable upload to S3
+    enable: true
+    # -- The S3 bucket
     bucket:
+    # -- The S3 subpath
     subpath:
+  # -- The Mina node label used to query the ledger
   minaNodeLabel:
+  # -- The Slack webhook URL for info messages
   slackWebhookInfoUrl:
+  # -- The Slack webhook URL for warn messages
   slackWebhookWarnUrl:
   minaPayoutsDataProvider:
+    # -- Enable upload to Mina payouts data provider
+    enable: true
+    # -- The Mina payouts data provider URL
     url:
+    # -- The Mina payouts data provider username
     username:
+    # -- The Mina payouts data provider password
     password:
 
 serviceAccount:
-  # Specifies whether a service account should be created
+  # -- Specifies whether a service account should be created
   create: true
-  # Annotations to add to the service account
+  # -- Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # -- The name of the service account to use.
+  # -- If not set and create is true, a name is generated using the fullname template
   name: ""
 
+# -- Annotations to add to the pods
 podAnnotations: {}
 
+# -- The Pod Security Context
 podSecurityContext: {}
   # fsGroup: 2000
 
+# -- The Security Context
 securityContext: {}
   # capabilities:
   #   drop:
@@ -51,7 +75,7 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
-
+# -- Resource limitations for the pods
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
@@ -64,8 +88,11 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
+# -- Node selector labels
 nodeSelector: {}
 
+# -- Tolerations
 tolerations: []
 
+# -- Affinity rules
 affinity: {}

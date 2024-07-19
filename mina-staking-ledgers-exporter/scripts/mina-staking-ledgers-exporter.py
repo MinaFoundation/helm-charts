@@ -15,12 +15,13 @@ logging.basicConfig(level=os.environ.get("APP_LOG_LEVEL", "info").upper())
 
 
 class config:
-
+    api_enable = os.environ.get("APP_MINA_PAYOUTS_DATA_PROVIDER_ENABLE", False).lower() == "true"
     api_password = os.environ["APP_MINA_PAYOUTS_DATA_PROVIDER_PASSWORD"]
     api_url = os.environ["APP_MINA_PAYOUTS_DATA_PROVIDER_URL"]
     api_username = os.environ["APP_MINA_PAYOUTS_DATA_PROVIDER_USERNAME"]
     mina_node_label = os.environ["APP_MINA_NODE_LABEL"]
     network = os.environ["APP_NETWORK"]
+    s3_enable = os.environ.get("APP_S3_ENABLE", False).lower() == "true"
     s3_bucket = os.environ["APP_S3_BUCKET"]
     s3_subpath = os.environ.get("APP_S3_SUBPATH", "")
     slack_webhook_info_url = os.environ["APP_SLACK_WEBHOOK_INFO_URL"]
@@ -79,16 +80,24 @@ def process_staking_ledger(synced_pod, epoch, staking_ledger):
         tar.extractall(path="./")
     validate_json_file(staking_ledger_name)
 
-    logger.info("Uploading to S3")
-    uploaded_to_s3 = upload_file_to_s3(
-        staking_ledger_archive_name,
-        config.s3_bucket,
-        config.s3_subpath,
-        staking_ledger_archive_name,
-    )
+    if config.s3_enable:
+      logger.info("Uploading to S3")
+      uploaded_to_s3 = upload_file_to_s3(
+          staking_ledger_archive_name,
+          config.s3_bucket,
+          config.s3_subpath,
+          staking_ledger_archive_name,
+      )
+    else:
+      logger.info("S3 upload is disabled, skip")
+      uploaded_to_s3 = False
 
-    logger.info("Uploading to Payout API")
-    uploaded_to_api = submit_mina_payout_data(staking_ledger_name, staking_ledger_hash, epoch)
+    if config.api_enable:
+      logger.info("Uploading to Payout API")
+      uploaded_to_api = submit_mina_payout_data(staking_ledger_name, staking_ledger_hash, epoch)
+    else:
+      logger.info("API upload is disabled, skip")
+      uploaded_to_api = False
 
     logger.info("Sending notifications")
     message = ""
