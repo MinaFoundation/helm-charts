@@ -29,7 +29,7 @@ minaStakingLedgersExporter:
   network:
   s3:
     # -- Enable upload to S3
-    enable: true
+    enabled: true
     # -- The S3 bucket
     bucket:
     # -- The S3 subpath
@@ -42,7 +42,7 @@ minaStakingLedgersExporter:
   slackWebhookWarnUrl:
   minaPayoutsDataProvider:
     # -- Enable upload to Mina payouts data provider
-    enable: true
+    enabled: true
     # -- The Mina payouts data provider URL
     url:
     # -- The Mina payouts data provider username
