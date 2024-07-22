@@ -49,13 +49,13 @@ helmfile status
 | imagePullSecrets | list | `[]` | The secrets used to pull the image |
 | minaStakingLedgersExporter.logLevel | string | `"info"` | The log level |
 | minaStakingLedgersExporter.minaNodeLabel | string | `nil` | The Mina node label used to query the ledger |
-| minaStakingLedgersExporter.minaPayoutsDataProvider.enable | bool | `true` | Enable upload to Mina payouts data provider |
+| minaStakingLedgersExporter.minaPayoutsDataProvider.enabled | bool | `true` | Enable upload to Mina payouts data provider |
 | minaStakingLedgersExporter.minaPayoutsDataProvider.password | string | `nil` | The Mina payouts data provider password |
 | minaStakingLedgersExporter.minaPayoutsDataProvider.url | string | `nil` | The Mina payouts data provider URL |
 | minaStakingLedgersExporter.minaPayoutsDataProvider.username | string | `nil` | The Mina payouts data provider username |
 | minaStakingLedgersExporter.network | string | `nil` | The network (mainnet | devnet) |
 | minaStakingLedgersExporter.s3.bucket | string | `nil` | The S3 bucket |
-| minaStakingLedgersExporter.s3.enable | bool | `true` | Enable upload to S3 |
+| minaStakingLedgersExporter.s3.enabled | bool | `true` | Enable upload to S3 |
 | minaStakingLedgersExporter.s3.subpath | string | `nil` | The S3 subpath |
 | minaStakingLedgersExporter.slackWebhookInfoUrl | string | `nil` | The Slack webhook URL for info messages |
 | minaStakingLedgersExporter.slackWebhookWarnUrl | string | `nil` | The Slack webhook URL for warn messages |
