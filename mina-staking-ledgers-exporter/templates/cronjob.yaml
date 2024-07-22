@@ -36,16 +36,16 @@ spec:
               env:
                 - name: APP_NETWORK
                   value: "{{ .Values.minaStakingLedgersExporter.network }}"
-                - name: APP_S3_ENABLE
-                  value: "{{ .Values.minaStakingLedgersExporter.s3.enable }}"
+                - name: APP_S3_ENABLED
+                  value: "{{ .Values.minaStakingLedgersExporter.s3.enabled }}"
                 - name: APP_S3_BUCKET
                   value: "{{ .Values.minaStakingLedgersExporter.s3.bucket }}"
                 - name: APP_S3_SUBPATH
                   value: "{{ .Values.minaStakingLedgersExporter.s3.subpath }}"
                 - name: APP_MINA_NODE_LABEL
                   value: "{{ .Values.minaStakingLedgersExporter.minaNodeLabel }}"
-                - name: APP_MINA_PAYOUTS_DATA_PROVIDER_ENABLE
-                  value: "{{ .Values.minaStakingLedgersExporter.minaPayoutsDataProvider.enable }}"
+                - name: APP_MINA_PAYOUTS_DATA_PROVIDER_ENABLED
+                  value: "{{ .Values.minaStakingLedgersExporter.minaPayoutsDataProvider.enabled }}"
                 - name: APP_MINA_PAYOUTS_DATA_PROVIDER_URL
                   value: "{{ .Values.minaStakingLedgersExporter.minaPayoutsDataProvider.url }}"
                 - name: APP_MINA_PAYOUTS_DATA_PROVIDER_USERNAME
