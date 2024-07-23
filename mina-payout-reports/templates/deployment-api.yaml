@@ -1,0 +1,143 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mina-payout-reports.fullname" . }}-api
+  labels:
+    {{- include "mina-payout-reports.labels" . | nindent 4 }}-api
+spec:
+  {{- with .Values.payoutReportsApi }}
+  replicas: {{ .replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "mina-payout-reports.selectorLabels" $ | nindent 6 }}-api
+  template:
+    metadata:
+      {{- with .podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "mina-payout-reports.selectorLabels" $ | nindent 8 }}-api
+    spec:
+      {{- with .imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "mina-payout-reports.serviceAccountName" $ }}
+      securityContext:
+        {{- toYaml .podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: initdb
+          image: "{{ .image.repository }}:{{ .image.tag }}"
+          env:
+            - name: POSTGRES_PAYOUT_HOST
+              value: {{ .payoutsDB.host | quote }}
+            - name: POSTGRES_PAYOUT_PORT
+              value: {{ .payoutsDB.port | quote }}
+            - name: POSTGRES_PAYOUT_DB
+              value: {{ .payoutsDB.name | quote }}
+            - name: POSTGRES_PAYOUT_USER
+              value: {{ .payoutsDB.user | quote }}
+            - name: POSTGRES_PAYOUT_PASSWORD
+              value: {{ .payoutsDB.password | quote }}
+          command: ["/bin/entrypoint/entrypoint-initdb.sh"]
+          volumeMounts:
+            - name: entrypoint-initdb
+              mountPath: "/bin/entrypoint"
+      containers:
+        - name: leaderboard-api
+          securityContext:
+            {{- toYaml .securityContext | nindent 12 }}
+          image: "{{ .image.repository }}:{{ .image.tag | default $.Chart.AppVersion }}"
+          imagePullPolicy: {{ .image.pullPolicy }}
+          env:
+            - name: POSTGRES_PAYOUT_HOST
+              value: {{ .payoutsDB.host | quote }}
+            - name: POSTGRES_PAYOUT_PORT
+              value: {{ .payoutsDB.port | quote }}
+            - name: POSTGRES_PAYOUT_DB
+              value: {{ .payoutsDB.name | quote }}
+            - name: POSTGRES_PAYOUT_USER
+              value: {{ .payoutsDB.user | quote }}
+            - name: POSTGRES_PAYOUT_PASSWORD
+              value: {{ .payoutsDB.password | quote }}
+            - name: POSTGRES_ARCHIVE_HOST
+              value: {{ .archiveDB.host | quote }}
+            - name: POSTGRES_ARCHIVE_PORT
+              value: {{ .archiveDB.port | quote }}
+            - name: POSTGRES_ARCHIVE_USER
+              value: {{ .archiveDB.user | quote }}
+            - name: POSTGRES_ARCHIVE_PASSWORD
+              value: {{ .archiveDB.password | quote }}
+            - name: POSTGRES_ARCHIVE_DB
+              value: {{ .archiveDB.name | quote }}
+            - name: SENDGRID_API_KEY
+              value: {{ .sendgridToken | quote }}
+            - name: SPREADSHEET_CREDENTIALS_JSON
+              value: /app/mina_payout/api/gcloud/gcp-sa.json
+            - name: CONTACT_DETAILS_SPREADSHEET_NAME
+              value: {{ .contactDetailsSpreadsheetName | quote }}
+            - name: GCS_BUCKET_NAME
+              value: {{ .stakingLedgersBucket | quote }}
+            - name: BP_WALLET_MAPPING_URL
+              value: {{ .walletMappingSpreadsheetUrl | quote }}
+            - name: BP_WALLET_MAPPING_TAB
+              value: {{ .walletMappingSpreadsheetTab | quote }}
+            - name: AWS_BUCKET_NAME
+              value: {{ .s3bucket | quote }}
+            - name: AWS_REGION
+              value: {{ .aws.region | quote }}
+            - name: AWS_ACCESS_KEY_ID
+              value: {{ .aws.accessKeyID }}
+            - name: AWS_SECRET_ACCESS_KEY
+              value: {{ .aws.secretAccessKey }}
+            - name: SERVER_ALLOWED_ORIGINS
+              value: "*"
+            {{- if .extraEnvVars }}
+            {{- toYaml .extraEnvVars | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            - name:  gcp-sa
+              mountPath: /app/mina_payout/api/gcloud
+          ports:
+            - name: http
+              containerPort: {{ .service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          resources:
+            {{- toYaml .resources | nindent 12 }}
+      {{- with .nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: entrypoint-initdb
+          configMap:
+            name: {{ include "mina-payout-reports.fullname" . }}-initdb
+            defaultMode: 0777
+            items:
+              - key: "entrypoint-initdb.sh"
+                path: "entrypoint-initdb.sh"
+        - name: gcp-sa
+          secret:
+            secretName: {{ include "mina-payout-reports.fullname" . }}
+            defaultMode: 0600
+            items:
+              - key: gcp-sa-json
+                path: gcp-sa.json
+  {{- end }}

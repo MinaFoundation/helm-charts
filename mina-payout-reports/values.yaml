@@ -1,0 +1,203 @@
+# Default values for mina-payout-reports.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- The release name override
+nameOverride: ""
+# -- The full release name override
+fullnameOverride: ""
+
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use.
+  # -- If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# Configuration options for `mina-payout-reports` frontend deployment
+payoutReportsWeb:
+  # -- The number of replicas
+  replicaCount: 1
+
+  image:
+    # -- The repository of the image
+    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-payout-reports
+    # -- The pullPolicy used when pulling the image
+    pullPolicy: IfNotPresent
+    # -- The tag of the image
+    tag: ""
+
+  # -- The secrets used to pull the image
+  imagePullSecrets: []
+
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+
+  # -- The Pod Security Context
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  # -- The Security Context
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    # -- The type of service to create
+    type: ClusterIP
+    # -- The port of the service
+    port: 3000
+
+  # -- Additional list of Environment Variables
+  extraEnvVars: []
+    # See Application's README(or source code).
+    # - name: FOO
+    #   value: FOO
+    # - name: BAR
+    #   valueFrom:
+    #     secretKeyRef:
+    #       name: mySecret
+    #       key: bar  offline:
+
+  # -- Resource limitations for the pods
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  # -- Node selector labels
+  nodeSelector: {}
+
+  # -- Tolerations
+  tolerations: []
+
+  # -- Affinity rules
+  affinity: {}
+
+# Configuration options for `mina-payout-reports` backend deployment
+payoutReportsApi:
+  payoutsDB:
+    # -- Delegation Program Payouts Database Host
+    host: "localhost"
+    # -- Delegation Program Payouts Database Port
+    port: "5432"
+    # -- Delegation Program Payouts Database User
+    user: "postgres"
+    # -- Delegation Program Payouts Database Password
+    password: "postgres"
+    # -- Delegation Program Payouts Database Name
+    name: "postgres"
+  archiveDB:
+    # -- Mina Archive Database Host
+    host: "localhost"
+    # -- Mina Archive Database Port
+    port: "5432"
+    # -- Mina Archive Database User
+    user: "postgres"
+    # -- Mina Archive Database Password
+    password: "postgres"
+    # -- Mina Archive Database Name
+    name: "postgres"
+  # -- A token to use SendGrid email API
+  sendgridToken: ""
+  # -- GCP ServiceAccount json data to create a secret from
+  gcpServiceAccount: ""
+  # -- Google spreadsheet containing contact details
+  contactDetailsSpreadsheetName: ""
+  # -- Staking ledgers bucket name(GCS)
+  stakingLedgersBucket: mina-staking-ledgers
+  # -- Google's public spreadsheet url containing wallet mappings
+  walletMappingSpreadsheetUrl: ""
+  # -- Google's public spreadsheet sheet(tab) name 
+  walletMappingSpreadsheetTab: ""
+  # -- S3 bucket where to store reports
+  s3Bucket: ""
+  aws:
+    # -- AWS Region
+    region: "us-west-2"
+    # -- AWS access key ID(leave empty to assume role)
+    accessKeyID: ""
+    # -- AWS access key secret(leave empty to assume role)
+    secretAccessKey: ""
+
+  # -- The number of replicas
+  replicaCount: 1
+
+  image:
+    # -- The repository of the image
+    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-payout-reports
+    # -- The pullPolicy used when pulling the image
+    pullPolicy: IfNotPresent
+    # -- The tag of the image
+    tag: ""
+
+  # -- The secrets used to pull the image
+  imagePullSecrets: []
+
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+
+  # -- The Pod Security Context
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  # -- The Security Context
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    # -- The type of service to create
+    type: ClusterIP
+    # -- The port of the service
+    port: 5000
+
+  # -- Extra Environment Variables
+  extraEnvVars: {}
+    # See Application's README(or source code).
+    # - name: FOO
+    #   value: FOO
+    # - name: BAR
+    #   valueFrom:
+    #     secretKeyRef:
+    #       name: mySecret
+    #       key: bar  offline:
+
+  # -- Resource limitations for the pods
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  # -- Node selector labels
+  nodeSelector: {}
+
+  # -- Tolerations
+  tolerations: []
+
+  # -- Affinity rules
+  affinity: {}
