@@ -34,7 +34,7 @@ spec:
           imagePullPolicy: {{ .image.pullPolicy }}
           env:
             - name: REACT_APP_API_URL
-              value: "{{ include "mina-payout-reports.fullname" . }}-api:{{ $.Values.payoutReportsApi.service.port }}"
+              value: "{{ include "mina-payout-reports.fullname" $ }}-api:{{ $.Values.payoutReportsApi.service.port }}"
             {{- if .extraEnvVars }}
             {{- toYaml .extraEnvVars | nindent 12 }}
             {{- end }}
