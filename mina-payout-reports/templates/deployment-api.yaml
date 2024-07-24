@@ -18,7 +18,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "mina-payout-reports.selectorLabelsApi" $ | nindent * }}
+        {{- include "mina-payout-reports.selectorLabelsApi" $ | nindent 8 }}
     spec:
       {{- with .imagePullSecrets }}
       imagePullSecrets:
@@ -46,7 +46,7 @@ spec:
             - name: entrypoint-initdb
               mountPath: "/bin/entrypoint"
       containers:
-        - name: leaderboard-api
+        - name: payout-reports-api
           securityContext:
             {{- toYaml .securityContext | nindent 12 }}
           image: "{{ .image.repository }}:{{ .image.tag | default $.Chart.AppVersion }}"
@@ -85,7 +85,7 @@ spec:
             - name: BP_WALLET_MAPPING_TAB
               value: {{ .walletMappingSpreadsheetTab | quote }}
             - name: AWS_BUCKET_NAME
-              value: {{ .s3bucket | quote }}
+              value: {{ .s3Bucket | quote }}
             - name: AWS_REGION
               value: {{ .aws.region | quote }}
             - name: AWS_ACCESS_KEY_ID
