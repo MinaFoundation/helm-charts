@@ -35,7 +35,6 @@ Common labels
 */}}
 {{- define "mina-payout-reports.labels" -}}
 helm.sh/chart: {{ include "mina-payout-reports.chart" . }}
-{{ include "mina-payout-reports.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -43,10 +42,18 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
-Selector labels
+Selector labels for backend
 */}}
-{{- define "mina-payout-reports.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "mina-payout-reports.name" . }}
+{{- define "mina-payout-reports.selectorLabelsApi" -}}
+app.kubernetes.io/name: {{ include "mina-payout-reports.name" . }}-api
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Selector labels for frontend
+*/}}
+{{- define "mina-payout-reports.selectorLabelsWeb" -}}
+app.kubernetes.io/name: {{ include "mina-payout-reports.name" . }}-web
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 

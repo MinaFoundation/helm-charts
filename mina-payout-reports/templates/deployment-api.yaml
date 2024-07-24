@@ -3,13 +3,14 @@ kind: Deployment
 metadata:
   name: {{ include "mina-payout-reports.fullname" . }}-api
   labels:
-    {{- include "mina-payout-reports.labels" . | nindent 4 }}-api
+    {{- include "mina-payout-reports.labels" . | nindent 4 }}
+    {{- include "mina-payout-reports.selectorLabelsApi" . | nindent 4 }}
 spec:
   {{- with .Values.payoutReportsApi }}
   replicas: {{ .replicaCount }}
   selector:
     matchLabels:
-      {{- include "mina-payout-reports.selectorLabels" $ | nindent 6 }}-api
+      {{- include "mina-payout-reports.selectorLabelsApi" $ | nindent 6 }}
   template:
     metadata:
       {{- with .podAnnotations }}
@@ -17,7 +18,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "mina-payout-reports.selectorLabels" $ | nindent 8 }}-api
+        {{- include "mina-payout-reports.selectorLabelsApi" $ | nindent * }}
     spec:
       {{- with .imagePullSecrets }}
       imagePullSecrets:
@@ -28,7 +29,7 @@ spec:
         {{- toYaml .podSecurityContext | nindent 8 }}
       initContainers:
         - name: initdb
-          image: "{{ .image.repository }}:{{ .image.tag }}"
+          image: "{{ .image.repository }}:{{ .image.tag | default $.Chart.AppVersion }}"
           env:
             - name: POSTGRES_PAYOUT_HOST
               value: {{ .payoutsDB.host | quote }}

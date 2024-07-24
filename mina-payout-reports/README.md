@@ -42,6 +42,11 @@ helmfile status
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | fullnameOverride | string | `""` | The full release name override |
+| ingress.annotations | object | `{}` | The Ingress Annotations |
+| ingress.className | string | `""` | The Ingress Class Name to use |
+| ingress.enabled | bool | `false` | Whether to create a frontend Ingress |
+| ingress.hosts | list | `[]` | The Ingress Hosts |
+| ingress.tls | list | `[]` | The TLS configuration |
 | nameOverride | string | `""` | The release name override |
 | payoutReportsApi.affinity | object | `{}` | Affinity rules |
 | payoutReportsApi.archiveDB.host | string | `"localhost"` | Mina Archive Database Host |
