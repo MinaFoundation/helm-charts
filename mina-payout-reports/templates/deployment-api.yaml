@@ -128,14 +128,14 @@ spec:
       volumes:
         - name: entrypoint-initdb
           configMap:
-            name: {{ include "mina-payout-reports.fullname" . }}-initdb
+            name: {{ include "mina-payout-reports.fullname" $ }}-initdb
             defaultMode: 0777
             items:
               - key: "entrypoint-initdb.sh"
                 path: "entrypoint-initdb.sh"
         - name: gcp-sa
           secret:
-            secretName: {{ include "mina-payout-reports.fullname" . }}
+            secretName: {{ include "mina-payout-reports.fullname" $ }}
             defaultMode: 0600
             items:
               - key: gcp-sa-json
