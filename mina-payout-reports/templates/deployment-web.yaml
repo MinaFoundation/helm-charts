@@ -3,13 +3,14 @@ kind: Deployment
 metadata:
   name: {{ include "mina-payout-reports.fullname" . }}-web
   labels:
-    {{- include "mina-payout-reports.labels" . | nindent 4 }}-web
+    {{- include "mina-payout-reports.labels" . | nindent 4 }}
+    {{- include "mina-payout-reports.selectorLabelsWeb" . | nindent 4 }}
 spec:
   {{- with .Values.payoutReportsWeb }}
   replicas: {{ .replicaCount }}
   selector:
     matchLabels:
-      {{- include "mina-payout-reports.selectorLabels" $ | nindent 6 }}-web
+      {{- include "mina-payout-reports.selectorLabelsWeb" $ | nindent 6 }}
   template:
     metadata:
       {{- with .podAnnotations }}
@@ -17,7 +18,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "mina-payout-reports.selectorLabels" $ | nindent 8 }}-web
+        {{- include "mina-payout-reports.selectorLabelsWeb" $ | nindent 8 }}
     spec:
       {{- with .imagePullSecrets }}
       imagePullSecrets:
