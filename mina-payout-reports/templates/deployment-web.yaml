@@ -28,7 +28,7 @@ spec:
       securityContext:
         {{- toYaml .podSecurityContext | nindent 8 }}
       containers:
-        - name: leaderboard-web
+        - name: payout-reports-web
           securityContext:
             {{- toYaml .securityContext | nindent 12 }}
           image: "{{ .image.repository }}:{{ .image.tag | default $.Chart.AppVersion }}"

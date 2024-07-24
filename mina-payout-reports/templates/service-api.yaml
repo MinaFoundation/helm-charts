@@ -6,9 +6,9 @@ metadata:
     {{- include "mina-payout-reports.labels" . | nindent 4 }}
     {{- include "mina-payout-reports.selectorLabelsApi" . | nindent 4 }}
 spec:
-  type: {{ .Values.leaderboardApi.service.type }}
+  type: {{ .Values.payoutReportsApi.service.type }}
   ports:
-    - port: {{ .Values.leaderboardApi.service.port }}
+    - port: {{ .Values.payoutReportsApi.service.port }}
       targetPort: http
       protocol: TCP
       name: http
