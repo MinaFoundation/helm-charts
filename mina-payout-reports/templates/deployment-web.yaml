@@ -45,15 +45,9 @@ spec:
               containerPort: {{ .service.port }}
               protocol: TCP
           livenessProbe:
-            httpGet:
-              path: /health
-              port: http
-            initialDelaySeconds: 120
+            {{- toYaml .livenessProbe | nindent 12 }}
           readinessProbe:
-            httpGet:
-              path: /health
-              port: http
-            initialDelaySeconds: 120
+            {{- toYaml .readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .resources | nindent 12 }}
       {{- with .nodeSelector }}
