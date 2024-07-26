@@ -93,7 +93,7 @@ spec:
             - name: AWS_SECRET_ACCESS_KEY
               value: {{ .aws.secretAccessKey }}
             - name: SERVER_ALLOWED_ORIGINS
-              value: "*"
+              value: {{ .frontendPublicUrl }}
             {{- if .extraEnvVars }}
             {{- toYaml .extraEnvVars | nindent 12 }}
             {{- end }}

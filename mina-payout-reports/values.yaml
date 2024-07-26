@@ -18,6 +18,8 @@ serviceAccount:
 
 # Configuration options for `mina-payout-reports` frontend deployment
 payoutReportsWeb:
+  # -- Payout reports backend public url accessible from the client
+  backendPublicUrl: localhost:5000
   # -- The number of replicas
   replicaCount: 1
 
@@ -87,6 +89,27 @@ payoutReportsWeb:
   # -- Affinity rules
   affinity: {}
 
+  ingress:
+    # -- Whether to create a frontend Ingress
+    enabled: false
+    # -- The Ingress Class Name to use
+    className: ""
+    # -- The Ingress Annotations
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    # -- The Ingress Hosts
+    hosts: []
+      # - host: chart-example.local
+      #   paths:
+      #     - path: /
+      #       pathType: ImplementationSpecific
+    # -- The TLS configuration
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+
 # Configuration options for `mina-payout-reports` backend deployment
 payoutReportsApi:
   payoutsDB:
@@ -132,6 +155,8 @@ payoutReportsApi:
     accessKeyID: ""
     # -- AWS access key secret(leave empty to assume role)
     secretAccessKey: ""
+  # -- Payout reports frontend public url accessible from the client
+  frontendPublicUrl: localhost:3000
 
   # -- The number of replicas
   replicaCount: 1
@@ -202,23 +227,23 @@ payoutReportsApi:
   # -- Affinity rules
   affinity: {}
 
-ingress:
-  # -- Whether to create a frontend Ingress
-  enabled: false
-  # -- The Ingress Class Name to use
-  className: ""
-  # -- The Ingress Annotations
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  # -- The Ingress Hosts
-  hosts: []
-    # - host: chart-example.local
-    #   paths:
-    #     - path: /
-    #       pathType: ImplementationSpecific
-  # -- The TLS configuration
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
+  ingress:
+    # -- Whether to create a backend Ingress
+    enabled: false
+    # -- The Ingress Class Name to use
+    className: ""
+    # -- The Ingress Annotations
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    # -- The Ingress Hosts
+    hosts: []
+      # - host: chart-example.local
+      #   paths:
+      #     - path: /
+      #       pathType: ImplementationSpecific
+    # -- The TLS configuration
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
