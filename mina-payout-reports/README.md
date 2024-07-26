@@ -65,6 +65,7 @@ helmfile status
 | payoutReportsApi.ingress.enabled | bool | `false` | Whether to create a backend Ingress |
 | payoutReportsApi.ingress.hosts | list | `[]` | The Ingress Hosts |
 | payoutReportsApi.ingress.tls | list | `[]` | The TLS configuration |
+| payoutReportsApi.livenessProbe | object | `{}` | Liveness check configuration |
 | payoutReportsApi.nodeSelector | object | `{}` | Node selector labels |
 | payoutReportsApi.payoutsDB.host | string | `"localhost"` | Delegation Program Payouts Database Host |
 | payoutReportsApi.payoutsDB.name | string | `"postgres"` | Delegation Program Payouts Database Name |
@@ -73,6 +74,7 @@ helmfile status
 | payoutReportsApi.payoutsDB.user | string | `"postgres"` | Delegation Program Payouts Database User |
 | payoutReportsApi.podAnnotations | object | `{}` | Annotations to add to the pods |
 | payoutReportsApi.podSecurityContext | object | `{}` | The Pod Security Context |
+| payoutReportsApi.readinessProbe | object | `{}` | Readiness check configuration |
 | payoutReportsApi.replicaCount | int | `1` | The number of replicas |
 | payoutReportsApi.resources | object | `{}` | Resource limitations for the pods |
 | payoutReportsApi.s3Bucket | string | `""` | S3 bucket where to store reports |
@@ -96,9 +98,11 @@ helmfile status
 | payoutReportsWeb.ingress.enabled | bool | `false` | Whether to create a frontend Ingress |
 | payoutReportsWeb.ingress.hosts | list | `[]` | The Ingress Hosts |
 | payoutReportsWeb.ingress.tls | list | `[]` | The TLS configuration |
+| payoutReportsWeb.livenessProbe | object | `{}` | Liveness check configuration |
 | payoutReportsWeb.nodeSelector | object | `{}` | Node selector labels |
 | payoutReportsWeb.podAnnotations | object | `{}` | Annotations to add to the pods |
 | payoutReportsWeb.podSecurityContext | object | `{}` | The Pod Security Context |
+| payoutReportsWeb.readinessProbe | object | `{}` | Readiness check configuration |
 | payoutReportsWeb.replicaCount | int | `1` | The number of replicas |
 | payoutReportsWeb.resources | object | `{}` | Resource limitations for the pods |
 | payoutReportsWeb.securityContext | object | `{}` | The Security Context |

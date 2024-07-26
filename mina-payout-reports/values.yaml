@@ -67,6 +67,12 @@ payoutReportsWeb:
     #       name: mySecret
     #       key: bar  offline:
 
+  # -- Liveness check configuration
+  livenessProbe: {}
+
+  # -- Readiness check configuration
+  readinessProbe: {}
+
   # -- Resource limitations for the pods
   resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious
@@ -204,6 +210,12 @@ payoutReportsApi:
     #     secretKeyRef:
     #       name: mySecret
     #       key: bar  offline:
+
+  # -- Liveness check configuration
+  livenessProbe: {}
+
+  # -- Readiness check configuration
+  readinessProbe: {}
 
   # -- Resource limitations for the pods
   resources: {}
