@@ -35,7 +35,8 @@ spec:
           imagePullPolicy: {{ .image.pullPolicy }}
           env:
             - name: REACT_APP_API_URL
-              value: "{{ include "mina-payout-reports.fullname" $ }}-api:{{ $.Values.payoutReportsApi.service.port }}"
+              value: {{ .backendPublicUrl | quote }}
+
             {{- if .extraEnvVars }}
             {{- toYaml .extraEnvVars | nindent 12 }}
             {{- end }}
@@ -47,10 +48,12 @@ spec:
             httpGet:
               path: /health
               port: http
+            initialDelaySeconds: 120
           readinessProbe:
             httpGet:
               path: /health
               port: http
+            initialDelaySeconds: 120
           resources:
             {{- toYaml .resources | nindent 12 }}
       {{- with .nodeSelector }}

@@ -1,0 +1,62 @@
+{{- if .Values.payoutReportsWeb.ingress.enabled -}}
+{{- $fullName := include "mina-payout-reports.fullname" . -}}
+{{- $svcPort := .Values.payoutReportsWeb.service.port -}}
+{{- if and .Values.payoutReportsWeb.ingress.className (not (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion)) }}
+  {{- if not (hasKey .Values.payoutReportsWeb.ingress.annotations "kubernetes.io/ingress.class") }}
+  {{- $_ := set .Values.payoutReportsWeb.ingress.annotations "kubernetes.io/ingress.class" .Values.payoutReportsWeb.ingress.className}}
+  {{- end }}
+{{- end }}
+{{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion -}}
+apiVersion: networking.k8s.io/v1
+{{- else if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
+apiVersion: networking.k8s.io/v1beta1
+{{- else -}}
+apiVersion: extensions/v1beta1
+{{- end }}
+kind: Ingress
+metadata:
+  name: {{ $fullName }}-web
+  labels:
+    {{- include "mina-payout-reports.labels" . | nindent 4 }}
+    {{- include "mina-payout-reports.selectorLabelsWeb" . | nindent 4 }}
+  {{- with .Values.payoutReportsWeb.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if and .Values.payoutReportsWeb.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
+  ingressClassName: {{ .Values.payoutReportsWeb.ingress.className }}
+  {{- end }}
+  {{- if .Values.payoutReportsWeb.ingress.tls }}
+  tls:
+    {{- range .Values.payoutReportsWeb.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.payoutReportsWeb.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            {{- if and .pathType (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion) }}
+            pathType: {{ .pathType }}
+            {{- end }}
+            backend:
+              {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
+              service:
+                name: {{ $fullName }}-web
+                port:
+                  number: {{ $svcPort }}
+              {{- else }}
+              serviceName: {{ $fullName }}-web
+              servicePort: {{ $svcPort }}
+              {{- end }}
+          {{- end }}
+    {{- end }}
+{{- end }}

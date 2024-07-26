@@ -42,11 +42,6 @@ helmfile status
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | fullnameOverride | string | `""` | The full release name override |
-| ingress.annotations | object | `{}` | The Ingress Annotations |
-| ingress.className | string | `""` | The Ingress Class Name to use |
-| ingress.enabled | bool | `false` | Whether to create a frontend Ingress |
-| ingress.hosts | list | `[]` | The Ingress Hosts |
-| ingress.tls | list | `[]` | The TLS configuration |
 | nameOverride | string | `""` | The release name override |
 | payoutReportsApi.affinity | object | `{}` | Affinity rules |
 | payoutReportsApi.archiveDB.host | string | `"localhost"` | Mina Archive Database Host |
@@ -59,11 +54,17 @@ helmfile status
 | payoutReportsApi.aws.secretAccessKey | string | `""` | AWS access key secret(leave empty to assume role) |
 | payoutReportsApi.contactDetailsSpreadsheetName | string | `""` | Google spreadsheet containing contact details |
 | payoutReportsApi.extraEnvVars | object | `{}` | Extra Environment Variables |
+| payoutReportsApi.frontendPublicUrl | string | `"localhost:3000"` | Payout reports frontend public url accessible from the client |
 | payoutReportsApi.gcpServiceAccount | string | `""` | GCP ServiceAccount json data to create a secret from |
 | payoutReportsApi.image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
 | payoutReportsApi.image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-payout-reports"` | The repository of the image |
 | payoutReportsApi.image.tag | string | `""` | The tag of the image |
 | payoutReportsApi.imagePullSecrets | list | `[]` | The secrets used to pull the image |
+| payoutReportsApi.ingress.annotations | object | `{}` | The Ingress Annotations |
+| payoutReportsApi.ingress.className | string | `""` | The Ingress Class Name to use |
+| payoutReportsApi.ingress.enabled | bool | `false` | Whether to create a backend Ingress |
+| payoutReportsApi.ingress.hosts | list | `[]` | The Ingress Hosts |
+| payoutReportsApi.ingress.tls | list | `[]` | The TLS configuration |
 | payoutReportsApi.nodeSelector | object | `{}` | Node selector labels |
 | payoutReportsApi.payoutsDB.host | string | `"localhost"` | Delegation Program Payouts Database Host |
 | payoutReportsApi.payoutsDB.name | string | `"postgres"` | Delegation Program Payouts Database Name |
@@ -84,11 +85,17 @@ helmfile status
 | payoutReportsApi.walletMappingSpreadsheetTab | string | `""` | Google's public spreadsheet sheet(tab) name  |
 | payoutReportsApi.walletMappingSpreadsheetUrl | string | `""` | Google's public spreadsheet url containing wallet mappings |
 | payoutReportsWeb.affinity | object | `{}` | Affinity rules |
+| payoutReportsWeb.backendPublicUrl | string | `"localhost:5000"` | Payout reports backend public url accessible from the client |
 | payoutReportsWeb.extraEnvVars | list | `[]` | Additional list of Environment Variables |
 | payoutReportsWeb.image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
 | payoutReportsWeb.image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-payout-reports"` | The repository of the image |
 | payoutReportsWeb.image.tag | string | `""` | The tag of the image |
 | payoutReportsWeb.imagePullSecrets | list | `[]` | The secrets used to pull the image |
+| payoutReportsWeb.ingress.annotations | object | `{}` | The Ingress Annotations |
+| payoutReportsWeb.ingress.className | string | `""` | The Ingress Class Name to use |
+| payoutReportsWeb.ingress.enabled | bool | `false` | Whether to create a frontend Ingress |
+| payoutReportsWeb.ingress.hosts | list | `[]` | The Ingress Hosts |
+| payoutReportsWeb.ingress.tls | list | `[]` | The TLS configuration |
 | payoutReportsWeb.nodeSelector | object | `{}` | Node selector labels |
 | payoutReportsWeb.podAnnotations | object | `{}` | Annotations to add to the pods |
 | payoutReportsWeb.podSecurityContext | object | `{}` | The Pod Security Context |
