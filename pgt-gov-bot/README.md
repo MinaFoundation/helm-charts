@@ -63,7 +63,7 @@ helmfile status
 | nodeSelector | object | `{}` |  |
 | persistence.accessMode | string | `"ReadWriteOnce"` |  |
 | persistence.annotations | object | `{}` |  |
-| persistence.enabled | bool | `false` |  |
+| persistence.enabled | bool | `true` |  |
 | persistence.size | string | `"1Gi"` |  |
 | persistence.storageClass | string | `"ebs-gp3-encrypted"` |  |
 | podAnnotations | object | `{}` |  |
