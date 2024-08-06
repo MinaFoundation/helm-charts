@@ -14,7 +14,7 @@ config:
     token: ""
 
 persistence:
-  enabled: false
+  enabled: true
   storageClass: ebs-gp3-encrypted
   accessMode: ReadWriteOnce
   size: 1Gi
