@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pgt-leader-bot.fullname" . }}-api
+  {{- with .Values.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "pgt-leader-bot.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "pgt-leader-bot.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        component: api
+        {{- include "pgt-leader-bot.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "pgt-leader-bot.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: api
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: GITHUB_TOKEN
+              value: "{{.Values.config.github.token}}"
+            - name: GOOGLE_SHEETS_CREDENTIALS
+              value: "/secrets/google_sheets.json"
+            - name: LOG_LEVEL
+              value: "{{.Values.api.logLevel}}"
+            - name: MONGO_COLLECTION
+              value: "{{.Values.config.mongo.collection}}"
+            - name: MONGO_DB
+              value: "{{.Values.config.mongo.database}}"
+            - name: MONGO_HOST
+              value: "mongodb://{{ .Release.Name }}-mongodb:27017"
+            - name: OPENAI_API_KEY
+              value: "{{.Values.config.openAi.apiKey}}"
+            - name: SHARED_SECRET
+              value: "{{.Values.config.sharedSecret}}"
+            - name: SPREADSHEET_ID
+              value: "{{.Values.config.googleSheets.spreadsheetId}}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name:  {{ .Release.Name }}-secret
+              mountPath: /secrets/
+          {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: {{ .Release.Name }}-secret
+          secret:
+            secretName: {{ .Release.Name }}
+            defaultMode: 0600
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
