@@ -15,13 +15,13 @@ logging.basicConfig(level=os.environ.get("APP_LOG_LEVEL", "info").upper())
 
 
 class config:
-    api_enabled = os.environ.get("APP_MINA_PAYOUTS_DATA_PROVIDER_ENABLED", False).lower() == "true"
+    api_enabled = os.environ.get("APP_MINA_PAYOUTS_DATA_PROVIDER_ENABLED", "false" ).lower() == "true"
     api_password = os.environ["APP_MINA_PAYOUTS_DATA_PROVIDER_PASSWORD"]
     api_url = os.environ["APP_MINA_PAYOUTS_DATA_PROVIDER_URL"]
     api_username = os.environ["APP_MINA_PAYOUTS_DATA_PROVIDER_USERNAME"]
     mina_node_label = os.environ["APP_MINA_NODE_LABEL"]
     network = os.environ["APP_NETWORK"]
-    s3_enabled = os.environ.get("APP_S3_ENABLED", False).lower() == "true"
+    s3_enabled = os.environ.get("APP_S3_ENABLED", "false" ).lower() == "true"
     s3_bucket = os.environ["APP_S3_BUCKET"]
     s3_subpath = os.environ.get("APP_S3_SUBPATH", "")
     slack_webhook_info_url = os.environ["APP_SLACK_WEBHOOK_INFO_URL"]
@@ -40,7 +40,13 @@ def main():
     logger.info(f" -- Processing current epoch ({current_epoch}) --")
     process_staking_ledger(synced_pod, current_epoch, "staking-epoch-ledger")
     logger.info(f" -- Processing next epoch ({next_epoch}) --")
-    process_staking_ledger(synced_pod, next_epoch, "next-epoch-ledger")
+    try:
+      process_staking_ledger(synced_pod, next_epoch, "next-epoch-ledger")
+    except subprocess.CalledProcessError as e:
+      if "Ledger not found: next staking ledger is not finalized yet" in e.output:
+        logger.warning(f"Unable to process the next epoch {next_epoch} due to error: {e.output}, skipping further processing.")
+      else:
+        raise e
 
     logger.info("Complete with success")
 
