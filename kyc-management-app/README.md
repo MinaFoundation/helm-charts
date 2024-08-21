@@ -51,25 +51,38 @@ helmfile status
 | databaseName | string | `"kyc"` |  |
 | deploymentAnnotations | object | `{}` | Annotations to add to deployments |
 | fullnameOverride | string | `""` | The full release name override |
-| image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
-| image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/kyc-management-app"` | The repository of the image |
-| image.tag | string | `"0.1.4"` | The tag of the image. Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | The secrets used to pull the image |
 | ingress.annotations | object | `{}` | The Ingress Annotations |
 | ingress.className | string | `""` | The Ingress Class Name to use |
 | ingress.enabled | bool | `false` | Whether to create an Ingress |
 | ingress.hosts | list | `[]` | The Ingress Hosts |
 | ingress.tls | list | `[]` | The TLS configuration |
-| kyc.api.authUrl | string | `"https://auth-sandbox.hakata.io"` |  |
-| kyc.api.baseUrl | string | `"https://api-sandbox.hakata.io"` |  |
-| kyc.api.clientId | string | `""` |  |
-| kyc.api.clientSecret | string | `""` |  |
-| kycManagementApp.app.envVars | object | `{}` | The ENV vars to set on the app container |
-| kycManagementApp.app.port | int | `3000` | The port of the app service |
-| kycManagementApp.dex.configBase64 | string | `""` | The configuration file for dex in base64 format |
-| kycManagementApp.dex.envVars | object | `{}` | The ENV vars to set on the dex container |
-| kycManagementApp.dex.port | int | `5556` | The port of the dex service |
-| livenessProbe | string | `nil` | The Liveness Probe |
+| kycApi.authUrl | string | `"https://auth-sandbox.hakata.io"` | The auth url of the api |
+| kycApi.baseUrl | string | `"https://api-sandbox.hakata.io"` | The base url of the api |
+| kycApi.clientId | string | `""` | The client id of the api |
+| kycApi.clientSecret | string | `""` | The client secret of the api |
+| kycApi.emailSenderAddress | string | `"no-reply@minaprotocol.com"` | The email sender address |
+| kycApi.emailService | string | `"sendgrid"` | The email service to use |
+| kycApi.envVars | object | `{}` | The ENV vars to set on the api container |
+| kycApi.image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the api image |
+| kycApi.image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/kyc-management-app"` | The repository of the api image |
+| kycApi.image.tag | string | `"0.1.4"` | The tag of the api image. |
+| kycApi.livenessProbe | string | `nil` | The Liveness Probe of the api |
+| kycApi.port | int | `3000` | The port of the api service |
+| kycApi.readinessProbe | string | `nil` | The Readiness Probe of the api |
+| kycApi.resources | object | `{}` | Resource limitations for the api container |
+| kycApi.sendgridApiKey | string | `""` | The sendgrid api key |
+| kycApi.volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
+| kycDex.configBase64 | string | `""` | The configuration file for dex in base64 format |
+| kycDex.envVars | object | `{}` | The ENV vars to set on the dex container |
+| kycDex.image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the dex image |
+| kycDex.image.repository | string | `"dexidp/dex"` | The repository of the dex image |
+| kycDex.image.tag | string | `"latest-distroless"` | The tag of the dex image. |
+| kycDex.livenessProbe | string | `nil` | The Liveness Probe |
+| kycDex.port | int | `5556` | The port of the dex service |
+| kycDex.readinessProbe | string | `nil` | The Readiness Probe |
+| kycDex.resources | object | `{}` | Resource limitations for the dex container |
+| kycDex.volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
 | nameOverride | string | `""` | The release name override |
 | nodeSelector | object | `{}` | Node selector labels |
 | podAnnotations | object | `{}` | Annotations to add to the pods |
@@ -85,17 +98,13 @@ helmfile status
 | postgresql.primary.persistence.size | string | `"8Gi"` | Size of the postgresql server volume |
 | postgresql.primary.persistence.storageClass | string | `""` | Storage class for the postgresql server volume |
 | postgresql.primary.resourcesPreset | string | `"nano"` | Resources preset to set resource requests and limits |
-| readinessProbe | string | `nil` | The Readiness Probe |
 | replicaCount | int | `1` | The number of replicas |
-| resources | object | `{}` | Resource limitations for the pods |
 | securityContext | object | `{}` | The Security Context |
-| service.port | int | `3000` | The port of the service |
 | service.type | string | `"ClusterIP"` | The type of service to create |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
 | serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | If not set and create is true, a name is generated using the fullname template |
 | tolerations | list | `[]` | Tolerations |
-| volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
 | volumes | list | `[]` | Additional volumes on the output Deployment definition. |
 

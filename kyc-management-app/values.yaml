@@ -5,14 +5,6 @@
 # -- The number of replicas
 replicaCount: 1
 
-image:
-  # -- The repository of the image
-  repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/kyc-management-app
-  # -- The pullPolicy used when pulling the image
-  pullPolicy: IfNotPresent
-  # -- The tag of the image. Overrides the image tag whose default is the chart appVersion.
-  tag: "0.1.4"
-
 # -- The secrets used to pull the image
 imagePullSecrets: []
 # -- The release name override
@@ -56,8 +48,6 @@ securityContext:
 service:
   # -- The type of service to create
   type: ClusterIP
-  # -- The port of the service
-  port: 3000
 
 ingress:
   # -- Whether to create an Ingress
@@ -82,67 +72,115 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-# -- Resource limitations for the pods
-resources:
-  {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
+kycApi:
+  image:
+    # -- The repository of the api image
+    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/kyc-management-app
+    # -- The pullPolicy used when pulling the api image
+    pullPolicy: IfNotPresent
+    # -- The tag of the api image.
+    tag: "0.1.4"
+  # -- The port of the api service
+  port: 3000
+  # -- The base url of the api
+  baseUrl: "https://api-sandbox.hakata.io"
+  # -- The auth url of the api
+  authUrl: "https://auth-sandbox.hakata.io"
+  # -- The client id of the api
+  clientId: ""
+  # -- The client secret of the api
+  clientSecret: ""
+  # -- The email sender address
+  emailSenderAddress: "no-reply@minaprotocol.com"
+  # -- The email service to use
+  emailService: "sendgrid"
+  # -- The sendgrid api key
+  sendgridApiKey: ""
+  # -- The ENV vars to set on the api container
+  envVars: {}
+    # - name: FOO
+    #   value: FOO
+    # - name: BAR
+    #   valueFrom:
+    #     secretKeyRef:
+    #       name: mySecret
+    #       key: bar  offline:
+  # -- The Liveness Probe of the api
+  livenessProbe:
+    # httpGet:
+    #   path: /health
+    #   port: http
+  # -- The Readiness Probe of the api
+  readinessProbe:
+    # httpGet:
+    #   path: /health
+    #   port: http
+  # -- Resource limitations for the api container
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  # -- Additional volumeMounts on the output Deployment definition.
+  volumeMounts: []
+  # - name: foo
+  #   mountPath: "/etc/foo"
+  #   readOnly: true
+kycDex:
+  image:
+    # -- The repository of the dex image
+    repository: dexidp/dex
+    # -- The pullPolicy used when pulling the dex image
+    pullPolicy: IfNotPresent
+    # -- The tag of the dex image.
+    tag: "latest-distroless"
+  # -- The port of the dex service
+  port: 5556
+  # -- The ENV vars to set on the dex container
+  envVars: {}
+    # - name: FOO
+    #   value: FOO
+    # - name: BAR
+    #   valueFrom:
+    #     secretKeyRef:
+    #       name: mySecret
+    #       key: bar  offline:
+  # -- The configuration file for dex in base64 format
+  configBase64: ""
+  # -- The Liveness Probe
+  livenessProbe:
+    # httpGet:
+    #   path: /health
+    #   port: http
+  # -- The Readiness Probe
+  readinessProbe:
+    # httpGet:
+    #   path: /health
+    #   port: http
+  # -- Resource limitations for the dex container
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # -- Additional volumeMounts on the output Deployment definition.
+  volumeMounts: []
+  # - name: foo
+  #   mountPath: "/etc/foo"
+  #   readOnly: true
 
-kyc:
-  api:
-    baseUrl: "https://api-sandbox.hakata.io"
-    authUrl: "https://auth-sandbox.hakata.io"
-    clientId: ""
-    clientSecret: ""
-
-kycManagementApp:
-  app:
-    # -- The port of the app service
-    port: 3000
-    # -- The ENV vars to set on the app container
-    envVars:
-      {}
-      # - name: FOO
-      #   value: FOO
-      # - name: BAR
-      #   valueFrom:
-      #     secretKeyRef:
-      #       name: mySecret
-      #       key: bar  offline:
-  dex:
-    # -- The port of the dex service
-    port: 5556
-    # -- The ENV vars to set on the dex container
-    envVars:
-      {}
-      # - name: FOO
-      #   value: FOO
-      # - name: BAR
-      #   valueFrom:
-      #     secretKeyRef:
-      #       name: mySecret
-      #       key: bar  offline:
-    # -- The configuration file for dex in base64 format
-    configBase64: ""
-
-# -- The Liveness Probe
-livenessProbe:
-  # httpGet:
-  #   path: /health
-  #   port: http
-# -- The Readiness Probe
-readinessProbe:
-  # httpGet:
-  #   path: /health
-  #   port: http
 
 # -- Additional volumes on the output Deployment definition.
 volumes: []
@@ -150,12 +188,6 @@ volumes: []
 #   secret:
 #     secretName: mysecret
 #     optional: false
-
-# -- Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
-# - name: foo
-#   mountPath: "/etc/foo"
-#   readOnly: true
 
 # -- Node selector labels
 nodeSelector: {}
@@ -167,7 +199,6 @@ tolerations: []
 affinity: {}
 
 databaseName: kyc
-
 postgresql:
   # -- Enable local postgresql database server
   enabled: true
