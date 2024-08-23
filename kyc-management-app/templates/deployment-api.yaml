@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "kyc-management-app.fullname" . }}
+  name: {{ include "kyc-management-app.fullname" . }}-api
   {{- with .Values.deploymentAnnotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -34,8 +34,8 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
         - name: init-db
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.kycApi.image.repository }}:{{ .Values.kycApi.image.tag }}"
+          imagePullPolicy: {{ .Values.kycApi.image.pullPolicy }}
           env:
             - name: DATABASE_URL
               value: {{ include "postgresUri" . | quote }}
@@ -52,47 +52,43 @@ spec:
               psql $DATABASE_URL -f /db/seed.sql --set=ON_ERROR_STOP=1
               echo DB migration done.
       containers:
-        - name: {{ .Chart.Name }}
+        - name: api
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.kycApi.image.repository }}:{{ .Values.kycApi.image.tag }}"
+          imagePullPolicy: {{ .Values.kycApi.image.pullPolicy }}
           env:
             - name: DATABASE_URL
               value: {{ include "postgresUri" . | quote }}
             - name: KYC_API_BASE_URL
-              value: {{.Values.kyc.api.baseUrl}}
+              value: {{.Values.kycApi.baseUrl}}
             - name: KYC_API_AUTH_URL
-              value: {{.Values.kyc.api.authUrl}}
+              value: {{.Values.kycApi.authUrl}}
             - name: KYC_API_CLIENT_ID
-              value: {{.Values.kyc.api.clientId}}
+              value: {{.Values.kycApi.clientId}}
             - name: KYC_API_CLIENT_SECRET
-              value: {{.Values.kyc.api.clientSecret}}
+              value: {{.Values.kycApi.clientSecret}}
+            - name: EMAIL_SENDER_ADDRESS
+              value: {{.Values.kycApi.emailSenderAddress}}
+            - name: EMAIL_SERVICE
+              value: {{.Values.kycApi.emailService}}
+            - name: SENDGRID_API_KEY
+              value: {{.Values.kycApi.sendgridApiKey}}
           ports:
-            - name: http
-              containerPort: {{ .Values.service.port }}
+            - name: api
+              containerPort: {{ .Values.kycApi.port }}
               protocol: TCP
           livenessProbe:
-            {{- toYaml .Values.livenessProbe | nindent 12 }}
+            {{- toYaml .Values.kycApi.livenessProbe | nindent 12 }}
           readinessProbe:
-            {{- toYaml .Values.readinessProbe | nindent 12 }}
+            {{- toYaml .Values.kycApi.readinessProbe | nindent 12 }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml .Values.kycApi.resources | nindent 12 }}
           volumeMounts:
-            # - name: dex
-            #   mountPath: "/etc/dex"
-            #   readOnly: true
-          {{- with .Values.volumeMounts }}
+          {{- with .Values.kycApi.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
-        - name: dex
-          secret:
-            secretName: {{ include "kyc-management-app.fullname" . }}
-            optional: false
-            items:
-              - key: dex.yaml
-                path: config.yaml
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}

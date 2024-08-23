@@ -1,19 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "kyc-management-app.fullname" . }}
+  name: {{ include "kyc-management-app.fullname" . }}-api
   labels:
     {{- include "kyc-management-app.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
-    - port: {{ .Values.kycManagementApp.app.port }}
-      targetPort: http
+    - port: {{ .Values.kycApi.port }}
+      targetPort: api
       protocol: TCP
-      name: app
-    - port: {{ .Values.kycManagementApp.dex.port }}
-      targetPort: http
-      protocol: TCP
-      name: dex
+      name: api
   selector:
     {{- include "kyc-management-app.selectorLabels" . | nindent 4 }}
