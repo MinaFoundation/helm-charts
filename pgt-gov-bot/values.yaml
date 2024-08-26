@@ -2,33 +2,120 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-replicaCount: 1
+# -- The release name override
+nameOverride: ""
+# -- The full release name override
+fullnameOverride: ""
 
-config:
-  discord:
-    # -- Discord Application ID
-    clientId: ""
-    # -- Discord Guild/Server ID
-    guildId: ""
-    # -- Discord API Token
-    token: ""
+bot:
+  image:
+    # -- The repository of the image
+    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/pgt-gov-bot
+    # -- The pullPolicy used when pulling the image
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "0.0.1"
+  # -- The secrets used to pull the image
+  imagePullSecrets: []
+  # -- The number of replicas
+  replicaCount: 1
+  config:
+    discord:
+      # -- Discord Application ID
+      clientId: ""
+      # -- Discord Guild/Server ID
+      guildId: ""
+      # -- Discord API Token
+      token: ""
+  # -- Annotations to add to the deployment
+  deploymentAnnotations: {}
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+  # -- Labels to add to the pods
+  podLabels: {}
+  # -- Resource limitations for the pods
+  resources:
+    {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  # -- Liveness check configuration
+  livenessProbe:
+    # httpGet:
+    #   path: /
+    #   port: http
+  # -- Readiness check configuration
+  readinessProbe:
+    # httpGet:
+    #   path: /
+    #   port: http
+
+ocvWeb:
+  image:
+    # -- The repository of the image
+    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/pgt-gov-bot-ocv-web
+    # -- The pullPolicy used when pulling the image
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "0.0.1"
+  # -- The secrets used to pull the image
+  imagePullSecrets: []
+  # -- The number of replicas
+  replicaCount: 1
+  # -- Annotations to add to the deployment
+  deploymentAnnotations: {}
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+  # -- Labels to add to the pods
+  podLabels: {}
+  # -- Resource limitations for the pods
+  resources:
+    {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  # -- Liveness check configuration
+  livenessProbe:
+    # httpGet:
+    #   path: /
+    #   port: http
+  # -- Readiness check configuration
+  readinessProbe:
+    # httpGet:
+    #   path: /
+    #   port: http
+
+  service:
+    # -- Service type
+    type: ClusterIP
+    # -- Service port
+    port: 80
 
 persistence:
+  # -- Enable persistence using PVC
   enabled: true
+  # -- The StorageClass of the PVC
   storageClass: ebs-gp3-encrypted
+  # -- The access mode of the PVC
   accessMode: ReadWriteOnce
+  # -- The size of the PVC
   size: 1Gi
+  # -- Annotations to add to the PVC
   annotations: {}
-
-image:
-  repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/pgt-gov-bot
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.0.1"
-
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -40,10 +127,6 @@ serviceAccount:
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
-
-deploymentAnnotations: {}
-podAnnotations: {}
-podLabels: {}
 
 podSecurityContext:
   {}
@@ -58,13 +141,12 @@ securityContext:
   # runAsNonRoot: true
   # runAsUser: 1000
 
-service:
-  type: ClusterIP
-  port: 80
-
 ingress:
+  # -- Enable Ingress
   enabled: false
+  # -- Ingress class
   className: ""
+  # -- Annotations to add to the Ingress
   annotations:
     {}
     # kubernetes.io/ingress.class: nginx
@@ -79,28 +161,6 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-resources:
-  {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
-livenessProbe:
-  # httpGet:
-  #   path: /
-  #   port: http
-readinessProbe:
-  # httpGet:
-  #   path: /
-  #   port: http
-
 # Additional volumes on the output Deployment definition.
 volumes: []
 # - name: foo
@@ -114,8 +174,11 @@ volumeMounts: []
 #   mountPath: "/etc/foo"
 #   readOnly: true
 
+# -- Node selector labels
 nodeSelector: {}
 
+# -- Tolerations
 tolerations: []
 
+# -- Affinity rules
 affinity: {}
