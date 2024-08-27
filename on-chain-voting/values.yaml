@@ -2,35 +2,46 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# -- Name override
 nameOverride: ""
+# -- Full name override
 fullnameOverride: ""
 
 serviceAccount:
-  # Specifies whether a service account should be created
+  # -- Specifies whether a service account should be created
   create: true
-  # Annotations to add to the service account
+  # -- Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # -- The name of the service account to use.
+  # -- If not set and create is true, a name is generated using the fullname template
   name: ""
 
 web:
+  # -- The number of replicas
   replicaCount: 1
 
   image:
-    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/on-chain-voting
+    # -- The image repository
+    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/on-chain-voting-web
+    # -- The image pull policy
     pullPolicy: IfNotPresent
-    # Overrides the image tag whose default is the chart appVersion.
-    tag: "web-0.1.0-ff43708"
+    # -- Overrides the image tag whose default is the chart appVersion.
+    tag: "0.1.0"
 
+    # -- The secrets used to pull the image
     imagePullSecrets: []
 
+  # -- Annotations to add to deployments
+  deploymentAnnotations: {}
 
+  # -- Annotations to add to the pods
   podAnnotations: {}
 
+  # -- The Pod Security Context
   podSecurityContext: {}
     # fsGroup: 2000
 
+  # -- The Security Context
   securityContext: {}
     # capabilities:
     #   drop:
@@ -40,25 +51,33 @@ web:
     # runAsUser: 1000
 
   service:
+    # -- The service type
     type: ClusterIP
+    # -- The service port
     port: 3000
 
   ingress:
+    # -- Whether to create an Ingress
     enabled: false
+    # -- The Ingress Class Name to use
     className: ""
+    # -- The Ingress Annotations
     annotations: {}
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
+    # -- The Ingress Hosts
     hosts: []
       # - host: chart-example.local
       #   paths:
       #     - path: /
       #       pathType: ImplementationSpecific
+    # -- The TLS configuration
     tls: []
     #  - secretName: chart-example-tls
     #    hosts:
     #      - chart-example.local
 
+  # -- Resources
   resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
@@ -71,11 +90,16 @@ web:
     #   cpu: 100m
     #   memory: 128Mi
 
+  # -- API base URL
   apiBaseURL: ""
+  # -- Next Public API base URL
   nextPublicApiBaseURL: ""
+  # -- Release stage
   releaseStage: production
+  # -- Next Public Release Stage
   nextPublicReleaseStage: production
 
+  # -- Extra Environment variables
   extraEnvVars: {}
     # - name: FOO
     #   value: FOO
@@ -85,28 +109,41 @@ web:
     #       name: mySecret
     #       key: bar
 
+  # -- Node Selector
   nodeSelector: {}
 
+  # -- Tolerations
   tolerations: []
 
+  # -- Affinity
   affinity: {}
 
 server:
+  # -- The number of replicas
   replicaCount: 1
 
   image:
+    # -- The image repository
     repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/on-chain-voting
+    # -- The image pull policy
     pullPolicy: IfNotPresent
-    # Overrides the image tag whose default is the chart appVersion.
-    tag: "server-0.1.0-ff43708"
+    # -- Overrides the image tag whose default is the chart appVersion.
+    tag: "0.1.0"
 
+    # -- The secrets used to pull the image
     imagePullSecrets: []
 
+  # -- Annotations to add to deployments
+  deploymentAnnotations: {}
+
+  # -- Annotations to add to the pods
   podAnnotations: {}
 
+  # -- The Pod Security Context
   podSecurityContext: {}
     # fsGroup: 2000
 
+  # -- The Security Context
   securityContext: {}
     # capabilities:
     #   drop:
@@ -116,9 +153,12 @@ server:
     # runAsUser: 1000
 
   service:
+    # -- The service type
     type: ClusterIP
+    # -- The service port
     port: 8080
 
+  # -- Resources
   resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
@@ -131,11 +171,16 @@ server:
     #   cpu: 100m
     #   memory: 128Mi
 
+  # -- Mina Network
   minaNetwork: berkeley
+  # -- Postgres Connection String
   postgresConnectionString: ""
+  # -- Archive Postgres Connection String
   archivePostgresConnectionString: postgres://mina@postgres:5432/archive
+  # -- Allow Origins
   allowedOrigins: '*'
 
+  # Extra Environment variables
   extraEnvVars: {}
     # - name: FOO
     #   value: FOO
@@ -145,26 +190,40 @@ server:
     #       name: mySecret
     #       key: bar
 
+  # -- Node Selector
   nodeSelector: {}
 
+  # -- Tolerations
   tolerations: []
 
+  # -- Affinity
   affinity: {}
 
 postgresql:
+  # -- Whether to deploy a PostgreSQL server to satisfy the application database requirements
   create: true
   global:
+    # -- The Storage Class to use
     storageClass: ebs-gp3-encrypted
   primary:
+    # -- Name of the PostgreSQL database
     name: "on-chain-voting"
     persistence:
+      # -- Enable persistence using PVC
       enabled: false
+      # -- The size of the PVC
       size: 1Gi
     initdb:
+      # -- The default user to use to initialize the database
       user: "mina"
+      # -- The default password to use to initialize the database
       password: "ZhSYoKNUoyZPBftuNYiA6WqkG7Gpak"
   auth:
+    # -- Default Username for the database
     username: "mina"
+    # -- Default Password for the database
     password: "ZhSYoKNUoyZPBftuNYiA6WqkG7Gpak"
+    # -- Default database name
     database: "on-chain-voting"
+    # -- Enable the default postgres user
     enablePostgresUser: false

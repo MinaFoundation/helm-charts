@@ -4,6 +4,10 @@ metadata:
   name: {{ include "on-chain-voting.fullname" . }}-web
   labels:
     {{- include "on-chain-voting.labels" . | nindent 4 }}
+  {{- with .Values.web.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   replicas: {{ .Values.web.replicaCount }}
   selector:
