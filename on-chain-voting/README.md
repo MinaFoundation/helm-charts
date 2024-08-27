@@ -1,111 +1,111 @@
-# `on-chain-voting` helm chart
+# on-chain-voting
 
-A Helm chart to deploy On Chain Voting.
+![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
 
-> **Note** Currently MF does not have chart repository. To install this chart i.e. with helmfile you need to reffer to it following ways:
-```console
-# helmfile.yaml
-<..>
-releases:
-  - name: mina-daemon
-    chart: git::https://git:accesstoken@github.com/MinaFoundation/helm-charts.git@on-chain-voting?ref=main
-<..>
-```
+A Helm chart for Kubernetes
+
+## Requirements
+
+| Repository | Name | Version |
+|------------|------|---------|
+| https://charts.bitnami.com/bitnami | postgresql | * |
 
 ## Prerequisites
 
-Before installing this Helm chart, you should have the following prerequisites:
+Before using this Helm chart, you should have the following prerequisites:
 
- - Access to Kubernetes cluster
- - Helm installed on your local machine
- - Basic knowledge of Kubernetes and Helm
- - Access to https://github.com/MinaFoundation/helm-charts
- - Optional: helmfile to install this chart
+- Access to Kubernetes cluster (If needed contact your friendly neighbourhood DevOps engineer)
+- Helm >= v3.14.3
+- (**Optional**) helmfile >= v0.162.0 to install this chart
 
 ## Installation
 
-To install this Helm chart, easiest is create a helmfile.yaml with needed values and run:
+> Note: **examples** can be found in the repository
 
-```bash
-$ helmfile template
-$ helmfile apply
+To install this Helm chart, the easiest is to create a helmfile.yaml with needed values and run:
+
+```
+helmfile template
+helmfile apply
 ```
 
 Or use helmfile only to generate resources and apply them with kubectl like so:
 
-```bash
-$ helmfile template | kubectl apply -f -
+```
+helmfile template | kubectl -f -
 ```
 
-## Configuration
+Verify that the chart is deployed successfully:
 
-To get all available values in cloned `helm-charts` do:
+> Note: `kubectl` is a better suited tool for this
 
-```bash
-$ helm show values ./on-chain-voting
+```
+helmfile status
 ```
 
-The following table lists the configurable parameters of the `on-chain-voting` chart and its common default values.
+## Values
 
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| fullnameOverride | string | `""` | Full name override |
+| nameOverride | string | `""` | Name override |
+| postgresql.auth.database | string | `"on-chain-voting"` | Default database name |
+| postgresql.auth.enablePostgresUser | bool | `false` | Enable the default postgres user |
+| postgresql.auth.password | string | `"ZhSYoKNUoyZPBftuNYiA6WqkG7Gpak"` | Default Password for the database |
+| postgresql.auth.username | string | `"mina"` | Default Username for the database |
+| postgresql.create | bool | `true` | Whether to deploy a PostgreSQL server to satisfy the application database requirements |
+| postgresql.global.storageClass | string | `"ebs-gp3-encrypted"` | The Storage Class to use |
+| postgresql.primary.initdb.password | string | `"ZhSYoKNUoyZPBftuNYiA6WqkG7Gpak"` | The default password to use to initialize the database |
+| postgresql.primary.initdb.user | string | `"mina"` | The default user to use to initialize the database |
+| postgresql.primary.name | string | `"on-chain-voting"` | Name of the PostgreSQL database |
+| postgresql.primary.persistence.enabled | bool | `false` | Enable persistence using PVC |
+| postgresql.primary.persistence.size | string | `"1Gi"` | The size of the PVC |
+| server.affinity | object | `{}` | Affinity |
+| server.allowedOrigins | string | `"*"` | Allow Origins |
+| server.archivePostgresConnectionString | string | `"postgres://mina@postgres:5432/archive"` | Archive Postgres Connection String |
+| server.deploymentAnnotations | object | `{}` | Annotations to add to deployments |
+| server.extraEnvVars | object | `{}` |  |
+| server.image.imagePullSecrets | list | `[]` | The secrets used to pull the image |
+| server.image.pullPolicy | string | `"IfNotPresent"` | The image pull policy |
+| server.image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/on-chain-voting"` | The image repository |
+| server.image.tag | string | `"0.1.0"` | Overrides the image tag whose default is the chart appVersion. |
+| server.minaNetwork | string | `"berkeley"` | Mina Network |
+| server.nodeSelector | object | `{}` | Node Selector |
+| server.podAnnotations | object | `{}` | Annotations to add to the pods |
+| server.podSecurityContext | object | `{}` | The Pod Security Context |
+| server.postgresConnectionString | string | `""` | Postgres Connection String |
+| server.replicaCount | int | `1` | The number of replicas |
+| server.resources | object | `{}` | Resources |
+| server.securityContext | object | `{}` | The Security Context |
+| server.service.port | int | `8080` | The service port |
+| server.service.type | string | `"ClusterIP"` | The service type |
+| server.tolerations | list | `[]` | Tolerations |
+| serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
+| serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
+| serviceAccount.name | string | `""` | If not set and create is true, a name is generated using the fullname template |
+| web.affinity | object | `{}` | Affinity |
+| web.apiBaseURL | string | `""` | API base URL |
+| web.deploymentAnnotations | object | `{}` | Annotations to add to deployments |
+| web.extraEnvVars | object | `{}` | Extra Environment variables |
+| web.image.imagePullSecrets | list | `[]` | The secrets used to pull the image |
+| web.image.pullPolicy | string | `"IfNotPresent"` | The image pull policy |
+| web.image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/on-chain-voting-web"` | The image repository |
+| web.image.tag | string | `"0.1.0"` | Overrides the image tag whose default is the chart appVersion. |
+| web.ingress.annotations | object | `{}` | The Ingress Annotations |
+| web.ingress.className | string | `""` | The Ingress Class Name to use |
+| web.ingress.enabled | bool | `false` | Whether to create an Ingress |
+| web.ingress.hosts | list | `[]` | The Ingress Hosts |
+| web.ingress.tls | list | `[]` | The TLS configuration |
+| web.nextPublicApiBaseURL | string | `""` | Next Public API base URL |
+| web.nextPublicReleaseStage | string | `"production"` | Next Public Release Stage |
+| web.nodeSelector | object | `{}` | Node Selector |
+| web.podAnnotations | object | `{}` | Annotations to add to the pods |
+| web.podSecurityContext | object | `{}` | The Pod Security Context |
+| web.releaseStage | string | `"production"` | Release stage |
+| web.replicaCount | int | `1` | The number of replicas |
+| web.resources | object | `{}` | Resources |
+| web.securityContext | object | `{}` | The Security Context |
+| web.service.port | int | `3000` | The service port |
+| web.service.type | string | `"ClusterIP"` | The service type |
+| web.tolerations | list | `[]` | Tolerations |
 
-### Optional Settings
-
-> **Note** This is only more notable list of values.
-
-Parameter | Description | Default
---- | --- | ---
-`nameOverride` | Override Release Name | ` `
-`fullnameOverride` | Override Release and Chart Name | ` `
-`fullnameOverride` | Override Release and Chart Name | ` `
-`serviceAccount.create` | Create or not Service Account | `true`
-`serviceAccount.annotations` | Annotations for Service Account | `{}`
-`serviceAccount.name` | If specified, name of the service account | ` `
---- | --- | ---
-`web.replicaCount` | Number of Replicas | `1`
-`web.image.repository` | Docker Respository | `673156464838.dkr.ecr.us-west-2.amazonaws.com/on-chain-voting`
-`web.image.pullPolicy` | Image Pull Policy| `IfNotPresent`
-`web.image.tag` | Tag | `web-0.1.0-39c837a`
-`web.image.imagePullSecrets` | Secret to pull Docker image | `[]`
-`web.podAnnotations` | Pod Annotations | `{}`
-`web.podSecurityContext` | Pod Security Context | `{}`
-`web.securityContext` | Security Context | `{}`
-`web.service.type` | Service Type | `ClusterIP`
-`web.service.port` | Service Port | `3000`
-`web.ingress.enabled` | Enable Ingress | `false`
-`web.ingress.className` | Ingress Class Name | ` `
-`web.ingress.annotations` | Ingress Annotations | `{}`
-`web.ingress.hosts` | Ingress Hosts | `[]`
-`web.ingress.tls` | Ingress TLS | `[]`
-`web.resources` | Resources allocated to the pods | `{}`
-`web.extraEnvVars` | Additional Environment Variables | `{}`
-`web.nodeSelector` | Override Node Selector | `{}`
-`web.tolerations` | Set tolerations | `[]`
-`web.affinity` | Set affinity | `{}`
---- | --- | ---
-`server.replicaCount` | Number of Replicas | `1`
-`server.image.repository` | Docker Respository | `673156464838.dkr.ecr.us-west-2.amazonaws.com/on-chain-voting`
-`server.image.pullPolicy` | Image Pull Policy| `IfNotPresent`
-`server.image.tag` | Tag | `server-0.1.0-39c837a`
-`server.image.imagePullSecrets` | Secret to pull Docker image | `[]`
-`server.podAnnotations` | Pod Annotations | `{}`
-`server.podSecurityContext` | Pod Security Context | `{}`
-`server.securityContext` | Security Context | `{}`
-`server.service.type` | Service Type | `ClusterIP`
-`server.service.port` | Service Port | `80`
-`server.resources` | Resources allocated to the pods | `{}`
-`server.extraEnvVars` | Additional Environment Variables | `{}`
-`server.nodeSelector` | Override Node Selector | `{}`
-`server.tolerations` | Set tolerations | `[]`
-`server.affinity` | Set affinity | `{}`
-
-## Uninstallation
-
-To uninstall the Helm chart using helmfile, follow these steps:
-
-```bash
-$ helmfile destroy
-```
-or
-```bash
-$ helmfile template . | kubectl delete -f -
-```
