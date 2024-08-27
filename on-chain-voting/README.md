@@ -67,7 +67,7 @@ helmfile status
 | server.extraEnvVars | object | `{}` |  |
 | server.image.imagePullSecrets | list | `[]` | The secrets used to pull the image |
 | server.image.pullPolicy | string | `"IfNotPresent"` | The image pull policy |
-| server.image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/on-chain-voting"` | The image repository |
+| server.image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/on-chain-voting-server"` | The image repository |
 | server.image.tag | string | `"0.1.0"` | Overrides the image tag whose default is the chart appVersion. |
 | server.minaNetwork | string | `"berkeley"` | Mina Network |
 | server.nodeSelector | object | `{}` | Node Selector |

@@ -124,7 +124,7 @@ server:
 
   image:
     # -- The image repository
-    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/on-chain-voting
+    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/on-chain-voting-server
     # -- The image pull policy
     pullPolicy: IfNotPresent
     # -- Overrides the image tag whose default is the chart appVersion.
