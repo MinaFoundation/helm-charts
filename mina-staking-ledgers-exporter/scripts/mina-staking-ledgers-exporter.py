@@ -192,7 +192,7 @@ def get_epochs(pod_name):
     status_info = json.loads(output)
     slot_number = int(status_info["global_slot_since_genesis_best_tip"])
     slots_per_epoch = int(status_info["consensus_time_now"]["slots_per_epoch"])
-    current_epoch = slot_number // slots_per_epoch
+    current_epoch = 1 + (slot_number // slots_per_epoch)
     next_epoch = current_epoch + 1
     return current_epoch, next_epoch
 
