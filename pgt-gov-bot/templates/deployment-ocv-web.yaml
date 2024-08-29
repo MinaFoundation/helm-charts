@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pgt-gov-bot.fullname" . }}-ocv-web
+  {{- with .Values.ocvWeb.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "pgt-gov-bot.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.ocvWeb.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "pgt-gov-bot.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.ocvWeb.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "pgt-gov-bot.labels" . | nindent 8 }}
+        {{- with .Values.ocvWeb.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.ocvWeb.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "pgt-gov-bot.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.ocvWeb.image.repository }}:{{ .Values.ocvWeb.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.ocvWeb.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.ocvWeb.service.port }}
+              protocol: TCP
+          env:
+            - name: DB_STORAGE
+              value: /data/database.sqlite
+          livenessProbe:
+            {{- toYaml .Values.ocvWeb.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.ocvWeb.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.ocvWeb.resources | nindent 12 }}
+          volumeMounts:
+            - name: database-data
+              mountPath: /data/
+          {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+      {{- if .Values.persistence.enabled }}
+        - name: database-data
+          persistentVolumeClaim:
+            claimName: {{ include "pgt-gov-bot.fullname" . }}-database
+      {{ end }}
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
