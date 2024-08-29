@@ -74,6 +74,9 @@ spec:
               value: {{.Values.kycApi.emailService}}
             - name: SENDGRID_API_KEY
               value: {{.Values.kycApi.sendgridApiKey}}
+            {{- if .Values.kycApi.envVars }}
+            {{- toYaml .Values.kycApi.envVars | nindent 12 }}
+            {{- end }}
           ports:
             - name: api
               containerPort: {{ .Values.kycApi.port }}
