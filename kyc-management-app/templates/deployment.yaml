@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "kyc-management-app.fullname" . }}-dex
+  name: {{ include "kyc-management-app.fullname" . }}
   {{- with .Values.deploymentAnnotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -9,7 +9,9 @@ metadata:
   labels:
     {{- include "kyc-management-app.labels" . | nindent 4 }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "kyc-management-app.selectorLabels" . | nindent 6 }}
@@ -32,46 +34,51 @@ spec:
       serviceAccountName: {{ include "kyc-management-app.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: init-db
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: DATABASE_URL
+              value: {{ include "postgresUri" . | quote }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 0
+          #NOTE: This is a temporary solution until the application manages the DB population and migrations
+          command:
+            - sh
+            - -c
+            - |
+              apk --update add postgresql-client
+              psql $DATABASE_URL -f /db/prisma/migrations/0_init/migration.sql --set=ON_ERROR_STOP=1
+              psql $DATABASE_URL -f /db/seed.sql --set=ON_ERROR_STOP=1
+              echo DB migration done.
       containers:
-        - name: dex
+        - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.kycDex.image.repository }}:{{ .Values.kycDex.image.tag }}"
-          imagePullPolicy: {{ .Values.kycDex.image.pullPolicy }}
-          command:
-            - /usr/local/bin/dex
-            - serve
-            - /etc/dex/config.yaml
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-          {{- with .Values.kycDex.envVars }}
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- if .Values.envVars }}
+            {{- toYaml .Values.envVars | nindent 12 }}
+            {{- end }}
           ports:
-            - name: dex
-              containerPort: {{ .Values.kycDex.port }}
+            - name: http
+              containerPort: {{ .Values.service.port }}
               protocol: TCP
           livenessProbe:
-            {{- toYaml .Values.kycDex.livenessProbe | nindent 12 }}
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
-            {{- toYaml .Values.kycDex.readinessProbe | nindent 12 }}
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
           resources:
-            {{- toYaml .Values.kycDex.resources | nindent 12 }}
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.volumeMounts }}
           volumeMounts:
-            - name: dex
-              mountPath: "/etc/dex"
-              readOnly: true
-          {{- with .Values.kycDex.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      volumes:
-        - name: dex
-          secret:
-            secretName: {{ include "kyc-management-app.fullname" . }}-dex
-            optional: false
-            items:
-              - key: dex.yaml
-                path: config.yaml
       {{- with .Values.volumes }}
+      volumes:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.nodeSelector }}
