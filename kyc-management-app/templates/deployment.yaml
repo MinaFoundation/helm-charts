@@ -60,6 +60,8 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
+            - name: DATABASE_URL
+              value: {{ include "postgresUri" . | quote }}
             {{- if .Values.envVars }}
             {{- toYaml .Values.envVars | nindent 12 }}
             {{- end }}
