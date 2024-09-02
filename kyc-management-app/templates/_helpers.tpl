@@ -60,7 +60,3 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
-
-{{- define "postgresUri" -}}
-  postgres://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password}}@{{ include "postgresql.v1.primary.fullname" .Subcharts.postgresql }}:{{- .Values.postgresql.primary.service.ports.postgresql -}}/{{.Values.postgresql.auth.database}}
-{{- end }}
