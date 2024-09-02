@@ -145,8 +145,9 @@ tolerations: []
 # -- Affinity for pod assignment
 affinity: {}
 
-# -- Database Name
-databaseName: kyc
+# -- The postgresql uri if the postgresql chart is disabled
+postgresUri:
+
 postgresql:
   # -- Enable local postgresql database server
   enabled: true

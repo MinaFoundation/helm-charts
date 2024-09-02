@@ -52,7 +52,6 @@ helmfile status
 | autoscaling.maxReplicas | int | `100` | Maximum number of pods |
 | autoscaling.minReplicas | int | `1` | Minimum number of pods |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` | Target CPU utilization percentage |
-| databaseName | string | `"kyc"` | Database Name |
 | deploymentAnnotations | object | `{}` | Annotations to add to deployments |
 | envVars | object | `{}` | Environment variables to set on the pod |
 | fullnameOverride | string | `""` | Full name override |
@@ -71,6 +70,7 @@ helmfile status
 | podAnnotations | object | `{}` | Annotations to add to the pods |
 | podLabels | object | `{}` | Label to add to the pods |
 | podSecurityContext | object | `{}` | The Pod Security Context |
+| postgresUri | string | `nil` | The postgresql uri if the postgresql chart is disabled |
 | postgresql.auth.database | string | `"kyc"` | Database name |
 | postgresql.auth.enablePostgresUser | bool | `false` | Enable the default postgres user |
 | postgresql.auth.password | string | `"password"` | Password for the database |

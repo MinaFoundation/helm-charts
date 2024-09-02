@@ -62,5 +62,5 @@ Create the name of the service account to use
 {{- end }}
 
 {{- define "postgresUri" -}}
-  postgres://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password}}@{{ include "postgresql.v1.primary.fullname" .Subcharts.postgresql }}:{{- .Values.postgresql.primary.service.ports.postgresql -}}/{{.Values.databaseName}}
+  postgres://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password}}@{{ include "postgresql.v1.primary.fullname" .Subcharts.postgresql }}:{{- .Values.postgresql.primary.service.ports.postgresql -}}/{{.Values.postgresql.auth.database}}
 {{- end }}
