@@ -40,7 +40,11 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: DATABASE_URL
+              {{- if .Values.postgresql.enabled }}
               value: {{ include "postgresUri" . | quote }}
+              {{- else }}
+              value: {{ .Values.postgresUri | quote }}
+              {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
             runAsUser: 0
@@ -61,7 +65,11 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: DATABASE_URL
+              {{- if .Values.postgresql.enabled }}
               value: {{ include "postgresUri" . | quote }}
+              {{- else }}
+              value: {{ .Values.postgresUri | quote }}
+              {{- end }}
             {{- if .Values.envVars }}
             {{- toYaml .Values.envVars | nindent 12 }}
             {{- end }}
