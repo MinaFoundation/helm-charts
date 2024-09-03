@@ -78,7 +78,7 @@ spec:
               value: /app/mina_payout/api/gcloud/gcp-sa.json
             - name: CONTACT_DETAILS_SPREADSHEET_NAME
               value: {{ .contactDetailsSpreadsheetName | quote }}
-            - name: GCS_BUCKET_NAME
+            - name: STAKING_LEDGER_BUCKET_NAME
               value: {{ .stakingLedgersBucket | quote }}
             - name: BP_WALLET_MAPPING_URL
               value: {{ .walletMappingSpreadsheetUrl | quote }}
