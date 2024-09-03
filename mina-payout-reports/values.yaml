@@ -146,8 +146,8 @@ payoutReportsApi:
   gcpServiceAccount: ""
   # -- Google spreadsheet containing contact details
   contactDetailsSpreadsheetName: ""
-  # -- Staking ledgers bucket name(GCS)
-  stakingLedgersBucket: mina-staking-ledgers
+  # -- Staking ledgers bucket name(AWS S3)
+  stakingLedgersBucket: ""
   # -- Google's public spreadsheet url containing wallet mappings
   walletMappingSpreadsheetUrl: ""
   # -- Google's public spreadsheet sheet(tab) name 
