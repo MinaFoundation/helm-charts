@@ -5,7 +5,7 @@ kind: ServiceMonitor
 metadata:
   name: {{ include "node-stats-collector.fullname" . }}
   labels:
-    app: {{- include "node-stats-collector.labels" . | nindent 4 }}
+    {{- include "node-stats-collector.labels" . | nindent 4 }}
 spec:
   endpoints:
     - interval: 30s
