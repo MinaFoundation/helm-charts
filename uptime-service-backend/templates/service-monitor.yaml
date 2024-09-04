@@ -5,7 +5,7 @@ kind: ServiceMonitor
 metadata:
   name: {{ include "uptime-service-backend.fullname" . }}
   labels:
-    app: {{- include "uptime-service-backend.labels" . | nindent 4 }}
+    {{- include "uptime-service-backend.labels" . | nindent 4 }}
 spec:
   endpoints:
     - interval: 30s
