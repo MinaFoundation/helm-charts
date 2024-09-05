@@ -45,7 +45,7 @@ spec:
           {{- end }}
           ports:
             - name: http
-              containerPort: {{ .Values.node.port }}
+              containerPort: {{ .Values.service.port }}
               protocol: TCP
           env:
             {{- if .Values.node.envVars }}

@@ -51,9 +51,34 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
-node:
-  # -- The port the openmina container listens on
+service:
+  # -- The service type
+  type: ClusterIP
+  # -- The service port
   port: 3000
+
+ingress:
+  # -- Whether to create an Ingress
+  enabled: false
+  # -- The Ingress Class Name to use
+  className: ""
+  # -- The Ingress Annotations
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  # -- The Ingress Hosts
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  # -- The TLS configuration
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+node:
   wallet:
     # -- The wallet private key
     privateKey: ""
