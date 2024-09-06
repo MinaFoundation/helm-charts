@@ -52,6 +52,12 @@ backend:
     #       name: mySecret
     #       key: bar  offline:
 
+  # -- Liveness check configuration
+  livenessProbe: {}
+
+  # -- Readiness check configuration
+  readinessProbe: {}
+
 
 secret:
   # -- GCP service account json
