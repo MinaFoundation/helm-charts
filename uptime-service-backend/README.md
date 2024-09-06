@@ -57,9 +57,11 @@ helmfile status
 | backend.awsConfig.accountId | string | `nil` | AWS Account ID |
 | backend.awsConfig.region | string | `nil` | AWS Region |
 | backend.extraEnvVars | list | `[]` | Extra Environment Variables |
+| backend.livenessProbe | object | `{}` | Liveness check configuration |
 | backend.logLevel | string | `"info"` |  |
 | backend.metrics.enabled | bool | `false` | Whether to enable prometheus metrics |
 | backend.network | string | `nil` | Name of a testnet |
+| backend.readinessProbe | object | `{}` | Readiness check configuration |
 | backend.requestsPerPkHourly | int | `120` | Hourly rate limit per Mina node |
 | backend.storage.keyspace.awsKeyspaceName | string | `nil` | Name of AWS Keyspace |
 | backend.storage.local.path | string | `nil` | Path for storing submissions locally |

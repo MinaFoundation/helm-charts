@@ -138,13 +138,9 @@ spec:
             {{- toYaml .Values.backend.extraEnvVars | nindent 12 }}
             {{- end }}
           livenessProbe:
-            httpGet:
-              path: /
-              port: http
+            {{- toYaml .Values.backend.livenessProbe | nindent 12 }}
           readinessProbe:
-            httpGet:
-              path: /
-              port: http
+            {{- toYaml .Values.backend.readinessProbe | nindent 12 }}
           volumeMounts:
             - name:  {{ .Release.Name }}-gcp-sa
               mountPath: /uptime/gcloud
