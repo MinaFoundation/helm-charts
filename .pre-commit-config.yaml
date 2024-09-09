@@ -19,6 +19,7 @@ repos:
             mina-staking-ledgers-exporter,\
             mina-transactions-generator,\
             on-chain-voting,\
+            openmina-block-producer-dashboard,\
             openmina-frontend,\
             openmina-node,\
             pgt-gov-bot,\
