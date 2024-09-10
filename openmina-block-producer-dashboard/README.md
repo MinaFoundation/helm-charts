@@ -63,6 +63,11 @@ helmfile status
 | node.wallet.privateKey | string | `""` | The wallet private key |
 | node.wallet.publicKey | string | `""` | The wallet public key |
 | nodeSelector | object | `{}` | The node selector |
+| persistence.accessMode | string | `"ReadWriteOnce"` | The access mode of the PVC |
+| persistence.annotations | object | `{}` | Annotations to add to the PVC |
+| persistence.enabled | bool | `true` | Enable persistence using PVC |
+| persistence.size | string | `"1Gi"` | The size of the PVC |
+| persistence.storageClass | string | `"ebs-gp3-encrypted"` | The StorageClass of the PVC |
 | podAnnotations | object | `{}` | Annotations to add to the pods |
 | podLabels | object | `{}` | Label to add to the pods |
 | podSecurityContext | object | `{}` | The Pod Security Context |

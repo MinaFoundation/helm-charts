@@ -10,15 +10,22 @@ metadata:
     {{- include "openmina-node.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  strategy:
+    {{- if .Values.persistence.enabled }}
+    type: Recreate
+    {{- else }}
+    type: RollingUpdate
+    {{- end }}
   selector:
     matchLabels:
       {{- include "openmina-node.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        checksum/environment: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "openmina-node.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
@@ -48,6 +55,8 @@ spec:
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           env:
+            - name: OPENMINA_HOME
+              value: {{ .Values.node.homeDirectory }}
             {{- if .Values.node.envVars }}
             {{- toYaml .Values.node.envVars | nindent 12 }}
             {{- end }}
@@ -58,17 +67,26 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
-            - name: openmina-node-data
-              mountPath: "/root/.openmina/keys"
+            - name: openmina-keys
+              mountPath: {{ .Values.node.homeDirectory }}/keys
               readOnly: true
+            {{- if .Values.persistence.enabled }}
+            - name: openmina-home
+              mountPath: {{ .Values.node.homeDirectory }}
+            {{ end }}
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
-        - name: openmina-node-data
+        - name: openmina-keys
           secret:
             secretName: {{ include "openmina-node.fullname" . }}
             defaultMode: 0600
+      {{- if .Values.persistence.enabled }}
+        - name: openmina-home
+          persistentVolumeClaim:
+            claimName: {{ include "openmina-node.fullname" . }}
+      {{ end }}
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}

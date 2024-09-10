@@ -46,7 +46,7 @@ helmfile status
 | fullnameOverride | string | `""` | The full release name override |
 | image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
 | image.repository | string | `"openmina/openmina"` | The image repository |
-| image.tag | string | `"0.8.2"` | Overrides the image tag whose default is the chart appVersion. |
+| image.tag | string | `"0.8.5"` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | The secrets used to pull the image |
 | ingress.annotations | object | `{}` | The Ingress Annotations |
 | ingress.className | string | `""` | The Ingress Class Name to use |
@@ -57,11 +57,17 @@ helmfile status
 | nameOverride | string | `""` | The release name override |
 | node.args | list | `[]` | The arguments to pass at runtime |
 | node.envVars | object | `{}` | The environment variables to set |
+| node.homeDirectory | string | `"/root/.openmina"` | The home directory of the node |
 | node.libp2p.privateKey | string | `""` | The libp2p private key |
 | node.libp2p.publicKey | string | `""` | The libp2p public key |
 | node.wallet.privateKey | string | `""` | The wallet private key |
 | node.wallet.publicKey | string | `""` | The wallet public key |
 | nodeSelector | object | `{}` | Node selector labels |
+| persistence.accessMode | string | `"ReadWriteOnce"` | The access mode of the PVC |
+| persistence.annotations | object | `{}` | Annotations to add to the PVC |
+| persistence.enabled | bool | `true` | Enable persistence using PVC |
+| persistence.size | string | `"1Gi"` | The size of the PVC |
+| persistence.storageClass | string | `"ebs-gp3-encrypted"` | The StorageClass of the PVC |
 | podAnnotations | object | `{}` | Annotations to add to the pods |
 | podLabels | object | `{}` | Label to add to the pods |
 | podSecurityContext | object | `{}` | The Pod Security Context |
