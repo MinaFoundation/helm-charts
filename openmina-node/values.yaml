@@ -11,7 +11,7 @@ image:
   # -- The pullPolicy used when pulling the image
   pullPolicy: IfNotPresent
   # -- Overrides the image tag whose default is the chart appVersion.
-  tag: "0.8.2"
+  tag: "0.8.5"
 
 # -- The secrets used to pull the image
 imagePullSecrets: []
@@ -79,6 +79,8 @@ ingress:
   #      - chart-example.local
 
 node:
+  # -- The home directory of the node
+  homeDirectory: "/root/.openmina"
   wallet:
     # -- The wallet private key
     privateKey: ""
@@ -100,6 +102,18 @@ node:
   #     secretKeyRef:
   #       name: mySecret
   #       key: bar
+
+persistence:
+  # -- Enable persistence using PVC
+  enabled: true
+  # -- The StorageClass of the PVC
+  storageClass: ebs-gp3-encrypted
+  # -- The access mode of the PVC
+  accessMode: ReadWriteOnce
+  # -- The size of the PVC
+  size: 1Gi
+  # -- Annotations to add to the PVC
+  annotations: {}
 
 # -- Resource limitations for the pods
 resources: {}

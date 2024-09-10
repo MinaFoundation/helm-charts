@@ -95,6 +95,19 @@ envVars: {}
 #       name: mySecret
 #       key: bar
 
+
+persistence:
+  # -- Enable persistence using PVC
+  enabled: true
+  # -- The StorageClass of the PVC
+  storageClass: ebs-gp3-encrypted
+  # -- The access mode of the PVC
+  accessMode: ReadWriteOnce
+  # -- The size of the PVC
+  size: 1Gi
+  # -- Annotations to add to the PVC
+  annotations: {}
+
 # -- The Resources
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious

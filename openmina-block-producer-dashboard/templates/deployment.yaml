@@ -10,15 +10,22 @@ metadata:
     {{- include "openmina-block-producer-dashboard.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  strategy:
+    {{- if .Values.persistence.enabled }}
+    type: Recreate
+    {{- else }}
+    type: RollingUpdate
+    {{- end }}
   selector:
     matchLabels:
       {{- include "openmina-block-producer-dashboard.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        checksum/environment: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "openmina-block-producer-dashboard.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
@@ -53,17 +60,26 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
-            - name: openmina-node-data
+            - name: openmina-keys
               mountPath: "/root/.openmina/keys"
               readOnly: true
+            {{- if .Values.persistence.enabled }}
+            - name: dashboard-database
+              mountPath: /tmp
+            {{ end }}
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
-        - name: openmina-node-data
+        - name: openmina-keys
           secret:
             secretName: {{ include "openmina-block-producer-dashboard.fullname" . }}
             defaultMode: 0600
+      {{- if .Values.persistence.enabled }}
+        - name: dashboard-database
+          persistentVolumeClaim:
+            claimName: {{ include "openmina-block-producer-dashboard.fullname" . }}
+      {{ end }}
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
