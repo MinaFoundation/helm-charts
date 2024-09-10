@@ -46,7 +46,7 @@ helmfile status
 | fullnameOverride | string | `""` | The full release name override |
 | image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
 | image.repository | string | `"openmina/openmina"` | The image repository |
-| image.tag | string | `"0.8.5"` | Overrides the image tag whose default is the chart appVersion. |
+| image.tag | string | `"0.8.3"` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | The secrets used to pull the image |
 | ingress.annotations | object | `{}` | The Ingress Annotations |
 | ingress.className | string | `""` | The Ingress Class Name to use |
