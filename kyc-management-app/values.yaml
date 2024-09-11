@@ -109,7 +109,7 @@ livenessProbe:
 # -- The readiness probes
 readinessProbe:
   httpGet:
-    path: /health
+    path: /version
     port: http
 
 autoscaling:
