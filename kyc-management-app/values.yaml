@@ -104,12 +104,12 @@ resources: {}
 # -- The liveness probes
 livenessProbe:
   httpGet:
-    path: /
+    path: /version
     port: http
 # -- The readiness probes
 readinessProbe:
   httpGet:
-    path: /
+    path: /health
     port: http
 
 autoscaling:

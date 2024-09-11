@@ -64,7 +64,7 @@ helmfile status
 | ingress.enabled | bool | `false` | Whether to create an Ingress |
 | ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}]` | The Ingress Hosts |
 | ingress.tls | list | `[]` | The TLS configuration |
-| livenessProbe | object | `{"httpGet":{"path":"/","port":"http"}}` | The liveness probes |
+| livenessProbe | object | `{"httpGet":{"path":"/version","port":"http"}}` | The liveness probes |
 | nameOverride | string | `""` | Name override |
 | nodeSelector | object | `{}` | Node labels for pod assignment |
 | podAnnotations | object | `{}` | Annotations to add to the pods |
@@ -81,7 +81,7 @@ helmfile status
 | postgresql.primary.persistence.size | string | `"8Gi"` | Size of the postgresql server volume |
 | postgresql.primary.persistence.storageClass | string | `""` | Storage class for the postgresql server volume |
 | postgresql.primary.resourcesPreset | string | `"nano"` | Resources preset to set resource requests and limits |
-| readinessProbe | object | `{"httpGet":{"path":"/","port":"http"}}` | The readiness probes |
+| readinessProbe | object | `{"httpGet":{"path":"/health","port":"http"}}` | The readiness probes |
 | replicaCount | int | `1` | The number of replicas |
 | resources | object | `{}` | Resources |
 | securityContext | object | `{}` | The Security Context |
