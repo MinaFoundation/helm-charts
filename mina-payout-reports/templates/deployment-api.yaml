@@ -52,6 +52,16 @@ spec:
           image: "{{ .image.repository }}:{{ .image.tag | default $.Chart.AppVersion }}"
           imagePullPolicy: {{ .image.pullPolicy }}
           env:
+            - name: POSTGRES_DELEGATION_HOST
+              value: {{ .delegationDB.host }}}
+            - name: POSTGRES_DELEGATION_PORT
+              value: {{ .delegationDB.port }}}
+            - name: POSTGRES_DELEGATION_USER
+              value: {{ .delegationDB.user }}}
+            - name: POSTGRES_DELEGATION_PASSWORD
+              value: {{ .delegationDB.password }}}
+            - name: POSTGRES_DELEGATION_DB
+              value: {{ .delegationDB.name }}}
             - name: POSTGRES_PAYOUT_HOST
               value: {{ .payoutsDB.host | quote }}
             - name: POSTGRES_PAYOUT_PORT

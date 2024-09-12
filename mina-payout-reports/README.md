@@ -53,6 +53,11 @@ helmfile status
 | payoutReportsApi.aws.region | string | `"us-west-2"` | AWS Region |
 | payoutReportsApi.aws.secretAccessKey | string | `""` | AWS access key secret(leave empty to assume role) |
 | payoutReportsApi.contactDetailsSpreadsheetName | string | `""` | Google spreadsheet containing contact details |
+| payoutReportsApi.delegationDB.host | string | `"localhost"` | Delegation Program Database Host |
+| payoutReportsApi.delegationDB.name | string | `"delegation_program"` | Delegation Program Database Name |
+| payoutReportsApi.delegationDB.password | string | `"postgres"` | Delegation Program Database Password |
+| payoutReportsApi.delegationDB.port | string | `"5432"` | Delegation Program Database Port |
+| payoutReportsApi.delegationDB.user | string | `"postgres"` | Delegation Program Database User |
 | payoutReportsApi.extraEnvVars | object | `{}` | Extra Environment Variables |
 | payoutReportsApi.frontendPublicUrl | string | `"localhost:3000"` | Payout reports frontend public url accessible from the client |
 | payoutReportsApi.gcpServiceAccount | string | `""` | GCP ServiceAccount json data to create a secret from |

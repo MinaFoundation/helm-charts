@@ -118,6 +118,17 @@ payoutReportsWeb:
 
 # Configuration options for `mina-payout-reports` backend deployment
 payoutReportsApi:
+  delegationDB:
+    # -- Delegation Program Database Host
+    host: "localhost"
+    # -- Delegation Program Database Port
+    port: "5432"
+    # -- Delegation Program Database User
+    user: "postgres"
+    # -- Delegation Program Database Password
+    password: "postgres"
+    # -- Delegation Program Database Name
+    name: "delegation_program"
   payoutsDB:
     # -- Delegation Program Payouts Database Host
     host: "localhost"
