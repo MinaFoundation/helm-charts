@@ -53,15 +53,15 @@ spec:
           imagePullPolicy: {{ .image.pullPolicy }}
           env:
             - name: POSTGRES_DELEGATION_HOST
-              value: {{ .delegationDB.host }}}
+              value: {{ .delegationDB.host | quote }}
             - name: POSTGRES_DELEGATION_PORT
-              value: {{ .delegationDB.port }}}
+              value: {{ .delegationDB.port | quote }}
             - name: POSTGRES_DELEGATION_USER
-              value: {{ .delegationDB.user }}}
+              value: {{ .delegationDB.user | quote }}
             - name: POSTGRES_DELEGATION_PASSWORD
-              value: {{ .delegationDB.password }}}
+              value: {{ .delegationDB.password | quote }}
             - name: POSTGRES_DELEGATION_DB
-              value: {{ .delegationDB.name }}}
+              value: {{ .delegationDB.name | quote }}
             - name: POSTGRES_PAYOUT_HOST
               value: {{ .payoutsDB.host | quote }}
             - name: POSTGRES_PAYOUT_PORT
