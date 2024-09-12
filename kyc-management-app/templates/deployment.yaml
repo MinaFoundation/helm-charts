@@ -50,13 +50,10 @@ spec:
             runAsUser: 0
           #NOTE: This is a temporary solution until the application manages the DB population and migrations
           command:
-            - sh
-            - -c
-            - |
-              apk --update add postgresql-client
-              psql $DATABASE_URL -f /db/prisma/migrations/0_init/migration.sql --set=ON_ERROR_STOP=1
-              psql $DATABASE_URL -f /db/seed.sql --set=ON_ERROR_STOP=1
-              echo DB migration done.
+            - npx
+            - prisma
+            - migrate
+            - deploy
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
