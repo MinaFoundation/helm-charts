@@ -42,6 +42,7 @@ helmfile status
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` | The affinity |
+| args | list | `[]` | The arguments to pass at runtime |
 | autoscaling.enabled | bool | `false` | Enable autoscaling for the deployment |
 | autoscaling.maxReplicas | int | `100` | The maximum number of pods |
 | autoscaling.minReplicas | int | `1` | The minimum number of pods |
