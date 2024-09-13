@@ -85,6 +85,9 @@ node:
     # -- The wallet public key
     publicKey: ""
 
+# -- The arguments to pass at runtime
+args: []
+
 ## - Environment variables
 envVars: {}
 # - name: FOO
