@@ -69,6 +69,7 @@ helmfile status
 | server.image.pullPolicy | string | `"IfNotPresent"` | The image pull policy |
 | server.image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/on-chain-voting-server"` | The image repository |
 | server.image.tag | string | `"0.1.0"` | Overrides the image tag whose default is the chart appVersion. |
+| server.ledgersBucket | string | `"673156464838-mina-staking-ledgers"` | Stacking ledgers S3 bucket |
 | server.minaNetwork | string | `"berkeley"` | Mina Network |
 | server.nodeSelector | object | `{}` | Node Selector |
 | server.podAnnotations | object | `{}` | Annotations to add to the pods |

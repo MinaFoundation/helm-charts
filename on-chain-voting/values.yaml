@@ -38,11 +38,13 @@ web:
   podAnnotations: {}
 
   # -- The Pod Security Context
-  podSecurityContext: {}
+  podSecurityContext:
+    {}
     # fsGroup: 2000
 
   # -- The Security Context
-  securityContext: {}
+  securityContext:
+    {}
     # capabilities:
     #   drop:
     #   - ALL
@@ -62,11 +64,13 @@ web:
     # -- The Ingress Class Name to use
     className: ""
     # -- The Ingress Annotations
-    annotations: {}
+    annotations:
+      {}
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
     # -- The Ingress Hosts
-    hosts: []
+    hosts:
+      []
       # - host: chart-example.local
       #   paths:
       #     - path: /
@@ -78,7 +82,8 @@ web:
     #      - chart-example.local
 
   # -- Resources
-  resources: {}
+  resources:
+    {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -100,7 +105,8 @@ web:
   nextPublicReleaseStage: production
 
   # -- Extra Environment variables
-  extraEnvVars: {}
+  extraEnvVars:
+    {}
     # - name: FOO
     #   value: FOO
     # - name: BAR
@@ -140,11 +146,13 @@ server:
   podAnnotations: {}
 
   # -- The Pod Security Context
-  podSecurityContext: {}
+  podSecurityContext:
+    {}
     # fsGroup: 2000
 
   # -- The Security Context
-  securityContext: {}
+  securityContext:
+    {}
     # capabilities:
     #   drop:
     #   - ALL
@@ -159,7 +167,8 @@ server:
     port: 8080
 
   # -- Resources
-  resources: {}
+  resources:
+    {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -173,15 +182,18 @@ server:
 
   # -- Mina Network
   minaNetwork: berkeley
+  # -- Stacking ledgers S3 bucket
+  ledgersBucket: 673156464838-mina-staking-ledgers
   # -- Postgres Connection String
   postgresConnectionString: ""
   # -- Archive Postgres Connection String
   archivePostgresConnectionString: postgres://mina@postgres:5432/archive
   # -- Allow Origins
-  allowedOrigins: '*'
+  allowedOrigins: "*"
 
   # Extra Environment variables
-  extraEnvVars: {}
+  extraEnvVars:
+    {}
     # - name: FOO
     #   value: FOO
     # - name: BAR
