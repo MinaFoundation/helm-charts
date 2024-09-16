@@ -163,11 +163,11 @@ postgresql:
     #   max_wal_size=2048
     persistence:
       # -- Enable the persistence for the postgresql server
-      enabled: false
+      enabled: true
       # -- Storage class for the postgresql server volume
-      storageClass: ""
+      storageClass: "ebs-gp3-encrypted"
       # -- Size of the postgresql server volume
-      size: 8Gi
+      size: 1Gi
   auth:
     # -- Username for the database
     username: username

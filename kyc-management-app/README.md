@@ -76,10 +76,10 @@ helmfile status
 | postgresql.auth.password | string | `"password"` | Password for the database |
 | postgresql.auth.username | string | `"username"` | Username for the database |
 | postgresql.enabled | bool | `true` | Enable local postgresql database server |
-| postgresql.primary.persistence | object | `{"enabled":false,"size":"8Gi","storageClass":""}` | Extended configuration to configure postgresql server extendedConfiguration: |   max_connections=500   max_locks_per_transaction=100   max_pred_locks_per_relation=100   max_pred_locks_per_transaction=5000   max_wal_size=2048 |
-| postgresql.primary.persistence.enabled | bool | `false` | Enable the persistence for the postgresql server |
-| postgresql.primary.persistence.size | string | `"8Gi"` | Size of the postgresql server volume |
-| postgresql.primary.persistence.storageClass | string | `""` | Storage class for the postgresql server volume |
+| postgresql.primary.persistence | object | `{"enabled":true,"size":"1Gi","storageClass":"ebs-gp3-encrypted"}` | Extended configuration to configure postgresql server extendedConfiguration: |   max_connections=500   max_locks_per_transaction=100   max_pred_locks_per_relation=100   max_pred_locks_per_transaction=5000   max_wal_size=2048 |
+| postgresql.primary.persistence.enabled | bool | `true` | Enable the persistence for the postgresql server |
+| postgresql.primary.persistence.size | string | `"1Gi"` | Size of the postgresql server volume |
+| postgresql.primary.persistence.storageClass | string | `"ebs-gp3-encrypted"` | Storage class for the postgresql server volume |
 | postgresql.primary.resourcesPreset | string | `"nano"` | Resources preset to set resource requests and limits |
 | readinessProbe | object | `{"httpGet":{"path":"/version","port":"http"}}` | The readiness probes |
 | replicaCount | int | `1` | The number of replicas |
