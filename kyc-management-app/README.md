@@ -57,7 +57,7 @@ helmfile status
 | fullnameOverride | string | `""` | Full name override |
 | image.pullPolicy | string | `"IfNotPresent"` | The image pull policy |
 | image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/kyc-management-app"` | The image repository |
-| image.tag | string | `"0.1.22"` | Overrides the image tag whose default is the chart appVersion. |
+| image.tag | string | `"0.1.25"` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | The secrets used to pull the image |
 | ingress.annotations | object | `{}` | The Ingress Annotations |
 | ingress.className | string | `""` | The Ingress Class Name to use |
