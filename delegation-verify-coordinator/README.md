@@ -1,90 +1,92 @@
-# Mina Delegation Coordinator
+# delegation-verify-coordinator
 
-Coordinator component for Mina Delegation Program. This component is responsible for taking submissions data gathered by uptime-service-backend and running validation against them using stateless-verification-tool. Next, based on these validation results, the Coordinator builds its own database containing uptime score.
+![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
 
-## TL;DR
-
-```console
-git clone https://github.com/MinaFoundation/helm-charts
-cd helm-charts/delegation-verify-coordinator
-helm install RELEASE_NAME ./ --namespace NAMESPACE
-```
+A Helm chart for the delegation verify coordinator
 
 ## Prerequisites
 
-- Kubernetes 1.12+
-- Helm 3.1.0
+Before using this Helm chart, you should have the following prerequisites:
 
-## Installing the Chart
+- Access to Kubernetes cluster (If needed contact your friendly neighbourhood DevOps engineer)
+- Helm >= v3.14.3
+- (**Optional**) helmfile >= v0.162.0 to install this chart
 
-To install the chart with the release name `RELEASE_NAME`:
+## Installation
 
-```console
-helm install RELEASE_NAME ./ --namespace NAMESPACE
+> Note: **examples** can be found in the repository
+
+To install this Helm chart, the easiest is to create a helmfile.yaml with needed values and run:
+
+```
+helmfile template
+helmfile apply
 ```
 
-The command deploys `delegation-verify-coordinator` on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
+Or use helmfile only to generate resources and apply them with kubectl like so:
 
-## Uninstalling the Chart
-
-To uninstall/delete the `RELEASE_NAME` deployment:
-
-```console
-helm delete RELEASE_NAME
+```
+helmfile template | kubectl -f -
 ```
 
-The command removes all the Kubernetes components associated with the chart and deletes the release.
+Verify that the chart is deployed successfully:
 
-### Charts configurable values
+> Note: `kubectl` is a better suited tool for this
 
-| Name                                 | Description                                               | Value           |
-| ------------------------------------ | --------------------------------------------------------- | --------------- |
-| `image.repository`                   | `delegation-verify-coordinator` docker image url          | `673156464838.dkr.ecr.us-west-2.amazonaws.com/delegation-verify-coordinator` |
-| `image.tag`                          | Docker image tag                                          | `0.0.1` |
-| `image.pullPolicy`                   | Docker image pull policy                                  | `IfNotPresent`  |
-| `nameOverride`                       | Override Release Name                                     | `""` |
-| `fullnameOverride`                   | Override Release and Chart Name                           | `""` |
-| `coordinator.networkName`            | Network name in which coordinator should participate      | `""` |
-| `coordinator.platform`               | Kubernetes cluster name where coordinator will run        | `""` |
-| `coordinator.noChecks`               | Whether to use --no-checks for delegation verify. (0 is false, 1 is true)| `""` |
-| `coordinator.surveyIntervalMinutes`  | Survey interval minutes                                   | `20` |
-| `coordinator.command.override`       | Override default command. Use '"command"' notation. Can be a list  | `` |
-| `coordinator.postgres.host`          | Postgres host. Default: templates like postgres helm chart| `{{ .Release.Name }}-postgresql` |
-| `coordinator.postgres.port`          | Postgres port                                             | `` |
-| `coordinator.postgres.db`            | Postgres database name                                    | `` |
-| `coordinator.postgres.user`          | Postgres username                                         | `` |
-| `coordinator.postgres.password`      | Postgres password                                         | `` |
-| `coordinator.miniBatchNumber`        | Number of mini-batches to process within each main batch. | `2` |
-| `coordinator.uptimeDaysForScore`     | Number of days the system must be operational to calculate a score. | `` |
-| `coordinator.worker.image`           | Docker image name for the delegation verify               | `` |
-| `coordinator.worker.tag`             | Docker image tag for the delegation verify                | `` |
-| `coordinator.worker.cpu.request`     | CPU request for the delegation verify container           | `3` |
-| `coordinator.worker.cpu.limit`       | CPU limit for the delegation verify container             | `4` |
-| `coordinator.worker.memory.request`  | Memory request for the delegation verify                  | `3072Mi` |
-| `coordinator.worker.memory.limit`    | Memory limit for the delegation verify                    | `4096Mi` |
-| `coordinator.worker.ttlSecondsAfterFinished`| Time to live seconds after the job finished        | `43200` |
-| `coordinator.aws.host`               | AWS host to connect to keyspace                           | `cassandra.us-west-2.amazonaws.com` |
-| `coordinator.aws.port`               | AWS port to connect to keyspace                           | `9142` |
-| `coordinator.aws.keyspace`           | AWS Keyspace name                                         | `` |
-| `coordinator.aws.region`             | AWS Region                                                | `` |
-| `coordinator.aws.accessKeyID`        | AWS Access Key ID                                         | `` |
-| `coordinator.aws.secretAccessKey`    | AWS Secret Access Key                                     | `` |
-| `coordinator.aws.s3Bucket`           | AWS S3 Bucket name that holds submissions                 | `673156464838-uptime-service-backend` |
-| `coordinator.ssl.certfile`           | Path to the certfile for AWS Keyspaces                    | `` |
-| `coordinator.envVars`                | Environment Variables to pass to the container            | `[]` |
-| `serviceAccount.create`              | Create or not Service Account                             | `true` |
-| `serviceAccount.automount`           | Automatically mount ServiceAccount API credentials        | `true` |
-| `serviceAccount.coordinator.annotations`| Annotations for the Coordinator Service Account        | `{}` |
-| `serviceAccount.worker.annotations`  | Annotations for the Worker Service Account                | `{}` |
-| `serviceAccount.name`                | If specified, name of the service account                 | ` `  |
-| `secret.gcpServiceAccount`           | JSON data of gcp sa credentials                           | ` `  |
-| `podAnnotations`                     | Pod annotations                                           | `{}` |
-| `podLabels`                          | Pod labels                                                | `{}` |
-| `affinity`                           | Pod affinity                                              | `{}` |
-| `service.type`                       | Service type                                              | `ClusterIP` |
-| `service.port`                       | Service port                                              | `80` |
-| `replicas`                           | Amount of replicas to deploy                              | `1` |
-| `resources.request.memory`           | Memory requested for the application pod                  | `256Mi` |
-| `resources.request.cpu`              | CPU resources requested for the application pod           | `500m` |
-| `resources.limit.memory`             | Maximum memory allowed for the application pod            | `512Mi` |
-| `resources.limit.cpu`                | Maximum CPU resources allowed for the application pod     | `1` |
+```
+helmfile status
+```
+
+## Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| affinity | object | `{}` | affinity for the pod assignment |
+| coordinator.aws.accessKeyID | string | `nil` | AWS Access Key ID |
+| coordinator.aws.host | string | `"cassandra.us-west-2.amazonaws.com"` | AWS Cassandra Host |
+| coordinator.aws.keyspace | string | `""` | Keyspace |
+| coordinator.aws.port | string | `"9142"` | AWS Cassandra Port |
+| coordinator.aws.region | string | `"us-west-2"` | AWS Region |
+| coordinator.aws.s3Bucket | string | `"673156464838-uptime-service-backend"` | AWS S3 Bucket |
+| coordinator.aws.secretAccessKey | string | `nil` | AWS Secret Access Key |
+| coordinator.command.override | string | `nil` | override: the command to run |
+| coordinator.envVars | list | `[]` | Environment Variables |
+| coordinator.miniBatchNumber | int | `2` | The minimum batch number |
+| coordinator.networkName | string | `""` | Network name |
+| coordinator.noChecks | string | `""` | No Checks |
+| coordinator.platform | string | `""` | Platform name |
+| coordinator.postgres.db | string | `""` | Postgres database |
+| coordinator.postgres.host | string | `"{{ .Release.Name }}-psql"` | Postgres Host |
+| coordinator.postgres.password | string | `""` | Postgres password |
+| coordinator.postgres.port | int | `5432` | Postgres Port |
+| coordinator.postgres.roPassword | string | `""` | Postgres Read Only Password |
+| coordinator.postgres.roUser | string | `""` | Postgres Read Only User |
+| coordinator.postgres.user | string | `""` | Postgres user |
+| coordinator.ssl.certfile | string | `nil` | SSL Cert File |
+| coordinator.surveyIntervalMinutes | int | `20` | Survey Interval Minutes |
+| coordinator.uptimeDaysForScore | string | `""` | The Uptime Days for Score |
+| coordinator.worker.cpu.limit | string | `nil` | The CPU limit |
+| coordinator.worker.cpu.request | string | `nil` | The CPU request |
+| coordinator.worker.image | string | `""` | The image used for the worker |
+| coordinator.worker.memory.limit | string | `nil` | The memory limit |
+| coordinator.worker.memory.request | string | `nil` | The memory request |
+| coordinator.worker.tag | string | `""` | The image tag used for the worker |
+| coordinator.worker.ttlSecondsAfterFinished | int | `43200` | TTL Seconds After Finished |
+| fullnameOverride | string | `nil` | Full name override |
+| image.pullPolicy | string | `"IfNotPresent"` | The image pull policy |
+| image.repository | string | `""` | The image repository |
+| image.tag | string | `""` | The image tag |
+| nameOverride | string | `nil` | Name override |
+| podAnnotations | object | `{}` | Annotations to add to the pods |
+| podLabels | object | `{}` | Label to add to the pods |
+| replicas | int | `1` | Replica count |
+| resources | object | `{}` | The Resources |
+| secret.gcpServiceAccount | string | `nil` | The gcp Service Account |
+| service.port | int | `80` | The port of the service |
+| service.type | string | `"ClusterIP"` | The type of service to create |
+| serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
+| serviceAccount.coordinator.annotations | object | `{}` | Annotations to add to the service account |
+| serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
+| serviceAccount.name | string | `""` | The name of the service account to use. |
+| serviceAccount.worker.annotations | object | `{}` | Annotations to add to the service account |
+

@@ -1,61 +1,66 @@
-# Pod Rotation Controller
+# pod-rotation-controller
 
-pod-rotation-controller is a tools that rotates the oldest pod based on a Regex Pattern and a schedule.
+![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
 
-## TL;DR
-
-```console
-git clone https://github.com/MinaFoundation/helm-charts
-cd helm-charts/pod-rotation-controller
-helm install RELEASE_NAME ./ --namespace NAMESPACE
-```
+A Helm chart for Kubernetes
 
 ## Prerequisites
 
-- Kubernetes 1.12+
-- Helm 3.1.0
+Before using this Helm chart, you should have the following prerequisites:
 
-## Installing the Chart
+- Access to Kubernetes cluster (If needed contact your friendly neighbourhood DevOps engineer)
+- Helm >= v3.14.3
+- (**Optional**) helmfile >= v0.162.0 to install this chart
 
-To install the chart with the release name `RELEASE_NAME`:
+## Installation
 
-```console
-helm install RELEASE_NAME ./ --namespace NAMESPACE
+> Note: **examples** can be found in the repository
+
+To install this Helm chart, the easiest is to create a helmfile.yaml with needed values and run:
+
+```
+helmfile template
+helmfile apply
 ```
 
-The command deploys pod-rotation-controller on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
+Or use helmfile only to generate resources and apply them with kubectl like so:
 
-## Uninstalling the Chart
-
-To uninstall/delete the `RELEASE_NAME` deployment:
-
-```console
-helm delete RELEASE_NAME
+```
+helmfile template | kubectl -f -
 ```
 
-The command removes all the Kubernetes components associated with the chart and deletes the release.
+Verify that the chart is deployed successfully:
 
-## Parameters
+> Note: `kubectl` is a better suited tool for this
 
-| Name                                     | Description                                         | Value                       |
-| ---------------------------------------- | --------------------------------------------------- | --------------------------- |
-| `image.repository`                       | pod-rotation-controller image name                  | `673156464838.dkr.ecr.us-west-2.amazonaws.com/github-actions-runner` |
-| `image.pullPolicy`                       | pod-rotation-controller image pull policy           | `IfNotPresent`              |
-| `image.pullSecrets`                      | Specify docker-registry secret names as an array    | `[]`                        |
-| `nameOverride`                           | String to partially override common.names.fullname   | ""                          |
-| `fullnameOverride`                       | String to fully override common.names.fullname       | ""                          |
-| `serviceAccount.create`                  | Enable the creation of a ServiceAccount for pod-rotation-controller pods | `true` |
-| `serviceAccount.annotations`             | Annotations for the created ServiceAccount          | {}                          |
-| `serviceAccount.name`                    | Name of the created ServiceAccount                   | ""                          |
-| `podAnnotations`                         | Annotations for pod-rotation-controller pods         | {}                          |
-| `podLabels`                              | Extra labels for pod-rotation-controller pods        | {}                          |
-| `podRegexPattern`                        | Regex pattern to match pods                          | ".*"                        |
-| `schedule`                               | Schedule to run pod rotation, runs every 6 hours     | "0 */6 * * *"               |
-| `restartPolicy`                          | Restart Policy when the job fails, can be OnFailure, Never, Always | "OnFailure" |
-| `podSecurityContext`                     | Set pod-rotation-controller Pod's Security Context   | {}                          |
-| `securityContext`                        | Set pod-rotation-controller Security Context          | {}                          |
-| `resources.limits`                      | The resources limits for the pod-rotation-controller container | {}                   |
-| `resources.requests`                    | The resources requests for the pod-rotation-controller container | {}                 |
-| `nodeSelector`                          | Node labels for pod assignment                       | {}                          |
-| `tolerations`                            | Tolerations for pod assignment                       | {}                          |
-| `affinity`                               | Affinity for pod assignment                          | {}                          |
+```
+helmfile status
+```
+
+## Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| affinity | object | `{}` | Affinity |
+| fullnameOverride | string | `""` | The full release name override |
+| image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
+| image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/github-actions-runner"` | The repository of the image |
+| image.tag | string | `"default-2023.09.26"` | The tag of the image. |
+| imagePullSecrets | list | `[]` | The secrets used to pull the image |
+| nameOverride | string | `""` | The release name override |
+| nodeSelector | object | `{}` | Node Selector |
+| podAnnotations | object | `{}` | Annotations to add to deployments |
+| podLabels | object | `{}` | Annotations to add to the pods |
+| podRegexPattern | string | `".*"` | The Pod Regex Pattern |
+| podSecurityContext | object | `{}` | The Pod Security Context |
+| resources | object | `{"limits":{},"requests":{}}` | Resources |
+| resources.limits | object | `{}` | The resources limits for the pod-rotation-controller container |
+| resources.requests | object | `{}` | The resources requests for the pod-rotation-controller container |
+| restartPolicy | string | `"OnFailure"` | The restart policy |
+| schedule | string | `"0 */6 * * *"` | The Pod Rotation Schedule |
+| securityContext | object | `{}` | The Security Context |
+| serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
+| serviceAccount.create | bool | `true` | Create a service account |
+| serviceAccount.name | string | `""` | The name of the service account to use |
+| tolerations | list | `[]` | Tolerations |
+

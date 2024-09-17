@@ -1,3 +1,4 @@
+# -- Resource to deploy
 resources: []
 #
 #  - apiVersion: scheduling.k8s.io/v1beta1

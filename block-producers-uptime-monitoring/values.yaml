@@ -1,17 +1,30 @@
 deployment:
+  # -- The affinity for the pod assignment
   affinity: {}
+  # -- The affinity for the pod assignment
   podAffinityPreset: ""
+  # -- The node anti-affinity for the pod assignment
   podAntiAffinityPreset: soft
   image:
+    # -- The image repository
     repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/block-producers-uptime-monitoring
+    # -- The image pull policy
     pullPolicy: IfNotPresent
+    # -- Overrides the image tag
     tag: "1.0.0-82c48e5-bullseye-mainnet"
+  # -- The number of replicas
   replicaCount: 1
   env:
+    # -- Time before
     timeBefore: "20"
+    # -- Network
     network: "mainnet"
 resources:
+  # -- The memory request
   memoryRequest: "256Mi"
+  # -- The cpu request
   cpuRequest: "500m"
+  # -- The memory limit
   memoryLimit: "512Mi"
+  # -- The cpu limit
   cpuLimit: "1"

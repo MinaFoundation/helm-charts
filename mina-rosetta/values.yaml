@@ -1,31 +1,40 @@
 # Default values for mina-rosetta.
 # This is a YAML-formatted file.
 
+# -- The number of replicas
 replicaCount: 1
 
 image:
+  # -- The image repository
   repository: gcr.io/o1labs-192920/mina-rosetta
+  # -- The image pull policy
   pullPolicy: IfNotPresent
+  # -- The image tag
   tag: "2.0.0rampup8-81d994d-focal"
 
+# -- The secrets used to pull the image
 imagePullSecrets: []
+# -- The release name override
 nameOverride: ""
+# -- The full release name override
 fullnameOverride: ""
 
 serviceAccount:
-  # Specifies whether a service account should be created
+  # -- Specifies whether a service account should be created
   create: true
-  # Annotations to add to the service account
+  # -- Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # -- The name of the service account to use.
   name: ""
 
+# -- Annotations to add to the pods
 podAnnotations: {}
 
+# -- The Pod Security Context
 podSecurityContext: {}
   # fsGroup: 2000
 
+# -- The Security Context
 securityContext: {}
   # capabilities:
   #   drop:
@@ -35,25 +44,33 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
+  # -- The service type
   type: ClusterIP
+  # -- The service port
   port: 3087 # Online, use 3088 for offline
 
 ingress:
+  # -- Enable Ingress
   enabled: false
+  # -- Ingress Class Name
   className: ""
+  # -- Ingress Annotations
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
+  # -- Ingress Hosts
   hosts:
     - host: chart-example.local
       paths:
         - path: /
           pathType: ImplementationSpecific
+  # -- The TLS configuration
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
 
+# -- Resource limitations for the pods
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
@@ -67,6 +84,7 @@ resources: {}
   #   memory: 128Mi
 
 rosetta:
+  # -- Environment variables to set on the pod
   envVars: {}
     # - name: FOO
     #   value: FOO
@@ -75,15 +93,24 @@ rosetta:
     #     secretKeyRef:
     #       name: mySecret
     #       key: bar  offline:
+  # -- Log level
   logLevel: Info
+  # -- GraphQL URL
   graphqlURL: http://localhost:3085/graphql
+  # -- Mina Archve Postgres Connection String
   pgConnectionString: postgres://postgres:postgres@localhost:5432/postgres
-  minaSuffix: "" # suffix to append to mina network name ("" for mainnet and "-dev" for other testnets)
+  # Mina Suffix ("" for mainnet and "-dev" for other testnets)
+  minaSuffix: ""
+  # -- Mina Archive Postgres Data Interval
   pgDataInterval: 30
+  # -- Mina Archive Postgres Max Pool Size
   maxDBPoolSize: 80
 
+# -- Node selector labels
 nodeSelector: {}
 
+# -- Tolerations
 tolerations: []
 
+# -- Affinity rules
 affinity: {}

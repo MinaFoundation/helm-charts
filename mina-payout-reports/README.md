@@ -89,7 +89,7 @@ helmfile status
 | payoutReportsApi.service.type | string | `"ClusterIP"` | The type of service to create |
 | payoutReportsApi.stakingLedgersBucket | string | `""` | Staking ledgers bucket name(AWS S3) |
 | payoutReportsApi.tolerations | list | `[]` | Tolerations |
-| payoutReportsApi.walletMappingSpreadsheetTab | string | `""` | Google's public spreadsheet sheet(tab) name  |
+| payoutReportsApi.walletMappingSpreadsheetTab | string | `""` | Google's public spreadsheet sheet(tab) name |
 | payoutReportsApi.walletMappingSpreadsheetUrl | string | `""` | Google's public spreadsheet url containing wallet mappings |
 | payoutReportsWeb.affinity | object | `{}` | Affinity rules |
 | payoutReportsWeb.backendPublicUrl | string | `"localhost:5000"` | Payout reports backend public url accessible from the client |
@@ -116,5 +116,5 @@ helmfile status
 | payoutReportsWeb.tolerations | list | `[]` | Tolerations |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
-| serviceAccount.name | string | `""` | If not set and create is true, a name is generated using the fullname template |
+| serviceAccount.name | string | `""` | The name of the service account to use. |
 

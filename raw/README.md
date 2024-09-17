@@ -1,133 +1,49 @@
-# ⚠️ Repo Archive Notice
+# raw
 
-This chart is copied from [archived repo](https://github.com/helm/charts/tree/master/incubator/raw), because of that it's used as it is.
+![Version: 0.2.5](https://img.shields.io/badge/Version-0.2.5-informational?style=flat-square) ![AppVersion: 0.2.3](https://img.shields.io/badge/AppVersion-0.2.3-informational?style=flat-square)
 
-# incubator/raw
+A raw chart to deploy loose kubernetes resources.
+Cloned from archived https://github.com/helm/charts repo
 
-The `incubator/raw` chart takes a list of Kubernetes resources and
-merges each resource with a default `metadata.labels` map and installs
-the result.
+**Homepage:** <https://github.com/MinaFoundation/helm-charts>
 
-The Kubernetes resources can be "raw" ones defined under the `resources` key, or "templated" ones defined under the `templates` key.
+## Prerequisites
 
-Some use cases for this chart include Helm-based installation and
-maintenance of resources of kinds:
-- LimitRange
-- PriorityClass
-- Secret
+Before using this Helm chart, you should have the following prerequisites:
 
-## Usage
+- Access to Kubernetes cluster (If needed contact your friendly neighbourhood DevOps engineer)
+- Helm >= v3.14.3
+- (**Optional**) helmfile >= v0.162.0 to install this chart
 
-### Raw resources
+## Installation
 
-#### STEP 1: Create a yaml file containing your raw resources.
+> Note: **examples** can be found in the repository
 
-```
-# raw-priority-classes.yaml
-
-resources:
-
-  - apiVersion: scheduling.k8s.io/v1beta1
-    kind: PriorityClass
-    metadata:
-      name: common-critical
-    value: 100000000
-    globalDefault: false
-    description: "This priority class should only be used for critical priority common pods."
-
-  - apiVersion: scheduling.k8s.io/v1beta1
-    kind: PriorityClass
-    metadata:
-      name: common-high
-    value: 90000000
-    globalDefault: false
-    description: "This priority class should only be used for high priority common pods."
-
-  - apiVersion: scheduling.k8s.io/v1beta1
-    kind: PriorityClass
-    metadata:
-      name: common-medium
-    value: 80000000
-    globalDefault: false
-    description: "This priority class should only be used for medium priority common pods."
-
-  - apiVersion: scheduling.k8s.io/v1beta1
-    kind: PriorityClass
-    metadata:
-      name: common-low
-    value: 70000000
-    globalDefault: false
-    description: "This priority class should only be used for low priority common pods."
-
-  - apiVersion: scheduling.k8s.io/v1beta1
-    kind: PriorityClass
-    metadata:
-      name: app-critical
-    value: 100000
-    globalDefault: false
-    description: "This priority class should only be used for critical priority app pods."
-
-  - apiVersion: scheduling.k8s.io/v1beta1
-    kind: PriorityClass
-    metadata:
-      name: app-high
-    value: 90000
-    globalDefault: false
-    description: "This priority class should only be used for high priority app pods."
-
-  - apiVersion: scheduling.k8s.io/v1beta1
-    kind: PriorityClass
-    metadata:
-      name: app-medium
-    value: 80000
-    globalDefault: true
-    description: "This priority class should only be used for medium priority app pods."
-
-  - apiVersion: scheduling.k8s.io/v1beta1
-    kind: PriorityClass
-    metadata:
-      name: app-low
-    value: 70000
-    globalDefault: false
-    description: "This priority class should only be used for low priority app pods."
-```
-
-#### STEP 2: Install your raw resources.
+To install this Helm chart, the easiest is to create a helmfile.yaml with needed values and run:
 
 ```
-helm install --name raw-priority-classes incubator/raw -f raw-priority-classes.yaml
+helmfile template
+helmfile apply
 ```
 
-### Templated resources
-
-#### STEP 1: Create a yaml file containing your templated resources.
+Or use helmfile only to generate resources and apply them with kubectl like so:
 
 ```
-# values.yaml
-
-templates:
-- |
-  apiVersion: v1
-  kind: Secret
-  metadata:
-    name: common-secret
-  stringData:
-    mykey: {{ .Values.mysecret }}
+helmfile template | kubectl -f -
 ```
 
-The yaml file containing `mysecret` should be encrypted with a tool like [helm-secrets](https://github.com/futuresimple/helm-secrets)
+Verify that the chart is deployed successfully:
+
+> Note: `kubectl` is a better suited tool for this
 
 ```
-# secrets.yaml
-mysecret: abc123
+helmfile status
 ```
 
-```
-$ helm secrets enc secrets.yaml
-```
+## Values
 
-#### STEP 2: Install your templated resources.
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| resources | list | `[]` | Resource to deploy |
+| templates | list | `[]` |  |
 
-```
-helm secrets install --name mysecret incubator/raw -f values.yaml -f secrets.yaml
-```

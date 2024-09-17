@@ -1,72 +1,77 @@
-# Uptime Service Payloads Scrapper
+# uptime-service-payloads-scrapper
 
-A chart scrapping payload from Uptime Service
+![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
-## TL;DR
-
-```console
-git clone https://github.com/MinaFoundation/helm-charts
-cd helm-charts/uptime-service-payloads-scrapper
-helm install RELEASE_NAME ./ --namespace NAMESPACE
-```
+A Helm chart for Kubernetes
 
 ## Prerequisites
 
-- Kubernetes 1.12+
-- Helm 3.1.0
+Before using this Helm chart, you should have the following prerequisites:
 
-## Installing the Chart
+- Access to Kubernetes cluster (If needed contact your friendly neighbourhood DevOps engineer)
+- Helm >= v3.14.3
+- (**Optional**) helmfile >= v0.162.0 to install this chart
 
-To install the chart with the release name `RELEASE_NAME`:
+## Installation
 
-```console
-helm install RELEASE_NAME ./ --namespace NAMESPACE
+> Note: **examples** can be found in the repository
+
+To install this Helm chart, the easiest is to create a helmfile.yaml with needed values and run:
+
+```
+helmfile template
+helmfile apply
 ```
 
-The command deploys `uptime-service-payloads-scrapper` on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
+Or use helmfile only to generate resources and apply them with kubectl like so:
 
-## Uninstalling the Chart
-
-To uninstall/delete the `RELEASE_NAME` deployment:
-
-```console
-helm delete RELEASE_NAME
+```
+helmfile template | kubectl -f -
 ```
 
-The command removes all the Kubernetes components associated with the chart and deletes the release.
+Verify that the chart is deployed successfully:
 
-### Parameters
+> Note: `kubectl` is a better suited tool for this
 
-| Name                                         | Description                                                          | Value |
-| -------------------------------------------- | -------------------------------------------------------------------- | ----- |
-| `image.repository`                           | `uptime-service-payloads-scrapper` Docker Image URL                  | `673156464838.dkr.ecr.us-west-2.amazonaws.com/uptime-service-payloads-scrapper` |
-| `image.tag`                                  | Docker Image Tag                                                     | `1.0.0-6e0b3ec` |
-| `image.pullPolicy`                           | Docker Image Pull Policy                                             | `IfNotPresent` |
-| `imagePullSecrets`                           | Secrets name used for Pulling the Docker Image                       | `""` |
-| `nameOverride`                               | Name override                                                        | `""` |
-| `fullnameOverride`                           | Fullname override                                                    | `""` |
-| `serviceAccount.create`                      | Specifies whether a Service Account should be created                | `true` |
-| `serviceAccount.annotations`                 | Annotations to add to the Service Account                            | `{}` |
-| `podAnnotations`                             | Annotations to add to the pods                                       | `{}` |
-| `podSecurityContext`                         | Pod Security Context                                                 | `{}` |
-| `securityContext`                            | Security Context                                                     | `{}` |
-| `service.type`                               | Service Type (`ClusterIP`, `LoadBalancer` or `NodePort`)             | `ClusterIP` |
-| `service.port`                               | Service Port                                                         | `8080` |
-| `ingress.enabled`                            | Enable Ingress                                                       | `false` |
-| `ingress.enabled`                            | Enable className                                                     | `""` |
-| `ingress.annotations`                        | Annotations to add to the Ingress                                    | `""` |
-| `ingress.hosts`                              | Ingress Hosts                                                        | `[]` |
-| `ingress.tls`                                | Ingress TLS                                                          | `[]` |
-| `resources`                                  | Resources allocated to the pods                                      | `{}` |
-| `autoscaling.enabled`                        | Enable Autoscaler                                                    | `false` |
-| `autoscaling.minReplicas`                    | Autoscaler Min Replicas                                              | `1` |
-| `autoscaling.maxReplicas`                    | Autoscaler Max Replicas                                              | `5` |
-| `autoscaling.targetCPUUtilizationPercentage` | Target CPU Utilization Percentage                                    | `80` |
-| `nodeSelector`                               | Override Node Selector                                               | `{}` |
-| `tolerations`                                | Set Tolerations                                                      | `[]` |
-| `affinity`                                   | Set Affinity                                                         | `{}` |
-| `persistence.enabled`                        | Enable Persitence                                                    | `false` |
-| `persistence.storageClass`                   | Set Persitence Storage Class                                         | `ebs-gp3-encrypted` |
-| `persistence.accessMode`                     | Set Access Mode (`ReadWriteOnce`, `ReadOnlyMany` or `ReadWriteMany`) | `ReadWriteOnce` |
-| `persistence.size`                           | Size allocated to the PVC                                            | `10Gi` |
-| `persistence.annotations`                    | Annotations added to the PVC                                         | `{}` |
+```
+helmfile status
+```
+
+## Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| affinity | object | `{}` | Affinity |
+| autoscaling.enabled | bool | `false` | Whether to enable autoscaling |
+| autoscaling.maxReplicas | int | `5` | The maximum number of pods |
+| autoscaling.minReplicas | int | `1` | The minimum number of pods |
+| autoscaling.targetCPUUtilizationPercentage | int | `80` | The target CPU utilization percentage |
+| fullnameOverride | string | `""` | The full release name override |
+| image.pullPolicy | string | `"IfNotPresent"` | The image pull policy |
+| image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/uptime-service-payloads-scrapper"` | The image repository |
+| image.tag | string | `"1.0.0-6e0b3ec"` | Overrides the image tag whose default is the chart appVersion. |
+| imagePullSecrets | list | `[]` | The secrets used to pull the image |
+| ingress.annotations | object | `{}` | Ingress Annotations |
+| ingress.className | string | `""` | Ingress class name |
+| ingress.enabled | bool | `false` | Whether to enable ingress |
+| ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}]` | Ingress hosts |
+| ingress.tls | list | `[]` | Ingress TLS configuration |
+| nameOverride | string | `""` | The release name override |
+| nodeSelector | object | `{}` | Node selector |
+| persistence.accessMode | string | `"ReadWriteOnce"` | The access mode |
+| persistence.annotations | object | `{}` | Annotations to add to the PVC |
+| persistence.enabled | bool | `false` | Whether to enable persistence |
+| persistence.size | string | `"10Gi"` | The size of the PVC |
+| persistence.storageClass | string | `"ebs-gp3-encrypted"` | The storage class |
+| podAnnotations | object | `{}` | Annotations to add to the pods |
+| podSecurityContext | object | `{}` | Pods Security Context |
+| replicaCount | int | `1` | The number of replicas |
+| resources | object | `{}` | Resources |
+| securityContext | object | `{}` | Security Context |
+| service.port | int | `8080` | The service port |
+| service.type | string | `"ClusterIP"` | The service type |
+| serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
+| serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
+| serviceAccount.name | string | `""` | The name of the service account to use. |
+| tolerations | list | `[]` | Tolerations |
+
