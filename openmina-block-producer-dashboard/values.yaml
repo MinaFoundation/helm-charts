@@ -7,11 +7,11 @@ replicaCount: 1
 
 image:
   # -- The image repository
-  repository: adrnagy/openmina-fe
+  repository: adrnagy/openmina-producer-dashboard
   # -- The image pull policy
   pullPolicy: IfNotPresent
   # -- Overrides the image tag whose default is the chart appVersion.
-  tag: "cluster-producers"
+  tag: "cluster-rc5"
 
 # -- The secrets used to pull the image
 imagePullSecrets: []

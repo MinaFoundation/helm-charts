@@ -51,8 +51,8 @@ helmfile status
 | envVars | object | `{}` |  |
 | fullnameOverride | string | `""` | Full name override |
 | image.pullPolicy | string | `"IfNotPresent"` | The image pull policy |
-| image.repository | string | `"adrnagy/openmina-fe"` | The image repository |
-| image.tag | string | `"cluster-producers"` | Overrides the image tag whose default is the chart appVersion. |
+| image.repository | string | `"adrnagy/openmina-producer-dashboard"` | The image repository |
+| image.tag | string | `"cluster-rc5"` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | The secrets used to pull the image |
 | ingress.annotations | object | `{}` | The Ingress Annotations |
 | ingress.className | string | `""` | The Ingress Class Name to use |
