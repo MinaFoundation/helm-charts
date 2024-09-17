@@ -1,87 +1,61 @@
-# `block-producers-uptime-monitoring` helm chart
+# block-producers-uptime-monitoring
 
-A Helm chart for the custom monitoring tools needed for Block Producers Uptime (further referred to as BPU)
+![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
 
-> **Note** Currently MF does not have chart repository. To install this chart i.e. with helmfile you need to reffer to it following ways:
-```
-# helmfile.yaml
-<..>
-releases:
-  - name: block-producers-uptime-monitoring
-    chart: git::https://git:accesstoken@github.com/MinaFoundation/helm-charts.git@block-producers-uptime-monitoring?ref=main
-<..>
-```
+Custom monitoring tool for Block Producers Uptime
+
+## Source Code
+
+* <https://github.com/MinaProtocol/mf-devops-workflows/tree/main/docker-image-ecr/bpu-monitoring>
 
 ## Prerequisites
 
-Before installing this Helm chart, you should have the following prerequisites:
+Before using this Helm chart, you should have the following prerequisites:
 
- - Access to Kubernetes cluster
- - Helm installed on your local machine
- - Basic knowledge of Kubernetes and Helm
- - Access to https://github.com/minaProtocol/mina-helm-charts-private
- - Optional: helmfile to install this chart
+- Access to Kubernetes cluster (If needed contact your friendly neighbourhood DevOps engineer)
+- Helm >= v3.14.3
+- (**Optional**) helmfile >= v0.162.0 to install this chart
 
 ## Installation
 
-To install this Helm chart, easiest is create a helmfile.yaml with needed values and run:
+> Note: **examples** can be found in the repository
 
-```bash
-$ helmfile template
-$ helmfile apply
+To install this Helm chart, the easiest is to create a helmfile.yaml with needed values and run:
+
+```
+helmfile template
+helmfile apply
 ```
 
 Or use helmfile only to generate resources and apply them with kubectl like so:
 
-```bash
-$ helmfile template | kubectl apply -f -
 ```
-
-You can get some inspiration from helmfiles in `examples` folder.
+helmfile template | kubectl -f -
+```
 
 Verify that the chart is deployed successfully:
 
-```bash
-$ helmfile status #although kubectl probably would give better insights.
+> Note: `kubectl` is a better suited tool for this
+
+```
+helmfile status
 ```
 
-## Configuration
+## Values
 
-To get all available values in cloned `mina-helm-charts-private` do:
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| deployment.affinity | object | `{}` | The affinity for the pod assignment |
+| deployment.env.network | string | `"mainnet"` | Network |
+| deployment.env.timeBefore | string | `"20"` | Time before |
+| deployment.image.pullPolicy | string | `"IfNotPresent"` | The image pull policy |
+| deployment.image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/block-producers-uptime-monitoring"` | The image repository |
+| deployment.image.tag | string | `"1.0.0-82c48e5-bullseye-mainnet"` | Overrides the image tag |
+| deployment.podAffinityPreset | string | `""` | The affinity for the pod assignment |
+| deployment.podAntiAffinityPreset | string | `"soft"` | The node anti-affinity for the pod assignment |
+| deployment.replicaCount | int | `1` | The number of replicas |
+| resources.cpuLimit | string | `"1"` | The cpu limit |
+| resources.cpuRequest | string | `"500m"` | The cpu request |
+| resources.memoryLimit | string | `"512Mi"` | The memory limit |
+| resources.memoryRequest | string | `"256Mi"` | The memory request |
 
-```bash
-$ helm show values ./mina-daemon
-```
-The following table lists the configurable parameters of the `block-producers-uptime-monitoring` chart and its common default values.
-
-### Required Settings
-
-Parameter | Description
---- | ---
-`deployment.image.repository` | image repository to pull the image from
-`deployment.image.pullPolicy` | image pulling strategy
-`deployment.image.tag` | tag of the image from the repository, usually containing commit hash, version, network and linux flavour
-`deployment.replicaCount` | number of pods to deploy
-`deployment.env.timeBefore` | environment variable that determines the time window of the application (time between current time and how much the user wants to look back)
-
-### Optional Settings
---- | ---
-`deployment.affinity` | affinity for pod assignment (note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set)
-`deployment.podAffinityPreset` | pod affinity preset. Ignored if `affinity` is set. Allowed values: `soft` or `hard`
-`deployment.podAntiAffinityPreset` | pod anti-affinity preset. Ignored if `affinity` is set. Allowed values: `soft` or `hard`
-`resources.memoryRequest` | requested memory for the application
-`resources.cpuRequest` | requested cpu for the application
-`resources.memoryLimit` | limit of the memory achieved by the application
-`resources.cpuLimit` | limit of the cpu achieved by the application
-
-## Uninstallation
-
-To uninstall the Helm chart using helmfile, follow these steps:
-
-```bash
-$ helmfile destroy
-```
-or
-```bash
-$ helmfile template . | kubectl delete -f -
-```

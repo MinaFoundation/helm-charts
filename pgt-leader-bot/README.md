@@ -47,52 +47,50 @@ helmfile status
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| affinity | object | `{}` |  |
-| api.logLevel | string | `"INFO"` |  |
-| bot.logLevel | string | `"INFO"` |  |
-| config.discord.forumChannelId | string | `"chanid"` |  |
-| config.discord.guildId | string | `"myguildid"` |  |
-| config.discord.token | string | `"mytoken"` |  |
-| config.github.token | string | `"mytoken"` |  |
-| config.googleSheets.credentials | string | `"JSON data"` |  |
-| config.googleSheets.email | string | `"myemail"` |  |
-| config.googleSheets.spreadsheetId | string | `"mysheetid"` |  |
-| config.mongo.collection | string | `"mycollection"` |  |
-| config.mongo.database | string | `"mydb"` |  |
-| config.mongo.host | string | `"myhost"` |  |
-| config.openAi.apiKey | string | `"myapikey"` |  |
-| config.sharedSecret | string | `"mysharedsecret"` |  |
-| deploymentAnnotations | object | `{}` |  |
-| fullnameOverride | string | `""` |  |
-| image.pullPolicy | string | `"Always"` |  |
-| image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/pgt-leader-bot"` |  |
-| image.tag | string | `"0.0.1"` |  |
-| imagePullSecrets | list | `[]` |  |
-| ingress.annotations | object | `{}` |  |
-| ingress.className | string | `""` |  |
-| ingress.enabled | bool | `false` |  |
-| ingress.hosts[0].host | string | `"chart-example.local"` |  |
-| ingress.hosts[0].paths[0].path | string | `"/"` |  |
-| ingress.hosts[0].paths[0].pathType | string | `"ImplementationSpecific"` |  |
-| ingress.tls | list | `[]` |  |
-| livenessProbe | string | `nil` |  |
-| mongodb.auth.enabled | bool | `false` |  |
-| nameOverride | string | `""` |  |
-| nodeSelector | object | `{}` |  |
-| podAnnotations | object | `{}` |  |
-| podLabels | object | `{}` |  |
-| podSecurityContext | object | `{}` |  |
-| readinessProbe | string | `nil` |  |
-| replicaCount | int | `1` |  |
-| resources | object | `{}` |  |
-| securityContext | object | `{}` |  |
-| service.port | int | `8000` |  |
-| service.type | string | `"ClusterIP"` |  |
-| serviceAccount.annotations | object | `{}` |  |
-| serviceAccount.automount | bool | `true` |  |
-| serviceAccount.create | bool | `true` |  |
-| serviceAccount.name | string | `""` |  |
-| tolerations | list | `[]` |  |
-| volumeMounts | list | `[]` |  |
-| volumes | list | `[]` |  |
+| affinity | object | `{}` | Affinity rules |
+| api.logLevel | string | `"INFO"` | Logs Level |
+| bot.logLevel | string | `"INFO"` | Logs Level |
+| config.discord.forumChannelId | string | `"chanid"` | Discord Channel ID |
+| config.discord.guildId | string | `"myguildid"` | Discord Guild/Server ID |
+| config.discord.token | string | `"mytoken"` | Discord API Token |
+| config.github.token | string | `"mytoken"` | Github API Token |
+| config.googleSheets.credentials | string | `"JSON data"` | Google Sheets API Credentials |
+| config.googleSheets.email | string | `"myemail"` | Email to send notifications to |
+| config.googleSheets.spreadsheetId | string | `"mysheetid"` | Google Sheets Spreadsheet ID |
+| config.mongo.collection | string | `"mycollection"` | MongoDB Collection |
+| config.mongo.database | string | `"mydb"` | MongoDB Database |
+| config.mongo.host | string | `"myhost"` | MongoDB Host |
+| config.openAi.apiKey | string | `"myapikey"` | OpenAI API Key |
+| config.sharedSecret | string | `"mysharedsecret"` | Shared Secret |
+| deploymentAnnotations | object | `{}` | Annotations to add to deployments |
+| fullnameOverride | string | `""` | The full release name override |
+| image.pullPolicy | string | `"Always"` | The pullPolicy used when pulling the image |
+| image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/pgt-leader-bot"` | The repository of the image |
+| image.tag | string | `"0.0.1"` | Overrides the image tag whose default is the chart appVersion. |
+| imagePullSecrets | list | `[]` | The secrets used to pull the image |
+| ingress.annotations | object | `{}` | Ingress Annotations |
+| ingress.className | string | `""` | Ingress Class Name |
+| ingress.enabled | bool | `false` | Enable Ingress |
+| ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}]` | Ingress Hosts |
+| ingress.tls | list | `[]` | Ingress TLS configuration |
+| livenessProbe | string | `nil` | Liveness Probe |
+| mongodb.auth.enabled | bool | `false` | Enable MongoDB Authentication |
+| nameOverride | string | `""` | The release name override |
+| nodeSelector | object | `{}` | Node selector labels |
+| podAnnotations | object | `{}` | Annotations to add to the pods |
+| podLabels | object | `{}` | Label to add to the pods |
+| podSecurityContext | object | `{}` | The Pod Security Context |
+| readinessProbe | string | `nil` | Readiness Probe |
+| replicaCount | int | `1` | The number of replicas |
+| resources | object | `{}` | The Resources |
+| securityContext | object | `{}` | The Security Context |
+| service.port | int | `8000` | The service port |
+| service.type | string | `"ClusterIP"` | The service type |
+| serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
+| serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
+| serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
+| serviceAccount.name | string | `""` | The name of the service account to use. |
+| tolerations | list | `[]` | Tolerations |
+| volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
+| volumes | list | `[]` | Additional volumes on the output Deployment definition. |
 

@@ -1,51 +1,87 @@
 # Default values for delegation-verify-coordinator.
+# -- Replica count
 replicas: 1
 
 image:
+  # -- The image repository
   repository: ""
+  # -- The image pull policy
   pullPolicy: IfNotPresent
+  # -- The image tag
   tag: ""
 
+# -- Name override
 nameOverride:
+# -- Full name override
 fullnameOverride:
 
 coordinator:
+  # --Network name
   networkName: ""
+  # -- Platform name
   platform: ""
+  # -- No Checks
   noChecks: ""
+  # -- Survey Interval Minutes
   surveyIntervalMinutes: 20
   command:
+    # -- override: the command to run
     override: # use '"<command>"' notation to template correctly
   postgres:
+    # -- Postgres Host
     host: '{{ .Release.Name }}-psql'
+    # -- Postgres Port
     port: 5432
+    # -- Postgres database
     db: ""
+    # -- Postgres user
     user: ""
+    # -- Postgres password
     password: ""
+    # -- Postgres Read Only User
     roUser: ""
+    # -- Postgres Read Only Password
     roPassword: ""
+  # -- The minimum batch number
   miniBatchNumber: 2
+  # -- The Uptime Days for Score
   uptimeDaysForScore: ""
   worker:
+    # -- The image used for the worker
     image: ""
+    # -- The image tag used for the worker
     tag: ""
     cpu:
+      # -- The CPU request
       request:
+      # -- The CPU limit
       limit:
     memory:
+      # -- The memory request
       request:
+      # -- The memory limit
       limit:
+    # -- TTL Seconds After Finished
     ttlSecondsAfterFinished: 43200 # half a day
   aws:
+    # -- AWS Cassandra Host
     host: "cassandra.us-west-2.amazonaws.com"
+    # -- AWS Cassandra Port
     port: "9142"
+    # -- Keyspace
     keyspace: ""
+    # -- AWS Region
     region: us-west-2
+    # -- AWS Access Key ID
     accessKeyID:
+    # -- AWS Secret Access Key
     secretAccessKey:
+    # -- AWS S3 Bucket
     s3Bucket: "673156464838-uptime-service-backend"
   ssl:
+    # -- SSL Cert File
     certfile:
+  # -- Environment Variables
   envVars: []
     # - name: FOO
     #   value: FOO
@@ -55,33 +91,39 @@ coordinator:
     #       name: mySecret
     #       key: bar  offline:
 secret:
+  # -- The gcp Service Account
   gcpServiceAccount:
 
 serviceAccount:
   coordinator:
 
-    # Annotations to add to the service account
+    # -- Annotations to add to the service account
     annotations: {}
 
   worker:
 
-    # Annotations to add to the service account
+    # -- Annotations to add to the service account
     annotations: {}
-     
-  # Specifies whether a service account should be created
+
+  # -- Specifies whether a service account should be created
   create: true
-  # Automatically mount a ServiceAccount's API credentials?
+  # -- Automatically mount a ServiceAccount's API credentials?
   automount: true
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # -- The name of the service account to use.
   name: ""
 
+# -- Annotations to add to the pods
 podAnnotations: {}
+# -- Label to add to the pods
 podLabels: {}
+# -- affinity for the pod assignment
 affinity: {}
 
 service:
+  # -- The type of service to create
   type: ClusterIP
+  # -- The port of the service
   port: 80
 
+# -- The Resources
 resources: {}

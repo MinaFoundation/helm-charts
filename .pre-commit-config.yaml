@@ -6,28 +6,6 @@ repos:
     hooks:
       - id: helm-docs-built
         args:
-          # Comma separated list, no space
-          - "--chart-to-generate=\
-            delegation-program-leaderboard,\
-            gpt-survey-summarizer,\
-            kyc-management-app,\
-            liminal-manual,\
-            matterbridge-bot,\
-            mina-archive,\
-            mina-payout-reports,\
-            mina-payouts-data-provider,\
-            mina-staking-ledgers-exporter,\
-            mina-transactions-generator,\
-            on-chain-voting,\
-            openmina-block-producer-dashboard,\
-            openmina-frontend,\
-            openmina-node,\
-            pgt-gov-bot,\
-            pgt-leader-bot,\
-            redisinsight,\
-            submission-report,\
-            uptime-service-backend"
-
           # The `./` makes it relative to the chart-search-root
           - --template-files=./README.md.gotmpl
 

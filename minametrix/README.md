@@ -1,8 +1,14 @@
-# liminal-manual
+# minametrix
 
 ![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
 
 A Helm chart for Kubernetes
+
+## Requirements
+
+| Repository | Name | Version |
+|------------|------|---------|
+| oci://registry-1.docker.io/bitnamicharts | mongodb | * |
 
 ## Prerequisites
 
@@ -41,42 +47,43 @@ helmfile status
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| affinity | object | `{}` | Affinity for pod assignment |
-| autoscaling.enabled | bool | `false` | Whether to enable autoscaling |
-| autoscaling.maxReplicas | int | `100` | The maximum number of pods |
-| autoscaling.minReplicas | int | `1` | The minimum number of pods |
-| autoscaling.targetCPUUtilizationPercentage | int | `80` | The metrics to use for autoscaling |
-| deploymentAnnotations | object | `{}` | Annotations to add to deployments |
+| admin_password | string | `"minametrix"` | Admin Password |
+| affinity | object | `{}` | Affinity rules |
+| api_tokens | string | `""` | API Tokens |
+| extraEnvVars | object | `{}` | Extra environment variables |
 | fullnameOverride | string | `""` | The full release name override |
-| image.pullPolicy | string | `"IfNotPresent"` | The image pull policy |
-| image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/liminal-manual"` | The image repository |
-| image.tag | string | `"latest"` | Overrides the image tag whose default is the chart appVersion. |
+| image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
+| image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/minametrix"` | The repository of the image |
+| image.tag | string | `"1.0.0-aec2116"` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | The secrets used to pull the image |
 | ingress.annotations | object | `{}` | Ingress Annotations |
 | ingress.className | string | `""` | Ingress Class Name |
 | ingress.enabled | bool | `false` | Enable Ingress |
-| ingress.hosts[0].host | string | `"chart-example.local"` |  |
-| ingress.hosts[0].paths[0].path | string | `"/"` |  |
-| ingress.hosts[0].paths[0].pathType | string | `"ImplementationSpecific"` |  |
+| ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}]` | Ingress Hosts |
 | ingress.tls | list | `[]` | TLS configuration |
-| livenessProbe | object | `{"httpGet":{"path":"/_/health","port":"http"}}` | Live and Readiness Probes |
+| is_local | bool | `false` | Is Local |
+| mongo_connection_string | string | `""` | Mongo Connection String |
+| mongodb.enabled | bool | `true` | Enable MongoDB |
 | nameOverride | string | `""` | The release name override |
 | nodeSelector | object | `{}` | Node selector labels |
+| persistence.accessMode | string | `"ReadWriteOnce"` | The access mode of the Persistent Volume Claim |
+| persistence.annotations | object | `{}` | Annotations to add to the Persistent Volume Claim |
+| persistence.enabled | bool | `true` | Enable persistence using Persistent Volume Claims |
+| persistence.size | string | `"1Gi"` | The size of the Persistent Volume Claim |
+| persistence.storageClass | string | `"ebs-gp3-encrypted"` | The storage class of the Persistent Volume Claim |
 | podAnnotations | object | `{}` | Annotations to add to the pods |
-| podLabels | object | `{}` | Label to add to the pods |
 | podSecurityContext | object | `{}` | The Pod Security Context |
-| readinessProbe.httpGet.path | string | `"/_/health"` |  |
-| readinessProbe.httpGet.port | string | `"http"` |  |
-| replicaCount | int | `1` | Replica count |
-| resources | object | `{}` | The Resources |
-| securityContext | object | `{}` | The Security Context |
-| service.port | int | `80` | The service port |
+| previous_search_timestamp | string | `"1697711276493"` | Previous Search Timestamps |
+| replicaCount | int | `1` | The number of replicas |
+| resources | object | `{}` | Resource limitations for the pods |
+| search_timestamp | string | `"1697711276493"` | Search Timestamps |
+| securityContext | object | `{}` | Security Context |
+| service.port | int | `3000` | The service port |
 | service.type | string | `"ClusterIP"` | The service type |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
-| serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. |
-| tolerations | list | `[]` | Tolerations for pod assignment |
-| volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
-| volumes | list | `[]` | Additional volumes on the output Deployment definition. |
+| session_secret | string | `"minametrix"` | Session Secret |
+| tolerations | list | `[]` | Tolerations |
+| web_concurency | int | `2` | Web Concurrency |
 

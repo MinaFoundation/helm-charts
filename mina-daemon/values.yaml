@@ -1,133 +1,242 @@
 deployment:
+  # -- Testnet
   testnet: "berkeley"
+  # -- Image to use for the deployment
   image: minaprotocol/mina-daemon:1.3.2beta2-release-2.0.0-05c2f73-bulseye-berkeley
+  # -- Genesis ledger URL
   genesisLedgerURL:
+  # -- Peer list URL
   peerListURL: "https://storage.googleapis.com/seed-lists/berkeley_seeds.txt"
   uptime:
+    # -- Enable uptime monitoring
     enabled: false
+    # -- Uptime monitoring URL
     url:
+    # -- Send Node Commit SHA
     sendNodeCommitSha:
+  # -- Seed peers
   seedPeers: []
     # - /dns4/seed-1.berkeley.o1test.net/tcp/10000/p2p/12D3KooWAdgYL6hv18M3iDBdaK1dRygPivSfAfBNDzie6YqydVbs
     # - /dns4/seed-2.berkeley.o1test.net/tcp/10001/p2p/12D3KooWLjs54xHzVmMmGYb7W5RVibqbwD1co7M2ZMfPgPm7iAag
     # - /dns4/seed-3.berkeley.o1test.net/tcp/10002/p2p/12D3KooWEiGVAFC7curXWXiGZyMWnZK9h8BKr88U8D5PKV3dXciv
   storeBlocks:
+    # -- Enable block storage
     enabled: false
+    # -- Block storage directory
     directory: /blocks
+    # -- Storage class
     storageClass:
+    # -- Block storage size
     sizePVC: 5Gi
     local:
+      # -- Enable local storage
       enabled: false
+      # -- Local storage filename
       filename: precomputed_blocks.json
     aws:
+      # -- Enable AWS S3 storage
       enabled: false
+      # -- AWS S3 bucket
       bucket:
+      # -- AWS S3 keyfile
       prefix:
+      # -- AWS S3 access key ID
       accessKeyID:
+      # -- AWS S3 secret access key
       secretKeyID:
+      # -- AWS S3 region
       defaultRegion:
+      # -- AWS upload interval
       uploadInterval: 900
     gcp:
+      # -- Enable GCP storage
       enabled: false
+      # -- GCP bucket
       bucket: mina_network_block_data
+      # -- GCP keyfile
       keyfile: "{}"
 
 node:
+  # -- Node name
   name: "berkeley-node"
+  # -- Node role
   role:
+  # -- Number of replicas
   replicas: 1
+  # -- Full name
   fullname: "berkeley-node"
+  # -- Expose GraphQL
   exposeGraphql: false
+  # -- Log level
   logLevel: Info
+  # -- File log level
   fileLogLevel: Error
+  # -- Generate genesis proof
   generateGenesisProof:
+  # -- Max connections
   maxConnections: 200
+  # -- Snark worker fee
   snarkWorkerFee:
+  # -- All Peers Seen Metric
   allPeersSeenMetric:
+  # -- Archive RocksDB
   archiveRocksDB:
+  # -- Background
   background:
+  # -- Bind IP
   bindIP:
+  # -- Client trust list
   clientTrustList: "10.0.0.0/8"
+  # -- Contact info
   contactInfo:
+  # -- Coinbase receiver
   coinbaseReceiver:
+  # -- Current protocol version
   currentProtocolVersion:
+  # -- Demo mode
   demoMode:
+  # -- Direct peer
   directPeer:
+  # -- Disable Node Status
   disableNodeStatus:
+  # -- Enable Flooding
   enableFlooding:
+  # -- Enable Peer Exchange
   enablePeerExchange: true
+  # -- Discovery External IP
   discoveryExternalIp:
+    # -- Enable Discovery External IP
     enabled: false
+    # -- Target DNS
     targetDNS: example.nlb.us-west-2.amazonaws.com
+  # -- External IP
   externalIP:
+  # -- File Log Rotations
   fileLogRotations:
+  # --Garbage Collection Stat Interval
   gcStatInterval:
+  # -- Internal Tracing
   internalTracing:
+  # -- Isolate Network
   isolateNetwork:
+  # -- ITN GraphQL Port
   itnGraphQLPort:
+  # -- ITN Keys
   itnKeys:
+  # -- ITN Max Logs
   itnMaxLogs:
+  # -- Libp2p Metrics Port
   libp2pMetricsPort:
+  # -- Limited GraphQL Port
   limitedGraphQLPort:
+  # -- Log Block Creation
   logBlockCreation:
+  # -- Log Precomputed Blocks
   logPrecomputedBlocks:
+  # -- Log Snark Work Gossip
   logSnarkWorkGossip:
+  # -- Log Txn Pool Gossip
   logTxnPoolGossip:
+  # -- Min Connections
   minConnections:
+  # -- Min Block Reward
   minBlockReward:
+  # -- No Super Catchup
   noSuperCatchup:
+  # -- Open Limited GraphQL Port
   openLimitedGraphQLPort:
+  # -- Peers
   peer:
+  # -- Peer List File
   peerListFile:
+  # -- Peer List URL
   peerListURL:
+  # -- Peer Protection Rate
   peerProtectionRate:
+  # -- Precomputed Blocks File
   precomputedBlocksFile:
+  # -- Proof Level
   proofLevel:
+  # -- Proposed Protocol Version
   proposedProtocolVersion:
+  # -- Snark Worker Parallelism
   snarkWorkerParallelism:
+  # -- Stop Time
   stopTime:
+  # -- Tracing
   tracing:
+  # -- Upload Submitter Key
   uploadSubmitterKey:
+  # -- Upload Submitter Pubkey
   uploadSubmitterPubkey:
+  # -- Validation Queue Size
   validationQueueSize:
+  # -- Work Reassignment Wait
   workReassignmentWait:
+  # -- Work Selection
   workSelection:
   metrics:
+    # -- Enable metric service
     enabled: false
+    # -- Metric port number
     port: 10001
   ports:
+    # -- Mina daemon client port number
     client: 8301
+    # -- Mina daemon graphql port number
     graphql: 3085
+    # -- Mina daemon graphql proxy port number
     proxy: 3000
+    # -- Mina daemon libp2p port number
     p2p: 10801
+  # -- Nodes Stats URL
   statsUrl:
+  # -- Nodes Errors URL
   errorsUrl:
   archive:
+    # -- Enable archive
     enabled: false
+    # -- Archive URL
     address: staging-berkeley-archive:3086
   libp2pKeys:
+    # -- Enable libp2p keys
     enabled: true
+    # -- Generate Libp2p keypair
     create: false
+    # -- Use Legacy Libp2p keypair
     legacy: false
   walletKeys:
+    # -- Enable wallet keys
     enabled: false
   daemonMode:
+    # -- Enable Block Producer Daemon Mode
     blockProducer: false
+    # -- Enable Snark Worker Daemon Mode
     snarkWorker: false
+    # -- Enable Snark Coordinator Daemon Mode
     coordinator: false
+  # -- Enable Seed Daemon Mode
     seed: false
   secrets:
+    # -- Wallet Password
     walletPassword: ""
+    # -- Libp2p Password
     libp2pPassword: ""
+    # -- Wallet Key
     walletKey: ""
+    # -- Wallet Public Key
     walletPub: ""
+    # -- Discovery Libp2p Key
     discoveryLibp2p: ""
+    # -- Discovery Libp2p Peerid
     discoveryLibp2pPeerid: ""
   # Snark Worker specific settings - Note that walletKeys.enabled should be set to false.
+  # -- Daemon Address
   daemonAddress: localhost:8301
+  # -- Shutdown on Disconnect
   shutdownOnDisconnect: false
 
-
+  # -- Extra environment variables for the mina daemon process
   extraEnvVars: {}
     # - name: FOO
     #   value: FOO
@@ -137,14 +246,21 @@ node:
     #       name: mySecret
     #       key: bar
 serviceAccount:
+  # -- Annotations to add to the service account
   annotations: {}
 
 ingress:
+  # -- Enable Ingress
   enabled: false
+  # -- Labels to add to the Ingress
   labels: {}
+  # -- Annotations to add to the Ingress
   annotations: {}
+  # -- Ingress Class Name
   className: ""
+  # -- TLS configuration
   tls: false
+  # -- The Ingress Hosts
   hosts: []
     # - host: chart-example.local
     #   paths: []
@@ -157,64 +273,105 @@ ingress:
 
 service:
   daemon:
+    # -- The service type
     type: ClusterIP
+    # -- The annotations to add to the service
     annotations: {}
+    # -- The labels to add to the service
     labels: {}
+    # -- The load balancer class
     loadBalancerClass:
+    # -- Publish not ready addresses
     publishNotReadyAddresses: true
   graphql:
+    # -- The service type
     type: ClusterIP
+    # -- The load balancer class
     loadBalancerClass:
+    # -- The annotations to add to the service
     annotations: {}
+    # -- Publish not ready addresses
     publishNotReadyAddresses: false
 
+# -- Annotations to add to the pods
 podAnnotations: {}
 
+# -- Labels to add to the pods
 podLabels: {}
 
 updateStrategy:
+  # -- The update strategy type
   type: Recreate
 
 resources:
+  # -- The Memory Request
   memoryRequest: "16.0Gi"
+  # -- The CPU Request
   cpuRequest: "4"
+  # -- The Ephemeral Storage Request
   ephemeralStorageRequest:
+  # -- The Memory Limit
   memoryLimit: "16.0Gi"
+  # -- The CPU Limit
   cpuLimit: "8"
+  # -- The Ephemeral Storage Limit
   ephemeralStorageLimit:
 
 healthcheck:
+  # -- Enable health checks
   enabled: true
   startup:
+    # -- The startup period in seconds
     periodSeconds: 30
+    # -- The startup failure threshold
     failureThreshold: 30
+  # -- The failure threshold
   failureThreshold: 10
+  # -- The period in seconds
   periodSeconds: 5
+  # -- The Initial Delay in seconds
   initialDelaySeconds: 10
+  # -- The timeout in seconds
   timeoutSeconds: 60
 
 s3BlocksUploader:
   image:
+    # -- The image repository
     repository: amazon/aws-cli
+    # -- The pull policy
     pullPolicy: IfNotPresent
+    # -- The image tag
     tag: "latest"
   resources:
+    # -- The memory request
     memoryRequest: "128Mi"
+    # -- The cpu request
     cpuRequest: "1"
+    # -- The ephemeral storage request
     ephemeralStorageRequest:
+    # -- The memory limit
     memoryLimit: "256Mi"
+    # -- The cpu limit
     cpuLimit: "2"
+    # -- The ephemeral storage limit
     ephemeralStorageLimit:
 
 graphqlPublicProxy:
   image:
+    # -- The image repository
     repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-graphql-public-proxy
+    # -- The pull policy
     pullPolicy: IfNotPresent
+    # -- The image tag
     tag: "0.0.12"
   resources:
     limits:
+      # -- The CPU limit
       cpu: 200m
+      # -- The memory limit
       memory: 256Mi
     requests:
+      # -- The CPU request
       cpu: 100m
+      # -- The memory request
       memory: 128Mi
