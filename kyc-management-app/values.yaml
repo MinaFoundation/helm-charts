@@ -109,8 +109,9 @@ livenessProbe:
 # -- The readiness probes
 readinessProbe:
   httpGet:
-    path: /version
+    path: /health
     port: http
+  timeoutSeconds: 5
 
 autoscaling:
   # -- Enable autoscaling for the deployment

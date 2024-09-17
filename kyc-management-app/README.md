@@ -81,7 +81,7 @@ helmfile status
 | postgresql.primary.persistence.size | string | `"1Gi"` | Size of the postgresql server volume |
 | postgresql.primary.persistence.storageClass | string | `"ebs-gp3-encrypted"` | Storage class for the postgresql server volume |
 | postgresql.primary.resourcesPreset | string | `"nano"` | Resources preset to set resource requests and limits |
-| readinessProbe | object | `{"httpGet":{"path":"/version","port":"http"}}` | The readiness probes |
+| readinessProbe | object | `{"httpGet":{"path":"/health","port":"http"},"timeoutSeconds":5}` | The readiness probes |
 | replicaCount | int | `1` | The number of replicas |
 | resources | object | `{}` | Resources |
 | securityContext | object | `{}` | The Security Context |
