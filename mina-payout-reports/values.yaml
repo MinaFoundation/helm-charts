@@ -164,6 +164,9 @@ payoutReportsApi:
   walletMappingSpreadsheetTab: ""
   # -- S3 bucket where to store reports
   s3Bucket: ""
+  # -- Configurable starting epoch for staking ledger
+  stakingLedgerStartingEpoch: "0"
+
   aws:
     # -- AWS Region
     region: "us-west-2"

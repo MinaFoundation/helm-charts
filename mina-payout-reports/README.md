@@ -87,6 +87,7 @@ helmfile status
 | payoutReportsApi.sendgridToken | string | `""` | A token to use SendGrid email API |
 | payoutReportsApi.service.port | int | `5000` | The port of the service |
 | payoutReportsApi.service.type | string | `"ClusterIP"` | The type of service to create |
+| payoutReportsApi.stakingLedgerStartingEpoch | string | `"0"` | Configurable starting epoch for staking ledger |
 | payoutReportsApi.stakingLedgersBucket | string | `""` | Staking ledgers bucket name(AWS S3) |
 | payoutReportsApi.tolerations | list | `[]` | Tolerations |
 | payoutReportsApi.walletMappingSpreadsheetTab | string | `""` | Google's public spreadsheet sheet(tab) name |
