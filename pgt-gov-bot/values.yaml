@@ -14,7 +14,7 @@ bot:
     # -- The pullPolicy used when pulling the image
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "0.0.1"
+    tag: "0.0.15"
   # -- The secrets used to pull the image
   imagePullSecrets: []
   # -- The number of replicas
@@ -64,7 +64,7 @@ ocvWeb:
     # -- The pullPolicy used when pulling the image
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "0.0.1"
+    tag: "0.0.4"
   # -- The secrets used to pull the image
   imagePullSecrets: []
   # -- The number of replicas
@@ -103,7 +103,7 @@ ocvWeb:
     # -- Service type
     type: ClusterIP
     # -- Service port
-    port: 80
+    port: 4321
 
 persistence:
   # -- Enable persistence using PVC

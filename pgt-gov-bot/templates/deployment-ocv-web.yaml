@@ -12,6 +12,7 @@ spec:
   replicas: {{ .Values.ocvWeb.replicaCount }}
   selector:
     matchLabels:
+      app.kubernetes.io/component: web
       {{- include "pgt-gov-bot.selectorLabels" . | nindent 6 }}
   template:
     metadata:
@@ -20,6 +21,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
+        app.kubernetes.io/component: web
         {{- include "pgt-gov-bot.labels" . | nindent 8 }}
         {{- with .Values.ocvWeb.podLabels }}
         {{- toYaml . | nindent 8 }}
@@ -45,6 +47,10 @@ spec:
           env:
             - name: DB_STORAGE
               value: /data/database.sqlite
+            - name: VITE_DEFAULT_NETWORK
+              value: mina:testnet
+            - name: API_BASE_URL
+              value: http://{{ include "pgt-gov-bot.fullname" . }}
           livenessProbe:
             {{- toYaml .Values.ocvWeb.livenessProbe | nindent 12 }}
           readinessProbe:
@@ -52,17 +58,10 @@ spec:
           resources:
             {{- toYaml .Values.ocvWeb.resources | nindent 12 }}
           volumeMounts:
-            - name: database-data
-              mountPath: /data/
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
-      {{- if .Values.persistence.enabled }}
-        - name: database-data
-          persistentVolumeClaim:
-            claimName: {{ include "pgt-gov-bot.fullname" . }}-database
-      {{ end }}
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
