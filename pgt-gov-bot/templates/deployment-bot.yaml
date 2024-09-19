@@ -14,6 +14,7 @@ spec:
     type: Recreate
   selector:
     matchLabels:
+      app.kubernetes.io/component: bot
       {{- include "pgt-gov-bot.selectorLabels" . | nindent 6 }}
   template:
     metadata:
@@ -22,6 +23,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
+        app.kubernetes.io/component: bot
         {{- include "pgt-gov-bot.labels" . | nindent 8 }}
         {{- with .Values.bot.podLabels }}
         {{- toYaml . | nindent 8 }}
@@ -64,6 +66,10 @@ spec:
             {{- toYaml .Values.bot.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.bot.resources | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
           volumeMounts:
             - name: database-data
               mountPath: /data/
