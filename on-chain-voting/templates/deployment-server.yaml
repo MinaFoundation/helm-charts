@@ -57,8 +57,8 @@ spec:
               value: {{ .Values.server.archivePostgresConnectionString | quote }}
             - name: SERVER_ALLOWED_ORIGINS
               value: {{ .Values.server.allowedOrigins | quote }}
-            - name: MINA_NETWORK
-              value: {{ .Values.server.minaNetwork | quote }}
+            - name: NETWORK
+              value: {{ .Values.server.network | quote }}
             - name: BUCKET_NAME
               value: {{ .Values.server.ledgersBucket | quote }}
             {{- if .Values.server.extraEnvVars }}

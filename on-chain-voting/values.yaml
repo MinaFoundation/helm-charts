@@ -180,7 +180,7 @@ server:
     #   memory: 128Mi
 
   # -- Mina Network
-  minaNetwork: berkeley
+  network: mainnet
   # -- Stacking ledgers S3 bucket
   ledgersBucket: 673156464838-mina-staking-ledgers
   # -- Postgres Connection String
