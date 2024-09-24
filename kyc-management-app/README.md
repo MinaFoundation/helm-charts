@@ -64,6 +64,7 @@ helmfile status
 | ingress.enabled | bool | `false` | Whether to create an Ingress |
 | ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}]` | The Ingress Hosts |
 | ingress.tls | list | `[]` | The TLS configuration |
+| lifecycle | object | `{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -SIGQUIT 1"]}}}` | Lifecycle hooks |
 | livenessProbe | object | `{"httpGet":{"path":"/version","port":"http"}}` | The liveness probes |
 | nameOverride | string | `""` | Name override |
 | nodeSelector | object | `{}` | Node labels for pod assignment |

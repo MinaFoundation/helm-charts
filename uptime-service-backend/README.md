@@ -81,6 +81,7 @@ helmfile status
 | ingress.enabled | bool | `false` | Whether to enable ingress |
 | ingress.hosts | list | `[]` |  |
 | ingress.tls | list | `[]` |  |
+| lifecycle | object | `{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -SIGQUIT 1"]}}}` | Lifecycle hooks |
 | nameOverride | string | `""` | The release name override |
 | nodeSelector | object | `{}` | Node selector labels |
 | podAnnotations | object | `{}` | Annotations to add to the pods |
