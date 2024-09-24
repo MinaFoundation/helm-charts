@@ -70,6 +70,7 @@ helmfile status
 | server.image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/on-chain-voting-server"` | The image repository |
 | server.image.tag | string | `"0.1.0"` | Overrides the image tag whose default is the chart appVersion. |
 | server.ledgersBucket | string | `"673156464838-mina-staking-ledgers"` | Stacking ledgers S3 bucket |
+| server.lifecycle | object | `{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -SIGQUIT 1"]}}}` | Lifecycle hooks |
 | server.network | string | `"mainnet"` | Mina Network |
 | server.nodeSelector | object | `{}` | Node Selector |
 | server.podAnnotations | object | `{}` | Annotations to add to the pods |
@@ -97,6 +98,7 @@ helmfile status
 | web.ingress.enabled | bool | `false` | Whether to create an Ingress |
 | web.ingress.hosts | list | `[]` | The Ingress Hosts |
 | web.ingress.tls | list | `[]` | The TLS configuration |
+| web.lifecycle | object | `{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -SIGQUIT 1"]}}}` | Lifecycle hooks |
 | web.nextPublicApiBaseURL | string | `""` | Next Public API base URL |
 | web.nextPublicReleaseStage | string | `"production"` | Next Public Release Stage |
 | web.nodeSelector | object | `{}` | Node Selector |

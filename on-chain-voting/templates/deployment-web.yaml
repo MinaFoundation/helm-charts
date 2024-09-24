@@ -37,6 +37,10 @@ spec:
             {{- toYaml .Values.web.securityContext | nindent 12 }}
           image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.web.image.pullPolicy }}
+          {{- with .Values.web.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           env:
             - name: API_BASE_URL
               value: {{ .Values.web.apiBaseURL | default (printf "http://%s-server:8080" .Release.Name) | quote }}
