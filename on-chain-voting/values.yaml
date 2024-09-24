@@ -123,6 +123,15 @@ web:
   # -- Affinity
   affinity: {}
 
+  # -- Lifecycle hooks
+  lifecycle:
+    preStop:
+      exec:
+        command:
+        - sh
+        - -c
+        - sleep 15 && kill -SIGQUIT 1
+
 server:
   # -- The number of replicas
   replicaCount: 1
@@ -209,6 +218,15 @@ server:
 
   # -- Affinity
   affinity: {}
+
+  # -- Lifecycle hooks
+  lifecycle:
+    preStop:
+      exec:
+        command:
+        - sh
+        - -c
+        - sleep 15 && kill -SIGQUIT 1
 
 postgresql:
   # -- Whether to deploy a PostgreSQL server to satisfy the application database requirements
