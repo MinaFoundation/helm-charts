@@ -62,6 +62,7 @@ helmfile status
 | ingress.enabled | bool | `false` | Whether to create an Ingress |
 | ingress.hosts | list | `[]` | The Ingress Hosts |
 | ingress.tls | list | `[]` | The TLS configuration |
+| lifecycle | object | `{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -SIGQUIT 1"]}}}` | Lifecycle hooks |
 | livenessProbe | object | `{"httpGet":{"path":"/health","port":"http"}}` | The Liveness Probe |
 | minaPayoutsDataProvider.archiveDBRecencyThreshold | int | `10` | The Archive DB Recency Threshold |
 | minaPayoutsDataProvider.blockDBQuery.host | string | `"http://localhost"` | The Host of the Archive DB |
