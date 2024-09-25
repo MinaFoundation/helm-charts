@@ -52,7 +52,7 @@ helmfile status
 | ingress.enabled | bool | `false` | Whether to create an Ingress |
 | ingress.hosts | list | `[{"host":"chart-example.local"}]` | A list of DNS names to create for leaderboard service |
 | ingress.tls | list | `[]` | The TLS configuration |
-| leaderboardApi | object | `{"affinity":{},"cacheTimeout":300,"extraEnvVars":{},"image":{"pullPolicy":"IfNotPresent","repository":"673156464838.dkr.ecr.us-west-2.amazonaws.com/delegation-program-leaderboard-api","tag":"2.1.0"},"imagePullSecrets":[],"logFile":"./application.log","nodeSelector":{},"podAnnotations":{},"podSecurityContext":{},"replicaCount":1,"resources":{},"securityContext":{},"service":{"port":5000,"type":"ClusterIP"},"swaggerUrl":"localhost:5000","tolerations":[]}` | configuration options for leaderboard api deployment |
+| leaderboardApi | object | `{"affinity":{},"cacheTimeout":300,"extraEnvVars":{},"image":{"pullPolicy":"IfNotPresent","repository":"673156464838.dkr.ecr.us-west-2.amazonaws.com/delegation-program-leaderboard-api","tag":"2.1.0"},"imagePullSecrets":[],"lifecycle":{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -SIGQUIT 1"]}}},"logFile":"./application.log","nodeSelector":{},"podAnnotations":{},"podSecurityContext":{},"replicaCount":1,"resources":{},"securityContext":{},"service":{"port":5000,"type":"ClusterIP"},"swaggerUrl":"localhost:5000","tolerations":[]}` | configuration options for leaderboard api deployment |
 | leaderboardApi.affinity | object | `{}` | Affinity rules |
 | leaderboardApi.cacheTimeout | int | `300` | Application cache timeout in seconds |
 | leaderboardApi.extraEnvVars | object | `{}` | Extra Environment Variables |
@@ -60,6 +60,7 @@ helmfile status
 | leaderboardApi.image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/delegation-program-leaderboard-api"` | The repository of the image |
 | leaderboardApi.image.tag | string | `"2.1.0"` | The tag of the image. Overrides the image tag whose default is the chart appVersion. |
 | leaderboardApi.imagePullSecrets | list | `[]` | The secrets used to pull the image |
+| leaderboardApi.lifecycle | object | `{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -SIGQUIT 1"]}}}` | Lifecycle hooks |
 | leaderboardApi.logFile | string | `"./application.log"` | A path to an application log file |
 | leaderboardApi.nodeSelector | object | `{}` | Node selector labels |
 | leaderboardApi.podAnnotations | object | `{}` | Annotations to add to the pods |
@@ -71,7 +72,7 @@ helmfile status
 | leaderboardApi.service.type | string | `"ClusterIP"` | The type of service to create |
 | leaderboardApi.swaggerUrl | string | `"localhost:5000"` | Swagger host URL |
 | leaderboardApi.tolerations | list | `[]` | Tolerations |
-| leaderboardWeb | object | `{"affinity":{},"autoscaling":{"enabled":false,"maxReplicas":100,"minReplicas":1,"targetCPUUtilizationPercentage":80},"extraEnvVars":{},"image":{"pullPolicy":"IfNotPresent","repository":"673156464838.dkr.ecr.us-west-2.amazonaws.com/delegation-program-leaderboard","tag":"2.1.0"},"imagePullSecrets":[],"nodeSelector":{},"podAnnotations":{},"podSecurityContext":{},"replicaCount":1,"resources":{},"securityContext":{},"service":{"port":80,"type":"ClusterIP"},"tolerations":[]}` | configuration options for leaderboard web deployment |
+| leaderboardWeb | object | `{"affinity":{},"autoscaling":{"enabled":false,"maxReplicas":100,"minReplicas":1,"targetCPUUtilizationPercentage":80},"extraEnvVars":{},"image":{"pullPolicy":"IfNotPresent","repository":"673156464838.dkr.ecr.us-west-2.amazonaws.com/delegation-program-leaderboard","tag":"2.1.0"},"imagePullSecrets":[],"lifecycle":{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -SIGQUIT 1"]}}},"nodeSelector":{},"podAnnotations":{},"podSecurityContext":{},"replicaCount":1,"resources":{},"securityContext":{},"service":{"port":80,"type":"ClusterIP"},"tolerations":[]}` | configuration options for leaderboard web deployment |
 | leaderboardWeb.affinity | object | `{}` | Affinity rules |
 | leaderboardWeb.autoscaling.enabled | bool | `false` | Whether to enable autoscaling |
 | leaderboardWeb.autoscaling.maxReplicas | int | `100` | The maximum number of pods |
@@ -82,6 +83,7 @@ helmfile status
 | leaderboardWeb.image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/delegation-program-leaderboard"` | The repository of the image |
 | leaderboardWeb.image.tag | string | `"2.1.0"` | The tag of the image. Overrides the image tag whose default is the chart appVersion. |
 | leaderboardWeb.imagePullSecrets | list | `[]` | The secrets used to pull the image |
+| leaderboardWeb.lifecycle | object | `{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -SIGQUIT 1"]}}}` | Lifecycle hooks |
 | leaderboardWeb.nodeSelector | object | `{}` | Node selector labels |
 | leaderboardWeb.podAnnotations | object | `{}` | Annotations to add to the pods |
 | leaderboardWeb.podSecurityContext | object | `{}` | The Pod Security Context |
