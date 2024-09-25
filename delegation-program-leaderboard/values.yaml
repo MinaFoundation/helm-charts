@@ -127,6 +127,15 @@ leaderboardWeb:
   # -- Affinity rules
   affinity: {}
 
+  # -- Lifecycle hooks
+  lifecycle:
+    preStop:
+      exec:
+        command:
+        - sh
+        - -c
+        - sleep 15 && kill -SIGQUIT 1
+
 # -- configuration options for leaderboard api deployment
 leaderboardApi:
   # -- Swagger host URL
@@ -206,3 +215,12 @@ leaderboardApi:
 
   # -- Affinity rules
   affinity: {}
+
+  # -- Lifecycle hooks
+  lifecycle:
+    preStop:
+      exec:
+        command:
+        - sh
+        - -c
+        - sleep 15 && kill -SIGQUIT 1
