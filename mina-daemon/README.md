@@ -74,19 +74,13 @@ helmfile status
 | graphqlPublicProxy.resources.limits.memory | string | `"256Mi"` | The memory limit |
 | graphqlPublicProxy.resources.requests.cpu | string | `"100m"` | The CPU request |
 | graphqlPublicProxy.resources.requests.memory | string | `"128Mi"` | The memory request |
-| healthcheck.enabled | bool | `true` | Enable health checks |
-| healthcheck.failureThreshold | int | `10` | The failure threshold |
-| healthcheck.initialDelaySeconds | int | `10` | The Initial Delay in seconds |
-| healthcheck.periodSeconds | int | `5` | The period in seconds |
-| healthcheck.startup.failureThreshold | int | `30` | The startup failure threshold |
-| healthcheck.startup.periodSeconds | int | `30` | The startup period in seconds |
-| healthcheck.timeoutSeconds | int | `60` | The timeout in seconds |
 | ingress.annotations | object | `{}` | Annotations to add to the Ingress |
 | ingress.className | string | `""` | Ingress Class Name |
 | ingress.enabled | bool | `false` | Enable Ingress |
 | ingress.hosts | list | `[]` | The Ingress Hosts |
 | ingress.labels | object | `{}` | Labels to add to the Ingress |
 | ingress.tls | bool | `false` | TLS configuration |
+| livenessProbe | object | `{"exec":{"command":["/bin/bash","-c","source /scripts/healthcheck.sh && check_liveness"]},"failureThreshold":3,"initialDelaySeconds":30,"periodSeconds":60,"successThreshold":1,"timeoutSeconds":30}` | The liveness probe |
 | node.allPeersSeenMetric | string | `nil` | All Peers Seen Metric |
 | node.archive.address | string | `"staging-berkeley-archive:3086"` | Archive URL |
 | node.archive.enabled | bool | `false` | Enable archive |
@@ -175,6 +169,7 @@ helmfile status
 | node.workSelection | string | `nil` | Work Selection |
 | podAnnotations | object | `{}` | Annotations to add to the pods |
 | podLabels | object | `{}` | Labels to add to the pods |
+| readinessProbe | object | `{"exec":{"command":["/bin/bash","-c","source /scripts/healthcheck.sh && check_readiness"]},"failureThreshold":2,"initialDelaySeconds":1200,"periodSeconds":60,"successThreshold":1,"timeoutSeconds":60}` | The readiness probe |
 | resources.cpuLimit | string | `"8"` | The CPU Limit |
 | resources.cpuRequest | string | `"4"` | The CPU Request |
 | resources.ephemeralStorageLimit | string | `nil` | The Ephemeral Storage Limit |
