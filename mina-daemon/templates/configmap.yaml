@@ -22,3 +22,5 @@ data:
   generate-libp2p-keys.sh: |-
 {{ (.Files.Get "scripts/generate-libp2p-keys.sh") | indent 4 }}
 {{- end }}
+  healthcheck.sh: |-
+{{ (.Files.Get "scripts/healthcheck.sh") | indent 4 }}

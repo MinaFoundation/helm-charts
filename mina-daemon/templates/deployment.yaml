@@ -433,14 +433,19 @@ spec:
             - name: graphql-port
               protocol: TCP
               containerPort: {{ .Values.node.ports.graphql }}
-            {{- end -}}
-{{- $data := dict "name" .Values.node.name "healthcheck" .Values.healthcheck }}
-{{- include "healthcheck.node.allChecks" $data | indent 10 }}
+            {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
           imagePullPolicy: Always
           volumeMounts:
             - name: {{ .Release.Name }}-scripts
               mountPath: /scripts/entrypoint.sh
               subPath: entrypoint.sh
+            - name: {{ .Release.Name }}-scripts
+              mountPath: /scripts/healthcheck.sh
+              subPath: healthcheck.sh
             {{ if .Values.node.libp2pKeys.enabled -}}
             {{ if .Values.node.libp2pKeys.create -}}
             - name: {{ .Release.Name }}-generated-libp2p-keys

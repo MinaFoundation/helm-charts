@@ -317,22 +317,33 @@ resources:
   # -- The Ephemeral Storage Limit
   ephemeralStorageLimit:
 
-healthcheck:
-  # -- Enable health checks
-  enabled: true
-  startup:
-    # -- The startup period in seconds
-    periodSeconds: 30
-    # -- The startup failure threshold
-    failureThreshold: 30
-  # -- The failure threshold
-  failureThreshold: 10
-  # -- The period in seconds
-  periodSeconds: 5
-  # -- The Initial Delay in seconds
-  initialDelaySeconds: 10
-  # -- The timeout in seconds
+# -- The liveness probe
+livenessProbe:
+  failureThreshold: 3
+  exec:
+    command: [
+      "/bin/bash",
+      "-c",
+      "source /scripts/healthcheck.sh && check_liveness"
+    ]
+  periodSeconds: 60
+  successThreshold: 1
+  timeoutSeconds: 30
+  initialDelaySeconds: 30
+# -- The readiness probe
+readinessProbe:
+  exec:
+    command: [
+      "/bin/bash",
+      "-c",
+      "source /scripts/healthcheck.sh && check_readiness"
+    ]
+  periodSeconds: 60
+  failureThreshold: 2
+  successThreshold: 1
   timeoutSeconds: 60
+  initialDelaySeconds: 1200
+
 
 s3BlocksUploader:
   image:
