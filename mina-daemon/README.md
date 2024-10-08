@@ -43,6 +43,7 @@ helmfile status
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| affinity | object | `{}` |  |
 | deployment.genesisLedgerURL | string | `nil` | Genesis ledger URL |
 | deployment.image | string | `"minaprotocol/mina-daemon:1.3.2beta2-release-2.0.0-05c2f73-bulseye-berkeley"` | Image to use for the deployment |
 | deployment.peerListURL | string | `"https://storage.googleapis.com/seed-lists/berkeley_seeds.txt"` | Peer list URL |
@@ -167,6 +168,7 @@ helmfile status
 | node.walletKeys.enabled | bool | `false` | Enable wallet keys |
 | node.workReassignmentWait | string | `nil` | Work Reassignment Wait |
 | node.workSelection | string | `nil` | Work Selection |
+| nodeSelector | object | `{}` | Node selector for all the pods |
 | podAnnotations | object | `{}` | Annotations to add to the pods |
 | podLabels | object | `{}` | Labels to add to the pods |
 | readinessProbe | object | `{"exec":{"command":["/bin/bash","-c","source /scripts/healthcheck.sh && check_readiness"]},"failureThreshold":2,"initialDelaySeconds":1200,"periodSeconds":60,"successThreshold":1,"timeoutSeconds":60}` | The readiness probe |
@@ -195,5 +197,6 @@ helmfile status
 | service.graphql.publishNotReadyAddresses | bool | `false` | Publish not ready addresses |
 | service.graphql.type | string | `"ClusterIP"` | The service type |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
+| tolerations | list | `[]` | Toleration for all the pods |
 | updateStrategy.type | string | `"Recreate"` | The update strategy type |
 
