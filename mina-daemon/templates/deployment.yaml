@@ -10,6 +10,9 @@ spec:
   selector:
     matchLabels:
       app: {{ .Release.Name }}
+  {{- if .Values.updateStrategy  }}
+  strategy: {{- toYaml .Values.updateStrategy | nindent  4 }}
+  {{- end }}
   template:
     metadata:
       labels:
@@ -612,7 +615,4 @@ spec:
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- if .Values.updateStrategy  }}
-      strategy: {{- toYaml .Values.updateStrategy | nindent  8 }}
       {{- end }}
