@@ -127,3 +127,12 @@ service:
 
 # -- The Resources
 resources: {}
+
+# -- Node selector labels
+nodeSelector: {}
+
+# -- Tolerations
+tolerations: []
+
+# -- Affinity rules
+affinity: {}
