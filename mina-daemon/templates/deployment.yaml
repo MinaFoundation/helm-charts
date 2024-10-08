@@ -601,6 +601,18 @@ spec:
           configMap:
             name: {{ .Release.Name }}-scripts
             defaultMode: 0755
-  {{- if .Values.updateStrategy  }}
-  strategy: {{- toYaml .Values.updateStrategy | nindent  4 }}
-  {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.updateStrategy  }}
+      strategy: {{- toYaml .Values.updateStrategy | nindent  8 }}
+      {{- end }}

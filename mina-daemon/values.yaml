@@ -386,3 +386,10 @@ graphqlPublicProxy:
       cpu: 100m
       # -- The memory request
       memory: 128Mi
+
+# -- Node selector for all the pods
+nodeSelector: {}
+# -- Toleration for all the pods
+tolerations: []
+# Affinity for all the pods
+affinity: {}
