@@ -41,6 +41,7 @@ helmfile status
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| affinity | object | `{}` | Affinity rules |
 | affinity | object | `{}` | affinity for the pod assignment |
 | coordinator.aws.accessKeyID | string | `nil` | AWS Access Key ID |
 | coordinator.aws.host | string | `"cassandra.us-west-2.amazonaws.com"` | AWS Cassandra Host |
@@ -77,6 +78,7 @@ helmfile status
 | image.repository | string | `""` | The image repository |
 | image.tag | string | `""` | The image tag |
 | nameOverride | string | `nil` | Name override |
+| nodeSelector | object | `{}` | Node selector labels |
 | podAnnotations | object | `{}` | Annotations to add to the pods |
 | podLabels | object | `{}` | Label to add to the pods |
 | replicas | int | `1` | Replica count |
@@ -89,4 +91,5 @@ helmfile status
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. |
 | serviceAccount.worker.annotations | object | `{}` | Annotations to add to the service account |
+| tolerations | list | `[]` | Tolerations |
 
