@@ -77,6 +77,19 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
+# -- The arguments to pass at runtime
+args: []
+
+## - Environment variables
+envVars: {}
+# - name: FOO
+#   value: FOO
+# - name: BAR
+#   valueFrom:
+#     secretKeyRef:
+#       name: mySecret
+#       key: bar
+
 # -- The Resources
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
