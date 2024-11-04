@@ -94,6 +94,15 @@ payoutReportsWeb:
   # -- Affinity rules
   affinity: {}
 
+  # -- Lifecycle hooks
+  lifecycle:
+    preStop:
+      exec:
+        command:
+        - sh
+        - -c
+        - sleep 15 && kill -SIGQUIT 1
+
   ingress:
     # -- Whether to create a frontend Ingress
     enabled: false
@@ -251,6 +260,15 @@ payoutReportsApi:
 
   # -- Affinity rules
   affinity: {}
+
+  # -- Lifecycle hooks
+  lifecycle:
+    preStop:
+      exec:
+        command:
+        - sh
+        - -c
+        - sleep 15 && kill -SIGQUIT 1
 
   ingress:
     # -- Whether to create a backend Ingress
