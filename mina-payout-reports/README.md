@@ -70,6 +70,7 @@ helmfile status
 | payoutReportsApi.ingress.enabled | bool | `false` | Whether to create a backend Ingress |
 | payoutReportsApi.ingress.hosts | list | `[]` | The Ingress Hosts |
 | payoutReportsApi.ingress.tls | list | `[]` | The TLS configuration |
+| payoutReportsApi.lifecycle | object | `{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -SIGQUIT 1"]}}}` | Lifecycle hooks |
 | payoutReportsApi.livenessProbe | object | `{}` | Liveness check configuration |
 | payoutReportsApi.nodeSelector | object | `{}` | Node selector labels |
 | payoutReportsApi.payoutsDB.host | string | `"localhost"` | Delegation Program Payouts Database Host |
@@ -104,6 +105,7 @@ helmfile status
 | payoutReportsWeb.ingress.enabled | bool | `false` | Whether to create a frontend Ingress |
 | payoutReportsWeb.ingress.hosts | list | `[]` | The Ingress Hosts |
 | payoutReportsWeb.ingress.tls | list | `[]` | The TLS configuration |
+| payoutReportsWeb.lifecycle | object | `{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -SIGQUIT 1"]}}}` | Lifecycle hooks |
 | payoutReportsWeb.livenessProbe | object | `{}` | Liveness check configuration |
 | payoutReportsWeb.nodeSelector | object | `{}` | Node selector labels |
 | payoutReportsWeb.podAnnotations | object | `{}` | Annotations to add to the pods |
