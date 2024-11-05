@@ -11,7 +11,7 @@ config:
   # -- Gpt Surver Summarizer Log Level
   gssLogLevel: INFO
   # -- Openai API Key
-  openAiApiKey: "" 
+  openAiApiKey: ""
   discord:
     # -- Discord Application ID
     clientId: ""
@@ -37,7 +37,7 @@ redis:
     # * After 14400 seconds (4 hours) if at least 1 change was performed
     # * After 3600 seconds (1 hour) if at least 100 changes were performed
     # * After 600 seconds (10 minutes) if at least 10.000 changes were performed
-    # 
+    #
     save 14400 1 3600 100 600 10000
     # Workdir of redis
     dir /data
@@ -84,7 +84,7 @@ server:
   args:
     - summarizer
   # -- Extra Environment Variables
-  extraEnvVars: [] 
+  extraEnvVars: []
   # -- Annotations for the summarizer serviceAccount
   serviceAccountAnnotations: {}
 
@@ -141,3 +141,12 @@ tolerations: []
 
 # -- Affinity rules
 affinity: {}
+
+# -- Lifecycle hooks
+lifecycle:
+  preStop:
+    exec:
+      command:
+      - sh
+      - -c
+      - sleep 15 && kill -SIGQUIT 1
