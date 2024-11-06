@@ -19,7 +19,7 @@ server:
     labels: {}
     # -- Service annotations
     annotations: {}
-  
+
   # -- Collection of ports
   ports:
     # -- Port through which the UI is exposed
@@ -85,6 +85,10 @@ securityContext: {}
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
+
+updateStrategy:
+  # -- The update strategy type
+  type: Recreate
 
 # -- Resource limitations for the pods
 resources: {}

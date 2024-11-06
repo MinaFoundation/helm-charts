@@ -73,6 +73,7 @@ helmfile status
 | ingress.enabled | bool | `false` | Enable Ingress |
 | ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}]` | Ingress Hosts |
 | ingress.tls | list | `[]` | Ingress TLS configuration |
+| lifecycle | object | `{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -SIGQUIT 1"]}}}` | Lifecycle hooks |
 | livenessProbe | string | `nil` | Liveness Probe |
 | mongodb.auth.enabled | bool | `false` | Enable MongoDB Authentication |
 | nameOverride | string | `""` | The release name override |
