@@ -74,4 +74,5 @@ helmfile status
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
 | terminationGracePeriodSeconds | int | `30` | The time to wait before terminating the process |
 | tolerations | list | `[]` | Tolerations |
+| updateStrategy.type | string | `"Recreate"` | The update strategy type |
 
