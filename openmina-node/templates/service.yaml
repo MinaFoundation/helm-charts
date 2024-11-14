@@ -11,5 +11,9 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+    - port: {{ .Values.node.libp2p.port }}
+      targetPort: libp2p
+      protocol: TCP
+      name: libp2p
   selector:
     {{- include "openmina-node.selectorLabels" . | nindent 4 }}
