@@ -146,3 +146,12 @@ tolerations: []
 
 # -- The affinity
 affinity: {}
+
+# -- Lifecycle hooks
+lifecycle:
+  preStop:
+    exec:
+      command:
+      - sh
+      - -c
+      - sleep 15 && kill -SIGQUIT 1
