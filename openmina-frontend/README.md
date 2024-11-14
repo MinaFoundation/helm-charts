@@ -59,6 +59,7 @@ helmfile status
 | ingress.enabled | bool | `false` | The ingress |
 | ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}]` | The Ingress Hosts |
 | ingress.tls | list | `[]` | The Ingress TLS configuration |
+| lifecycle | object | `{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -SIGQUIT 1"]}}}` | Lifecycle hooks |
 | livenessProbe | string | `nil` | The arguments to pass at runtime |
 | nameOverride | string | `""` | Name override |
 | nodeSelector | object | `{}` | The node selector |
