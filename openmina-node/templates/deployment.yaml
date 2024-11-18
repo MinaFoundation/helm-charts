@@ -39,6 +39,22 @@ spec:
       serviceAccountName: {{ include "openmina-node.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+
+      {{- if .Values.node.libp2p.discoveryExternalIp.enabled }}
+      initContainers:
+        - name: get-external-ip
+          image: busybox
+          command: ["/bin/sh", "/scripts/get-external-ip.sh"]
+          env:
+            - name: DISCOVERY_EXTERNAL_IP_TARGET_DNS
+              value: {{ .Values.node.libp2p.discoveryExternalIp.targetDNS | quote }}
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts/get-external-ip.sh
+              subPath: get-external-ip.sh
+            - name: data
+              mountPath: /data
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -46,17 +62,28 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/usr/local/bin/openmina", "node"]
-          {{- if .Values.node.args }}
           args:
+          {{- if .Values.node.libp2p.discoveryExternalIp.enabled }}
+            - "--libp2p-external-ip"
+            - "$(cat /data/external-ip)"
+          {{- end }}
+          {{- if .Values.node.args }}
             {{- toYaml .Values.node.args | nindent 12 }}
           {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+            - name: libp2p
+              containerPort: {{ .Values.node.libp2p.port }}
+              protocol: TCP
           env:
             - name: OPENMINA_HOME
               value: {{ .Values.node.homeDirectory }}
+            - name: PORT
+              value: {{ .Values.service.port | quote }}
+            - name: LIBP2P_PORT
+              value: {{ .Values.node.libp2p.port | quote }}
             {{- if .Values.node.envVars }}
             {{- toYaml .Values.node.envVars | nindent 12 }}
             {{- end }}
@@ -67,9 +94,16 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
+            - name: scripts
+              mountPath: /scripts/entrypoint.sh
+              subPath: entrypoint.sh
             - name: openmina-keys
               mountPath: {{ .Values.node.homeDirectory }}/keys
               readOnly: true
+            {{- if .Values.node.libp2p.discoveryExternalIp.enabled }}
+            - name: data
+              mountPath: /data
+            {{- end }}
             {{- if .Values.persistence.enabled }}
             - name: openmina-home
               mountPath: {{ .Values.node.homeDirectory }}
@@ -82,6 +116,12 @@ spec:
           secret:
             secretName: {{ include "openmina-node.fullname" . }}
             defaultMode: 0600
+        - name: scripts
+          configMap:
+            name: {{ include "openmina-node.fullname" . }}-scripts
+            defaultMode: 0755
+        - name: data
+          emptyDir: {}
       {{- if .Values.persistence.enabled }}
         - name: openmina-home
           persistentVolumeClaim:

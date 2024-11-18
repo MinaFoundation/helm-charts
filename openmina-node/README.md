@@ -1,6 +1,6 @@
 # openmina-node
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.8.1](https://img.shields.io/badge/AppVersion-v0.8.1-informational?style=flat-square)
+![Version: 0.1.1](https://img.shields.io/badge/Version-0.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.8.1](https://img.shields.io/badge/AppVersion-v0.8.1-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -46,7 +46,7 @@ helmfile status
 | fullnameOverride | string | `""` | The full release name override |
 | image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
 | image.repository | string | `"openmina/openmina"` | The image repository |
-| image.tag | string | `"0.8.3"` | Overrides the image tag whose default is the chart appVersion. |
+| image.tag | string | `"0.11.2"` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | The secrets used to pull the image |
 | ingress.annotations | object | `{}` | The Ingress Annotations |
 | ingress.className | string | `""` | The Ingress Class Name to use |
@@ -58,6 +58,10 @@ helmfile status
 | node.args | list | `[]` | The arguments to pass at runtime |
 | node.envVars | object | `{}` | The environment variables to set |
 | node.homeDirectory | string | `"/root/.openmina"` | The home directory of the node |
+| node.libp2p.discoveryExternalIp | object | `{"enabled":false,"targetDNS":"example.nlb.us-west-2.amazonaws.com"}` | Discovery External IP |
+| node.libp2p.discoveryExternalIp.enabled | bool | `false` | Enable Discovery External IP |
+| node.libp2p.discoveryExternalIp.targetDNS | string | `"example.nlb.us-west-2.amazonaws.com"` | Target DNS |
+| node.libp2p.port | int | `8302` | The libp2p peer id |
 | node.libp2p.privateKey | string | `""` | The libp2p private key |
 | node.libp2p.publicKey | string | `""` | The libp2p public key |
 | node.wallet.privateKey | string | `""` | The wallet private key |

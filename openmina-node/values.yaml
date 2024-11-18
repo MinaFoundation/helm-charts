@@ -11,7 +11,7 @@ image:
   # -- The pullPolicy used when pulling the image
   pullPolicy: IfNotPresent
   # -- Overrides the image tag whose default is the chart appVersion.
-  tag: "0.8.3"
+  tag: "0.11.2"
 
 # -- The secrets used to pull the image
 imagePullSecrets: []
@@ -90,6 +90,14 @@ node:
     privateKey: ""
     # -- The libp2p public key
     publicKey: ""
+    # -- The libp2p peer id
+    port: 8302
+    # -- Discovery External IP
+    discoveryExternalIp:
+      # -- Enable Discovery External IP
+      enabled: false
+      # -- Target DNS
+      targetDNS: example.nlb.us-west-2.amazonaws.com
   # -- The arguments to pass at runtime
   args: []
   # -- The environment variables to set
