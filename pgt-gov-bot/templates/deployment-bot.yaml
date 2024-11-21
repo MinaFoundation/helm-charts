@@ -60,6 +60,12 @@ spec:
                   key: discordGuildId
             - name: DB_STORAGE
               value: /data/database.sqlite
+            - name: MEF_FE_BASE_URL
+              value: {{.Values.config.mef.frontend.baseUrl}}
+            - name: JWT_PRIVATE_KEY_RS512
+              value: {{.Values.config.privateKey | quote}}
+            - name: JWT_PUBLIC_KEY_RS512
+              value: {{.Values.config.publicKey | quote}}
           livenessProbe:
             {{- toYaml .Values.bot.livenessProbe | nindent 12 }}
           readinessProbe:

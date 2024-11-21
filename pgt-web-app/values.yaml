@@ -1,0 +1,194 @@
+# Default values for pgt-web-app.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 1
+
+config:
+  privateKey: |
+    -----BEGIN PRIVATE KEY-----
+    MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDCEKoQMfoxAoAx
+    L9aNa2YP5EIy8dgqB/bcR6jaZwBUGaxqdeaA9ofYiIcEZyqPW5hL79i+tvHKfhU+
+    Tgh2VLAy2bpHyJZknwzLfC1lAyx67lZeIZpV1pqgvJL08rQZpddV+42Cucx2AglD
+    T25X0W/FjsIwZKfq9eiRKIa0avrd8PUM9A5NmQcVg2lsxLDR4fCqaieQSm3u1gXf
+    NO8H8wfyS5ZLgXWskzjAgeJgqg49SphziV/sr9+I4YSWQxAMYsVd6wwJVcMh25Hd
+    otjCHCS/HFxIVAvpt2YZf/xc9qZ0KKC7EA8CfjsrzQAX1SlMbamXu6d5JeyLcI+h
+    8PzJOUvVAgMBAAECggEASL/mgNu7ZtQBKm88hxdT03FGP8LZvifuKvXSHs2uGdjm
+    AaLhHkdM9ad4tfXWxpcXqJ/pKNV8HuTVId4u3e0xgF6OropLlrzpFv8eJVfjPNJM
+    Hk2KhdNFdCw9CwZQ7ax15Q3AJtlwBG0O++SzAMjKlczGj02shTBaVtBSbyALm1co
+    fRLaWjHdOUgHprbm+OG6cplGiJHkdCIf4pyo/OBt9rA/8f8mSvSTG7p3YamOAWFU
+    pGup1mRQmvOPjX4No2pzpEofKsZmlCYNZigABfjrUY2+Rmj0kELnxVnhoowu/ben
+    NWGVeL5JhpWnfhYquzOf/N+qvGPVP0XUGM+roDGboQKBgQD96aCpkXcJMNAfevH3
+    OPffLmMwLKbDu3N6xpSMiDN7rFmfzp7yxMW1mTj9juTKsHa5v7F4RQ3I1N+RNCp6
+    OBgrqQC5uU7D+1P6f072xWjw5aV84JfBedkj78N97fblCVCdXXebf7TsKQAJJUWR
+    b0pT+yi2Yiz0neVgBd/ER2J/gwKBgQDDqRWhHl7vMGuW0OksTbdEX2VRkOZNBjfn
+    fly97e+eCccL41ghRLhGjBfDGUi6DuB6XCUdZqGZVi8Fy30V2wrsPyZ4xiypWJS/
+    ARMMGvM1vbG6GY0pPzDzooIm8TsXl59cLOedKrfyLhLB5Cn34X1p8kWrsQmfnecD
+    nAcr1nqPxwKBgExLIsdQuh+81wxeeM38BB6/ZXZYNFOjw3MksAX59t42T0fBYek4
+    Tt/eBk3J3d05YLM3ci/dL+Mkc3jB3/GRYVHdGia0E4K3xegC0Ms9Teb0WeFH6tFr
+    t18g7/CqzADN57chGotSuB4tw6D73gdxFThew0DqBvAJcZ6EpVPozyPZAoGAcN6j
+    eZR5k2XNSu0s9b/HTwvw+MKr+Bb0PPiqK26M4hAl4Pe/KUHpQ9khBA0b5Skb2bo6
+    NuGzqy8KZT9j4y2++VXcraM0tGRDOoQ2Jq+NSZ0qX37J7ddkN8exaSGTwyJWbegB
+    nKq9/lkRvQQQKczMekemZUr1kDyYvX5OrL1HapUCgYAM7VCohi1sFfDUov1lAc+d
+    a51R641gaZmlw2749k762+6J6vagu6hcWljPiHo4pA9drvVqeMsNdKcXfs1JXqnC
+    iTdqrpGobUM8bNVyPRXxryQIKOJ6ou8xt1pyenAhOoMTOSOllnU8/bM/VSPXXHrf
+    Gv61TwASbeDP/WPoCMnylw==
+
+  publicKey: |
+    -----BEGIN PUBLIC KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwhCqEDH6MQKAMS/WjWtm
+    D+RCMvHYKgf23Eeo2mcAVBmsanXmgPaH2IiHBGcqj1uYS+/Yvrbxyn4VPk4IdlSw
+    Mtm6R8iWZJ8My3wtZQMseu5WXiGaVdaaoLyS9PK0GaXXVfuNgrnMdgIJQ09uV9Fv
+    xY7CMGSn6vXokSiGtGr63fD1DPQOTZkHFYNpbMSw0eHwqmonkEpt7tYF3zTvB/MH
+    8kuWS4F1rJM4wIHiYKoOPUqYc4lf7K/fiOGElkMQDGLFXesMCVXDIduR3aLYwhwk
+    vxxcSFQL6bdmGX/8XPamdCiguxAPAn47K80AF9UpTG2pl7uneSXsi3CPofD8yTlL
+    1QIDAQAB
+    -----END PUBLIC KEY-----
+
+# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+image:
+  repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/pgt-web-app
+  # This sets the pull policy for images.
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "0.1.0"
+
+# This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets: []
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+# This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# -- Annotations to add to deployments
+deploymentAnnotations: {}
+# This is for setting Kubernetes Annotations to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+podAnnotations: {}
+# This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  type: ClusterIP
+  # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+  port: 3000
+
+# This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
+ingress:
+  enabled: false
+  className: ""
+  annotations:
+    {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources:
+  {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+
+# This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# Additional volumes on the output Deployment definition.
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+
+# Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+postgresql:
+  # -- Enable local postgresql database server
+  enabled: true
+  primary:
+    # -- Resources preset to set resource requests and limits
+    resourcesPreset: "nano"
+    persistence:
+      # -- Enable the persistence for the postgresql server
+      enabled: true
+      # -- Storage class for the postgresql server volume
+      storageClass: ""
+      # -- Size of the postgresql server volume
+      size: 8Gi
+  auth:
+    # -- Username for the database
+    username: govbot
+    # -- Password for the database
+    password: mina123
+    # -- Enable the default postgres user
+    enablePostgresUser: false
+
+pgadmin4:
+  enabled: false
