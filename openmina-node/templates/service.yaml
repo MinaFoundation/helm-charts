@@ -22,5 +22,8 @@ spec:
       targetPort: libp2p
       protocol: TCP
       name: libp2p
+  {{ if .Values.service.loadBalancerClass }}
+  loadBalancerClass: {{ .Values.service.loadBalancerClass }}
+  {{- end }}
   selector:
     {{- include "openmina-node.selectorLabels" . | nindent 4 }}

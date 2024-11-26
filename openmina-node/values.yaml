@@ -53,6 +53,8 @@ securityContext: {}
 service:
   # -- The service type
   type: ClusterIP
+  # -- Loadbalancer class
+  loadBalancerClass: ""
   # -- The service port
   port: 3000
   # -- The service labels
