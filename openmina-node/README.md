@@ -1,6 +1,6 @@
 # openmina-node
 
-![Version: 0.1.2](https://img.shields.io/badge/Version-0.1.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.8.1](https://img.shields.io/badge/AppVersion-v0.8.1-informational?style=flat-square)
+![Version: 0.1.3](https://img.shields.io/badge/Version-0.1.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.8.1](https://img.shields.io/badge/AppVersion-v0.8.1-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -81,6 +81,7 @@ helmfile status
 | securityContext | object | `{}` | The Security Context |
 | service.annotations | object | `{}` | The service annotations |
 | service.labels | object | `{}` | The service labels |
+| service.loadBalancerClass | string | `""` | Loadbalancer class |
 | service.port | int | `3000` | The service port |
 | service.type | string | `"ClusterIP"` | The service type |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
