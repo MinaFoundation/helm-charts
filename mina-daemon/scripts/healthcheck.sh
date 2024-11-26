@@ -10,7 +10,7 @@ check_liveness() {
 
 # Function to check mina client status for liveness
 check_readiness() {
-  sync_status=$(mina client status --json | jq -r ".sync_status")
+  sync_status=$(mina client status --json | jq -r 'select(.sync_status) | .sync_status')
   if [ "$sync_status" != "Synced" ]; then
     exit 1
   fi

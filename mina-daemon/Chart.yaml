@@ -2,8 +2,8 @@ apiVersion: v2
 name: mina-daemon
 description: A Helm chart for Mina Protocol's daemons
 type: application
-version: 2.1.0
-appVersion: 2.1.0
+version: 2.1.1
+appVersion: 3.0.4
 annotations:
   artifacthub.io/changes: |
     - Initial Commit
