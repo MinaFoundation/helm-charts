@@ -55,6 +55,10 @@ service:
   type: ClusterIP
   # -- The service port
   port: 3000
+  # -- The service labels
+  labels: {}
+  # -- The service annotations
+  annotations: {}
 
 ingress:
   # -- Whether to create an Ingress
