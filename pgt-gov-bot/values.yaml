@@ -7,6 +7,50 @@ nameOverride: ""
 # -- The full release name override
 fullnameOverride: ""
 
+config:
+  mef:
+    frontend:
+      baseUrl: https://example.minaprotocol.network
+  privateKey: |
+    -----BEGIN PRIVATE KEY-----
+    MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDCEKoQMfoxAoAx
+    L9aNa2YP5EIy8dgqB/bcR6jaZwBUGaxqdeaA9ofYiIcEZyqPW5hL79i+tvHKfhU+
+    Tgh2VLAy2bpHyJZknwzLfC1lAyx67lZeIZpV1pqgvJL08rQZpddV+42Cucx2AglD
+    T25X0W/FjsIwZKfq9eiRKIa0avrd8PUM9A5NmQcVg2lsxLDR4fCqaieQSm3u1gXf
+    NO8H8wfyS5ZLgXWskzjAgeJgqg49SphziV/sr9+I4YSWQxAMYsVd6wwJVcMh25Hd
+    otjCHCS/HFxIVAvpt2YZf/xc9qZ0KKC7EA8CfjsrzQAX1SlMbamXu6d5JeyLcI+h
+    8PzJOUvVAgMBAAECggEASL/mgNu7ZtQBKm88hxdT03FGP8LZvifuKvXSHs2uGdjm
+    AaLhHkdM9ad4tfXWxpcXqJ/pKNV8HuTVId4u3e0xgF6OropLlrzpFv8eJVfjPNJM
+    Hk2KhdNFdCw9CwZQ7ax15Q3AJtlwBG0O++SzAMjKlczGj02shTBaVtBSbyALm1co
+    fRLaWjHdOUgHprbm+OG6cplGiJHkdCIf4pyo/OBt9rA/8f8mSvSTG7p3YamOAWFU
+    pGup1mRQmvOPjX4No2pzpEofKsZmlCYNZigABfjrUY2+Rmj0kELnxVnhoowu/ben
+    NWGVeL5JhpWnfhYquzOf/N+qvGPVP0XUGM+roDGboQKBgQD96aCpkXcJMNAfevH3
+    OPffLmMwLKbDu3N6xpSMiDN7rFmfzp7yxMW1mTj9juTKsHa5v7F4RQ3I1N+RNCp6
+    OBgrqQC5uU7D+1P6f072xWjw5aV84JfBedkj78N97fblCVCdXXebf7TsKQAJJUWR
+    b0pT+yi2Yiz0neVgBd/ER2J/gwKBgQDDqRWhHl7vMGuW0OksTbdEX2VRkOZNBjfn
+    fly97e+eCccL41ghRLhGjBfDGUi6DuB6XCUdZqGZVi8Fy30V2wrsPyZ4xiypWJS/
+    ARMMGvM1vbG6GY0pPzDzooIm8TsXl59cLOedKrfyLhLB5Cn34X1p8kWrsQmfnecD
+    nAcr1nqPxwKBgExLIsdQuh+81wxeeM38BB6/ZXZYNFOjw3MksAX59t42T0fBYek4
+    Tt/eBk3J3d05YLM3ci/dL+Mkc3jB3/GRYVHdGia0E4K3xegC0Ms9Teb0WeFH6tFr
+    t18g7/CqzADN57chGotSuB4tw6D73gdxFThew0DqBvAJcZ6EpVPozyPZAoGAcN6j
+    eZR5k2XNSu0s9b/HTwvw+MKr+Bb0PPiqK26M4hAl4Pe/KUHpQ9khBA0b5Skb2bo6
+    NuGzqy8KZT9j4y2++VXcraM0tGRDOoQ2Jq+NSZ0qX37J7ddkN8exaSGTwyJWbegB
+    nKq9/lkRvQQQKczMekemZUr1kDyYvX5OrL1HapUCgYAM7VCohi1sFfDUov1lAc+d
+    a51R641gaZmlw2749k762+6J6vagu6hcWljPiHo4pA9drvVqeMsNdKcXfs1JXqnC
+    iTdqrpGobUM8bNVyPRXxryQIKOJ6ou8xt1pyenAhOoMTOSOllnU8/bM/VSPXXHrf
+    Gv61TwASbeDP/WPoCMnylw==
+
+  publicKey: |
+    -----BEGIN PUBLIC KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwhCqEDH6MQKAMS/WjWtm
+    D+RCMvHYKgf23Eeo2mcAVBmsanXmgPaH2IiHBGcqj1uYS+/Yvrbxyn4VPk4IdlSw
+    Mtm6R8iWZJ8My3wtZQMseu5WXiGaVdaaoLyS9PK0GaXXVfuNgrnMdgIJQ09uV9Fv
+    xY7CMGSn6vXokSiGtGr63fD1DPQOTZkHFYNpbMSw0eHwqmonkEpt7tYF3zTvB/MH
+    8kuWS4F1rJM4wIHiYKoOPUqYc4lf7K/fiOGElkMQDGLFXesMCVXDIduR3aLYwhwk
+    vxxcSFQL6bdmGX/8XPamdCiguxAPAn47K80AF9UpTG2pl7uneSXsi3CPofD8yTlL
+    1QIDAQAB
+    -----END PUBLIC KEY-----
+
 bot:
   image:
     # -- The repository of the image
@@ -14,7 +58,7 @@ bot:
     # -- The pullPolicy used when pulling the image
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "0.0.15"
+    tag: "0.0.21"
   # -- The secrets used to pull the image
   imagePullSecrets: []
   # -- The number of replicas
