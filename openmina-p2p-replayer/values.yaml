@@ -1,0 +1,123 @@
+# Default values for openmina-p2p-replayer.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replayer:
+  p2p:
+    # -- Secret key(unencrypted, without password), can be generated with: cargo run --release -p cli misc p2p-key-pair
+    secretKey: ""
+  # -- Chain ID
+  chainId: "/coda/0.0.1/29936104443aaf264a7f0192ac64b1c7173198c1ed404c1bcff5e562e05eb7f6"
+  # -- The final height of the chain
+  blockHeight: 328010
+
+service:
+  # -- Service type
+  type: ClusterIP
+  # -- Service port
+  port: 8302
+
+## - Extra Environment variables
+extraEnvVars: {}
+# - name: FOO
+#   value: FOO
+# - name: BAR
+#   valueFrom:
+#     secretKeyRef:
+#       name: mySecret
+#       key: bar
+
+# -- The number of replicas
+replicaCount: 1
+
+image:
+  # -- The image repository
+  repository: vladsimplestakingcom/bootstrap-rr
+  # -- The image pull policy
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag whose default is the chart appVersion.
+  tag: "3.0.0-bullseye-devnet"
+
+# -- The secrets used to pull the image
+imagePullSecrets: []
+# -- Name override
+nameOverride: ""
+# -- Full name override
+fullnameOverride: ""
+
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: false
+  # -- Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # -  Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use.
+  # -- If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# -- Annotations to add to the pods
+podAnnotations: {}
+# -- Label to add to the pods
+podLabels: {}
+
+# -- The Pod Security Context
+podSecurityContext: {}
+  # fsGroup: 2000
+
+# -- The Security Context
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# -- The Resources
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# -- Liveness check configuration
+livenessProbe:
+  tcpSocket:
+    port: 8302
+  initialDelaySeconds: 15
+  periodSeconds: 10
+# -- Readiness check configuration
+readinessProbe:
+  tcpSocket:
+    port: 8302
+  initialDelaySeconds: 15
+  periodSeconds: 10
+
+# -- Additional volumes on the output Deployment definition.
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+
+# -- Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+
+# -- Node selector labels
+nodeSelector: {}
+
+# -- The tolerations
+tolerations: []
+
+# -- The affinity
+affinity: {}
