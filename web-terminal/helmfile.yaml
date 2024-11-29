@@ -1,0 +1,24 @@
+releases:
+  - name: web-terminal
+    chart: .
+    values:
+      - command: stern --since 1h "gov-bot-bot|pgt-web-app"
+        readonly: true
+        basicAuth:
+          user: pgt-log-viewer
+          password: dream!cloud!z5T0dj8l2c8!
+        ingress:
+          enabled: true
+          annotations:
+            alb.ingress.kubernetes.io/backend-protocol: HTTP
+            alb.ingress.kubernetes.io/certificate-arn: {{ fetchSecretValue "ref+awssecrets://certificate_arns?region=us-west-2#/minaprotocol.network" | quote }}
+            alb.ingress.kubernetes.io/group.name: staging
+            alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+            alb.ingress.kubernetes.io/scheme: internet-facing
+            alb.ingress.kubernetes.io/tags: BillingCode=staging
+            alb.ingress.kubernetes.io/target-type: ip
+          hosts:
+            - host: governance-pgt-live-logs.minaprotocol.network
+              paths:
+                - path: /*
+                  pathType: ImplementationSpecific
