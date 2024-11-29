@@ -1,0 +1,5 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "web-terminal.serviceAccountName" . }}
+rules: {{ .Values.roleRules | toYaml | nindent 2 }}
