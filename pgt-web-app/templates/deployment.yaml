@@ -41,6 +41,21 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
+            - name: DISCORD_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "pgt-web-app.fullname" . }}
+                  key: discordToken
+            - name: CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "pgt-web-app.fullname" . }}
+                  key: discordClientId
+            - name: GUILD_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "pgt-web-app.fullname" . }}
+                  key: discordGuildId
             - name: JWT_PRIVATE_KEY_RS512
               value: {{.Values.config.privateKey | quote}}
             - name: JWT_PUBLIC_KEY_RS512
