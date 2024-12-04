@@ -61,7 +61,7 @@ def process_staking_ledger(synced_pod, epoch, staking_ledger):
 
     logger.info(f"Calculating {staking_ledger} hash")
     staking_ledger_hash = run_command_on_pod(
-        synced_pod, f"/usr/local/bin/mina ledger hash --ledger-file /tmp/{staking_ledger}.json"
+        synced_pod, f"/usr/local/bin/mina ledger hash --ledger-file /tmp/{staking_ledger}.json | grep -E '^[a-zA-Z0-9]+$'"
     )
 
     staking_ledger_name = f"{config.network}-{epoch}-{staking_ledger_hash}.json"
