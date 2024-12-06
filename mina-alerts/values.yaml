@@ -1,0 +1,9 @@
+# Default values for mina-alerts.
+# -- The severity of the alert
+severity: "testing"
+# -- The alert time frame
+alert_timeframe: "1h"
+# -- The evaluation duration
+alert_evaluation_duration: "10m"
+# -- The alert testnet regex
+testnet_regex: "testnet=~\"^(devnet|mainnet).*\""
