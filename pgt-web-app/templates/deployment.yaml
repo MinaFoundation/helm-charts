@@ -66,6 +66,8 @@ spec:
               value: production
             - name: NEXT_APP_URL
               value: https://{{ (index .Values.ingress.hosts 0).host }}
+            - name: NEXT_PUBLIC_OCV_API_BASE_URL
+              value: {{ .Values.config.ocvServer }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
