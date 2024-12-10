@@ -38,6 +38,11 @@ spec:
           args:
             {{- toYaml .Values.bot.args | nindent 12 }}
           env:
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "gpt-survey-summarizer.fullname" . }}
+                  key: openAiApiKey
             - name: DISCORD_TOKEN
               valueFrom:
                 secretKeyRef:
