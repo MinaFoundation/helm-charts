@@ -52,6 +52,7 @@ config:
     guildId: ""
     # -- Discord API Token
     token: ""
+  ocvServer: "http://on-chain-voting-server:8080"
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
