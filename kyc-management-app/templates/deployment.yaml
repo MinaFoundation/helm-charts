@@ -71,6 +71,8 @@ spec:
               {{- else }}
               value: {{ .Values.postgresUri | quote }}
               {{- end }}
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /app/gcloud/gcp-sa.json
             {{- if .Values.envVars }}
             {{- toYaml .Values.envVars | nindent 12 }}
             {{- end }}
@@ -84,12 +86,21 @@ spec:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          {{- with .Values.volumeMounts }}
           volumeMounts:
+            - name:  {{ .Release.Name }}-gcp-sa
+              mountPath: /app/gcloud
+          {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.volumes }}
       volumes:
+        - name: {{ .Release.Name }}-gcp-sa
+          secret:
+            secretName: {{ .Release.Name }}
+            defaultMode: 0600
+            items:
+              - key: gcp-sa-json
+                path: gcp-sa.json
+      {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.nodeSelector }}
