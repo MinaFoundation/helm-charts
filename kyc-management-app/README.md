@@ -1,6 +1,6 @@
 # kyc-management-app
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -55,6 +55,7 @@ helmfile status
 | deploymentAnnotations | object | `{}` | Annotations to add to deployments |
 | envVars | object | `{}` | Environment variables to set on the pod |
 | fullnameOverride | string | `""` | Full name override |
+| gcpServiceAccount | string | `""` | GCP service account json |
 | image.pullPolicy | string | `"IfNotPresent"` | The image pull policy |
 | image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/kyc-management-app"` | The image repository |
 | image.tag | string | `"0.1.25"` | Overrides the image tag whose default is the chart appVersion. |

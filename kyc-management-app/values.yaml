@@ -20,6 +20,9 @@ nameOverride: ""
 # -- Full name override
 fullnameOverride: ""
 
+# -- GCP service account json
+gcpServiceAccount: ""
+
 serviceAccount:
   # -- Specifies whether a service account should be created
   create: true
