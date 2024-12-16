@@ -1,6 +1,6 @@
 # on-chain-voting
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -63,8 +63,9 @@ helmfile status
 | server.affinity | object | `{}` | Affinity |
 | server.allowedOrigins | string | `"*"` | Allow Origins |
 | server.archivePostgresConnectionString | string | `"postgres://mina@postgres:5432/archive"` | Archive Postgres Connection String |
+| server.args | list | `[]` | The arguments to pass at runtime |
 | server.deploymentAnnotations | object | `{}` | Annotations to add to deployments |
-| server.extraEnvVars | object | `{}` |  |
+| server.extraEnvVars | object | `{}` | Extra Environment variables |
 | server.image.imagePullSecrets | list | `[]` | The secrets used to pull the image |
 | server.image.pullPolicy | string | `"IfNotPresent"` | The image pull policy |
 | server.image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/on-chain-voting-server"` | The image repository |
@@ -87,6 +88,7 @@ helmfile status
 | serviceAccount.name | string | `""` | The name of the service account to use. |
 | web.affinity | object | `{}` | Affinity |
 | web.apiBaseURL | string | `""` | API base URL |
+| web.args | list | `[]` | The arguments to pass at runtime |
 | web.deploymentAnnotations | object | `{}` | Annotations to add to deployments |
 | web.extraEnvVars | object | `{}` | Extra Environment variables |
 | web.image.imagePullSecrets | list | `[]` | The secrets used to pull the image |

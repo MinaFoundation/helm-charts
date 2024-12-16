@@ -103,6 +103,9 @@ web:
   # -- Next Public Release Stage
   nextPublicReleaseStage: production
 
+  # -- The arguments to pass at runtime
+  args: []
+
   # -- Extra Environment variables
   extraEnvVars:
     {}
@@ -199,7 +202,10 @@ server:
   # -- Allow Origins
   allowedOrigins: "*"
 
-  # Extra Environment variables
+  # -- The arguments to pass at runtime
+  args: []
+
+  # -- Extra Environment variables
   extraEnvVars:
     {}
     # - name: FOO
