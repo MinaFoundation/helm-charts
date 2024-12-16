@@ -41,6 +41,11 @@ spec:
           lifecycle:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          command: [ "/app/start" ]
+          {{- if .Values.web.args }}
+          args:
+            {{- toYaml .Values.web.args | nindent 12 }}
+          {{- end }}
           env:
             - name: API_BASE_URL
               value: {{ .Values.web.apiBaseURL | default (printf "http://%s-server:8080" .Release.Name) | quote }}
