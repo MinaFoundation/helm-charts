@@ -57,29 +57,6 @@ web:
     # -- The service port
     port: 3000
 
-  ingress:
-    # -- Whether to create an Ingress
-    enabled: false
-    # -- The Ingress Class Name to use
-    className: ""
-    # -- The Ingress Annotations
-    annotations:
-      {}
-      # kubernetes.io/ingress.class: nginx
-      # kubernetes.io/tls-acme: "true"
-    # -- The Ingress Hosts
-    hosts:
-      []
-      # - host: chart-example.local
-      #   paths:
-      #     - path: /
-      #       pathType: ImplementationSpecific
-    # -- The TLS configuration
-    tls: []
-    #  - secretName: chart-example-tls
-    #    hosts:
-    #      - chart-example.local
-
   # -- Resources
   resources:
     {}
@@ -233,6 +210,34 @@ server:
         - sh
         - -c
         - sleep 15 && kill -SIGQUIT 1
+
+ingress:
+  # -- Whether to create an Ingress
+  enabled: false
+  # -- The Ingress Class Name to use
+  className: ""
+  # -- The Ingress Annotations
+  annotations:
+    {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  # -- The Ingress Hosts
+  hosts: []
+    # - host: chart-example.local
+    #   paths:
+    #     - path: /
+    #       pathType: Prefix
+    #       backend:
+    #         service:
+    #           name: chart-example-web
+    #           port:
+    #             number: 3000
+
+  # -- The TLS configuration
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
 
 postgresql:
   # -- Whether to deploy a PostgreSQL server to satisfy the application database requirements

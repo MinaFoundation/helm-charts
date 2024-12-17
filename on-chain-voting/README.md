@@ -1,6 +1,6 @@
 # on-chain-voting
 
-![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
+![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -48,6 +48,11 @@ helmfile status
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | fullnameOverride | string | `""` | Full name override |
+| ingress.annotations | object | `{}` | The Ingress Annotations |
+| ingress.className | string | `""` | The Ingress Class Name to use |
+| ingress.enabled | bool | `false` | Whether to create an Ingress |
+| ingress.hosts | list | `[]` | The Ingress Hosts |
+| ingress.tls | list | `[]` | The TLS configuration |
 | nameOverride | string | `""` | Name override |
 | postgresql.auth.database | string | `"on-chain-voting"` | Default database name |
 | postgresql.auth.enablePostgresUser | bool | `false` | Enable the default postgres user |
@@ -95,11 +100,6 @@ helmfile status
 | web.image.pullPolicy | string | `"IfNotPresent"` | The image pull policy |
 | web.image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/on-chain-voting-web"` | The image repository |
 | web.image.tag | string | `"0.1.0"` | Overrides the image tag whose default is the chart appVersion. |
-| web.ingress.annotations | object | `{}` | The Ingress Annotations |
-| web.ingress.className | string | `""` | The Ingress Class Name to use |
-| web.ingress.enabled | bool | `false` | Whether to create an Ingress |
-| web.ingress.hosts | list | `[]` | The Ingress Hosts |
-| web.ingress.tls | list | `[]` | The TLS configuration |
 | web.lifecycle | object | `{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -SIGQUIT 1"]}}}` | Lifecycle hooks |
 | web.nextPublicApiBaseURL | string | `""` | Next Public API base URL |
 | web.nextPublicReleaseStage | string | `"production"` | Next Public Release Stage |
