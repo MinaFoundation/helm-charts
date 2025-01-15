@@ -41,7 +41,7 @@ spec:
           lifecycle:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          command: [ "/app/target/release/mina_ocv" ]
+          command: [ "/app/mina_ocv" ]
           {{- if .Values.server.args }}
           args:
             {{- toYaml .Values.server.args | nindent 12 }}
