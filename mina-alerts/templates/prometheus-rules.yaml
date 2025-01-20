@@ -140,8 +140,8 @@ spec:
         description: "Critically low peer count of {{`{{`}} $value {{`}}`}} on network {{`{{`}} $labels.testnet {{`}}`}}."
         runbook: "https://www.notion.so/minafoundation/LowPeerCount-13f1fb28abc381bcae2bd814f90891b8"
 
-    - alert: CriticallyLowMinWindowDensity
-      expr: quantile by (testnet) (0.5, Coda_Transition_frontier_min_window_density {{`{`}} {{ .Values.testnet_regex }} {{`}`}}) <= 13
+    - alert: CriticallyLowMinWindowDensityMainnet
+      expr: quantile by (testnet) (0.5, Coda_Transition_frontier_min_window_density {{`{`}} testnet=~\"^(mainnet).*\" {{`}`}}) <= 10
       for: {{ .Values.alert_evaluation_duration }}
       labels:
         testnet: "{{`{{`}} $labels.testnet {{`}}`}}"
@@ -298,8 +298,19 @@ spec:
         description: "{{`{{`}} $value {{`}}`}} Blocks without transactions on tip of network {{`{{`}} $labels.testnet {{`}}`}}."
         runbook: "https://www.notion.so/minafoundation/NoTransactionsInAtLeastOneBlock-13f1fb28abc38101bc4bdb04943689f0"
 
-    - alert: LowMinWindowDensity
-      expr: quantile by (testnet) (0.5, Coda_Transition_frontier_min_window_density {{`{`}} {{ .Values.testnet_regex }} {{`}`}}) <= 35
+    - alert: LowMinWindowDensityDevnet
+      expr: quantile by (testnet) (0.5, Coda_Transition_frontier_min_window_density {{`{`}} testnet=~\"^(devnet).*\" {{`}`}}) <= 1
+      for: {{ .Values.alert_evaluation_duration }}
+      labels:
+        testnet: "{{`{{`}} $labels.testnet {{`}}`}}"
+        severity: {{ .Values.severity }}
+      annotations:
+        summary: "{{`{{`}} $labels.testnet {{`}}`}} min density is low"
+        description: "Low min density on network {{`{{`}} $labels.testnet {{`}}`}}."
+        runbook: "https://www.notion.so/minafoundation/LowMinWindowDensity-Runbook-13f1fb28abc3818ea8f1c199487c7157"
+
+    - alert: LowMinWindowDensityMainnet
+      expr: quantile by (testnet) (0.5, Coda_Transition_frontier_min_window_density {{`{`}} testnet=~\"^(mainnet).*\" {{`}`}}) <= 20
       for: {{ .Values.alert_evaluation_duration }}
       labels:
         testnet: "{{`{{`}} $labels.testnet {{`}}`}}"
