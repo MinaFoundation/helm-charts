@@ -257,8 +257,8 @@ spec:
 
   - name: MinaProtocolWarning
     rules:
-    - alert: HighBlockGossipLatency
-      expr: max by (testnet) (max_over_time(Coda_Block_latency_gossip_time {{`{`}} {{ .Values.testnet_regex }} {{`}`}} [{{ .Values.alert_timeframe }}])) > 200
+    - alert: HighBlockGossipLatencyMainnet
+      expr: max by (testnet) (max_over_time(Coda_Block_latency_gossip_time {{`{`}} testnet=~\"^(mainnet).*\" {{`}`}} [{{ .Values.alert_timeframe }}])) > 200
       for: {{ .Values.alert_evaluation_duration }}
       labels:
         testnet: "{{`{{`}} $labels.testnet {{`}}`}}"
