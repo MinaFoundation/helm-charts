@@ -27,7 +27,7 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
         - name: init-data-files
-          image: busybox:latest
+          image: {{ .Values.global.imageRegistry }}/busybox:latest
           command: ["sh", "-c"]
           args:
           - |
