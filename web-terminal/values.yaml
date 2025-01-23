@@ -12,6 +12,7 @@ command: bash -c "echo hello world"
 # command: stern --since 24h "pod"
 readonly: true
 basicAuth:
+  enabled: true
   user: super-mina-admin
   password: sR2vr!65D*0LzA
 

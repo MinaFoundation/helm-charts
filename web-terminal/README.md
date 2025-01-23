@@ -1,6 +1,6 @@
 # web-terminal
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -46,6 +46,7 @@ helmfile status
 | autoscaling.maxReplicas | int | `100` |  |
 | autoscaling.minReplicas | int | `1` |  |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| basicAuth.enabled | bool | `true` |  |
 | basicAuth.password | string | `"sR2vr!65D*0LzA"` |  |
 | basicAuth.user | string | `"super-mina-admin"` |  |
 | bootstrapCommands | string | `"apk add --quiet --no-progress curl ttyd aws-cli kubectl bash tar\nSTERN_VERSION=$(curl -s https://api.github.com/repos/stern/stern/releases/latest | grep 'tag_name' | cut -d '\"' -f 4)\ncurl -LO https://github.com/stern/stern/releases/download/${STERN_VERSION}/stern_${STERN_VERSION#v}_linux_amd64.tar.gz\ntar -xvzf stern_${STERN_VERSION#v}_linux_amd64.tar.gz && mv stern /usr/local/bin/ && chmod +x /usr/local/bin/stern\n"` |  |

@@ -1,6 +1,6 @@
 # minametrix
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
+![Version: 0.1.1](https://img.shields.io/badge/Version-0.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -52,6 +52,7 @@ helmfile status
 | api_tokens | string | `""` | API Tokens |
 | extraEnvVars | object | `{}` | Extra environment variables |
 | fullnameOverride | string | `""` | The full release name override |
+| global.imageRegistry | string | `"docker.io"` | Global Docker image registry |
 | image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
 | image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/minametrix"` | The repository of the image |
 | image.tag | string | `"1.0.0-aec2116"` | Overrides the image tag whose default is the chart appVersion. |

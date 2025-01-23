@@ -46,7 +46,7 @@ spec:
                 --port 80 \
                 --debug 3 \
                 {{- if not .Values.readonly }}--writable \{{end}}
-                --credential {{.Values.basicAuth.user}}:{{.Values.basicAuth.password}} \
+                {{- if .Values.basicAuth.enabled }}--credential {{.Values.basicAuth.user}}:{{.Values.basicAuth.password}} \{{end}}
                 {{.Values.command}}
           args: []
           ports:
