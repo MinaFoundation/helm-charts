@@ -1,6 +1,6 @@
 # openmina-node
 
-![Version: 0.1.3](https://img.shields.io/badge/Version-0.1.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.8.1](https://img.shields.io/badge/AppVersion-v0.8.1-informational?style=flat-square)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.8.1](https://img.shields.io/badge/AppVersion-v0.8.1-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -44,6 +44,7 @@ helmfile status
 | affinity | object | `{}` | Affinity rules |
 | deploymentAnnotations | object | `{}` | Annotations to add to deployments |
 | fullnameOverride | string | `""` | The full release name override |
+| global.imageRegistry | string | `"docker.io"` | Global Docker image registry |
 | image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
 | image.repository | string | `"openmina/openmina"` | The image repository |
 | image.tag | string | `"0.11.2"` | Overrides the image tag whose default is the chart appVersion. |
