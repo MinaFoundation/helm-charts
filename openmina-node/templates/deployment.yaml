@@ -43,7 +43,7 @@ spec:
       {{- if .Values.node.libp2p.discoveryExternalIp.enabled }}
       initContainers:
         - name: get-external-ip
-          image: busybox
+          image: {{ .Values.global.imageRegistry }}/library/busybox:latest
           command: ["/bin/sh", "/scripts/get-external-ip.sh"]
           env:
             - name: DISCOVERY_EXTERNAL_IP_TARGET_DNS
