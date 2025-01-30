@@ -5,6 +5,33 @@
 platform:
   name: sandbox
 
+# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  type: ClusterIP
+  # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+  port: 3000
+  # port: 80
+
+# This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
+ingress:
+  enabled: false
+  className: ""
+  annotations:
+    {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    # - host: chart-example.local
+    - host: example.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
 config:
   # -- Summarize Frequency Seconds
   summarizeFrequencySeconds: 3600
@@ -27,7 +54,7 @@ redis:
   architecture: standalone
   auth:
     # -- Redis password
-    password: ""
+    password: "default"
   # -- Configuration to add to redis.conf
   commonConfiguration: |-
     # Enable AOF https://redis.io/topics/persistence#append-only-file
@@ -77,6 +104,20 @@ bot:
   # -- Annotations for the bot serviceAccount
   serviceAccountAnnotations: {}
 
+# NOTE: There is confusion between API and Server
+# api is an API listening on a port to provide access to the data in the redis store
+# server is actually a summarizer worker, reading and writting data in the redis store
+
+api:
+  # -- The number of pods to be deployed for server
+  replicaCount: 1
+  # -- Arguments for the server container
+  args:
+    - server
+  # -- Extra Environment Variables
+  extraEnvVars: []
+  # -- Annotations for the summarizer serviceAccount
+
 server:
   # -- The number of pods to be deployed for server
   replicaCount: 1
@@ -102,11 +143,13 @@ deploymentAnnotations: {}
 podAnnotations: {}
 
 # -- SecurityContext used for the pods
-podSecurityContext: {}
+podSecurityContext:
+  {}
   # fsGroup: 2000
 
 # -- SecurityContext
-securityContext: {}
+securityContext:
+  {}
   # capabilities:
   #   drop:
   #   - ALL
@@ -115,7 +158,8 @@ securityContext: {}
   # runAsUser: 1000
 
 # -- Resource limitations for the pods
-resources: {}
+resources:
+  {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -147,6 +191,6 @@ lifecycle:
   preStop:
     exec:
       command:
-      - sh
-      - -c
-      - sleep 15 && kill -SIGQUIT 1
+        - sh
+        - -c
+        - sleep 15 && kill -SIGQUIT 1
