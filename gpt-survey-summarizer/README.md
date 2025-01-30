@@ -1,6 +1,6 @@
 # gpt-survey-summarizer
 
-![Version: 0.1.1](https://img.shields.io/badge/Version-0.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A helm chart for the gptSuverySummarizer
 
@@ -60,6 +60,9 @@ helmfile status
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` | Affinity rules |
+| api.args | list | `["server"]` | Arguments for the server container |
+| api.extraEnvVars | list | `[]` | Extra Environment Variables |
+| api.replicaCount | int | `1` | The number of pods to be deployed for server |
 | bot.args | list | `["bot"]` | Arguments for the bot container |
 | bot.extraEnvVars | list | `[]` | Extra Environment Variables |
 | bot.replicaCount | int | `1` | The number of pods to be deployed for bot |
@@ -83,6 +86,13 @@ helmfile status
 | image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/gpt-survey-summarizer"` | The repository of the image |
 | image.tag | string | `"0.3.2"` | The tag of the iamge. Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | The secrets used to pull the image |
+| ingress.annotations | object | `{}` |  |
+| ingress.className | string | `""` |  |
+| ingress.enabled | bool | `false` |  |
+| ingress.hosts[0].host | string | `"example.com"` |  |
+| ingress.hosts[0].paths[0].path | string | `"/"` |  |
+| ingress.hosts[0].paths[0].pathType | string | `"ImplementationSpecific"` |  |
+| ingress.tls | list | `[]` |  |
 | lifecycle | object | `{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -SIGQUIT 1"]}}}` | Lifecycle hooks |
 | nameOverride | string | `""` | The release name override |
 | nodeSelector | object | `{}` | Node selector labels |
@@ -90,7 +100,7 @@ helmfile status
 | podAnnotations | object | `{}` | Annotations to add to the pods |
 | podSecurityContext | object | `{}` | SecurityContext used for the pods |
 | redis.architecture | string | `"standalone"` | The redis architecture (accepted values are: standalone, replication) |
-| redis.auth.password | string | `""` | Redis password |
+| redis.auth.password | string | `"default"` | Redis password |
 | redis.commonConfiguration | string | `"# Enable AOF https://redis.io/topics/persistence#append-only-file\nappendonly yes\n#\n# Backups:\n# * After 14400 seconds (4 hours) if at least 1 change was performed\n# * After 3600 seconds (1 hour) if at least 100 changes were performed\n# * After 600 seconds (10 minutes) if at least 10.000 changes were performed\n#\nsave 14400 1 3600 100 600 10000\n# Workdir of redis\ndir /data\n# Database file name\ndbfilename dump.rdb"` | Configuration to add to redis.conf |
 | resources | object | `{}` | Resource limitations for the pods |
 | securityContext | object | `{}` | SecurityContext |
@@ -98,6 +108,8 @@ helmfile status
 | server.extraEnvVars | list | `[]` | Extra Environment Variables |
 | server.replicaCount | int | `1` | The number of pods to be deployed for server |
 | server.serviceAccountAnnotations | object | `{}` | Annotations for the summarizer serviceAccount |
+| service.port | int | `3000` |  |
+| service.type | string | `"ClusterIP"` |  |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
 | tolerations | list | `[]` | Tolerations |
