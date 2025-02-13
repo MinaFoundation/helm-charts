@@ -43,10 +43,8 @@ def main():
     try:
       process_staking_ledger(synced_pod, next_epoch, "next-epoch-ledger")
     except subprocess.CalledProcessError as e:
-      if "Ledger not found: next staking ledger is not finalized yet" in e.stderr:
-        logger.warning(f"Unable to process the next epoch {next_epoch} due to error: {e.output}, skipping further processing.")
-      else:
-        raise e
+      logger.warning(e)
+      logger.warning("Unable to export next-epoch-ledger")
 
     logger.info("Complete with success")
 
