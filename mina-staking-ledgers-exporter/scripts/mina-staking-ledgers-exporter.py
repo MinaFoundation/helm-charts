@@ -106,11 +106,11 @@ def process_staking_ledger(synced_pod, epoch, staking_ledger):
     logger.info("Sending notifications")
     message = ""
     if uploaded_to_s3:
-        message += f":tada: Stacking ledger successfully uploaded to S3:\n"
+        message += f":tada: Staking ledger successfully uploaded to S3:\n"
         message += f"`{config.s3_bucket}/{config.s3_subpath}/{staking_ledger_archive_name}`\n\n"
     if uploaded_to_api:
         message += (
-            f":tada: Stacking ledger successfully uploaded to Mina Payout Data Provider API:\n"
+            f":tada: Staking ledger successfully uploaded to Mina Payout Data Provider API:\n"
         )
         message += f"{config.api_url}"
     if message:
