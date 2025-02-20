@@ -43,6 +43,7 @@ api:
 bot:
   # -- Logs Level
   logLevel: "INFO"
+  extraEnvVars: []
 
 mongodb:
   auth:
