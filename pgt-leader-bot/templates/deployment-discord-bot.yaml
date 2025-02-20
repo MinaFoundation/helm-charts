@@ -68,6 +68,9 @@ spec:
               value: "{{.Values.config.sharedSecret}}"
             - name: SPREADSHEET_ID
               value: "{{.Values.config.googleSheets.spreadsheetId}}"
+            {{- if .Values.bot.extraEnvVars }}
+            {{- toYaml .Values.bot.extraEnvVars | nindent 12 }}
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
