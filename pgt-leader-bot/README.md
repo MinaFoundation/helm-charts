@@ -1,6 +1,6 @@
 # pgt-leader-bot
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -49,6 +49,7 @@ helmfile status
 |-----|------|---------|-------------|
 | affinity | object | `{}` | Affinity rules |
 | api.logLevel | string | `"INFO"` | Logs Level |
+| bot.extraEnvVars | list | `[]` |  |
 | bot.logLevel | string | `"INFO"` | Logs Level |
 | config.discord.forumChannelId | string | `"chanid"` | Discord Channel ID |
 | config.discord.guildId | string | `"myguildid"` | Discord Guild/Server ID |
