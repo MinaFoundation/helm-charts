@@ -57,8 +57,8 @@ helmfile status
 | deployment.storeBlocks.aws.uploadInterval | int | `900` | AWS upload interval |
 | deployment.storeBlocks.directory | string | `"/blocks"` | Block storage directory |
 | deployment.storeBlocks.enabled | bool | `false` | Enable block storage |
-| deployment.storeBlocks.gcp.bucket | string | `"mina_network_block_data"` | GCP bucket |
-| deployment.storeBlocks.gcp.enabled | bool | `false` | Enable GCP storage |
+| deployment.storeBlocks.gcp.bucket | string | `"mina_network_block_data"` | GCS bucket |
+| deployment.storeBlocks.gcp.enabled | bool | `false` | Enable GCP GCS storage |
 | deployment.storeBlocks.gcp.keyfile | string | `"{}"` | GCP keyfile |
 | deployment.storeBlocks.local.enabled | bool | `false` | Enable local storage |
 | deployment.storeBlocks.local.filename | string | `"precomputed_blocks.json"` | Local storage filename |
