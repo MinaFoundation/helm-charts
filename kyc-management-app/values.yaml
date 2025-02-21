@@ -2,8 +2,72 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# -- The number of replicas
-replicaCount: 1
+
+web:
+  envVars: {}
+  # -- The number of replicas
+  replicaCount: 0
+  # -- Annotations to add to deployments
+  deploymentAnnotations: {}
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+  # -- Label to add to the pods
+  podLabels: {}
+  # -- The liveness probes
+  livenessProbe:
+    httpGet:
+      path: /version
+      port: http
+  # -- The readiness probes
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: http
+    timeoutSeconds: 5
+
+dashboard:
+  envVars: {}
+  # -- The number of replicas
+  replicaCount: 0
+  # -- Annotations to add to deployments
+  deploymentAnnotations: {}
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+  # -- Label to add to the pods
+  podLabels: {}
+  # -- The liveness probes
+  livenessProbe:
+    httpGet:
+      path: /dashboard/version
+      port: http
+  # -- The readiness probes
+  readinessProbe:
+    httpGet:
+      path: /dashboard/health
+      port: http
+    timeoutSeconds: 5
+
+hook:
+  envVars: {}
+  # -- The number of replicas
+  replicaCount: 0
+  # -- Annotations to add to deployments
+  deploymentAnnotations: {}
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+  # -- Label to add to the pods
+  podLabels: {}
+  # -- The liveness probes
+  livenessProbe:
+    httpGet:
+      path: /hook/version
+      port: http
+  # -- The readiness probes
+  readinessProbe:
+    httpGet:
+      path: /hook/health
+      port: http
+    timeoutSeconds: 5
 
 image:
   # -- The image repository
@@ -11,7 +75,7 @@ image:
   # -- The image pull policy
   pullPolicy: IfNotPresent
   # -- Overrides the image tag whose default is the chart appVersion.
-  tag: "0.1.25"
+  tag: "1.0.0"
 
 # -- The secrets used to pull the image
 imagePullSecrets: []
@@ -33,12 +97,6 @@ serviceAccount:
   # -- The name of the service account to use.
   name: ""
 
-# -- Annotations to add to deployments
-deploymentAnnotations: {}
-# -- Annotations to add to the pods
-podAnnotations: {}
-# -- Label to add to the pods
-podLabels: {}
 
 # -- The Pod Security Context
 podSecurityContext: {}
@@ -103,28 +161,6 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
-# -- The liveness probes
-livenessProbe:
-  httpGet:
-    path: /version
-    port: http
-# -- The readiness probes
-readinessProbe:
-  httpGet:
-    path: /health
-    port: http
-  timeoutSeconds: 5
-
-autoscaling:
-  # -- Enable autoscaling for the deployment
-  enabled: false
-  # -- Minimum number of pods
-  minReplicas: 1
-  # -- Maximum number of pods
-  maxReplicas: 100
-  # -- Target CPU utilization percentage
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
 
 # -- Additional volumes on the output Deployment definition.
 volumes: []

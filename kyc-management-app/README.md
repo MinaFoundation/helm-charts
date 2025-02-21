@@ -1,6 +1,6 @@
 # kyc-management-app
 
-![Version: 0.2.1](https://img.shields.io/badge/Version-0.2.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
+![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -48,17 +48,26 @@ helmfile status
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` | Affinity for pod assignment |
-| autoscaling.enabled | bool | `false` | Enable autoscaling for the deployment |
-| autoscaling.maxReplicas | int | `100` | Maximum number of pods |
-| autoscaling.minReplicas | int | `1` | Minimum number of pods |
-| autoscaling.targetCPUUtilizationPercentage | int | `80` | Target CPU utilization percentage |
-| deploymentAnnotations | object | `{}` | Annotations to add to deployments |
+| dashboard.deploymentAnnotations | object | `{}` | Annotations to add to deployments |
+| dashboard.envVars | object | `{}` |  |
+| dashboard.livenessProbe | object | `{"httpGet":{"path":"/dashboard/version","port":"http"}}` | The liveness probes |
+| dashboard.podAnnotations | object | `{}` | Annotations to add to the pods |
+| dashboard.podLabels | object | `{}` | Label to add to the pods |
+| dashboard.readinessProbe | object | `{"httpGet":{"path":"/dashboard/health","port":"http"},"timeoutSeconds":5}` | The readiness probes |
+| dashboard.replicaCount | int | `0` | The number of replicas |
 | envVars | object | `{}` | Environment variables to set on the pod |
 | fullnameOverride | string | `""` | Full name override |
 | gcpServiceAccount | string | `""` | GCP service account json |
+| hook.deploymentAnnotations | object | `{}` | Annotations to add to deployments |
+| hook.envVars | object | `{}` |  |
+| hook.livenessProbe | object | `{"httpGet":{"path":"/hook/version","port":"http"}}` | The liveness probes |
+| hook.podAnnotations | object | `{}` | Annotations to add to the pods |
+| hook.podLabels | object | `{}` | Label to add to the pods |
+| hook.readinessProbe | object | `{"httpGet":{"path":"/hook/health","port":"http"},"timeoutSeconds":5}` | The readiness probes |
+| hook.replicaCount | int | `0` | The number of replicas |
 | image.pullPolicy | string | `"IfNotPresent"` | The image pull policy |
 | image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/kyc-management-app"` | The image repository |
-| image.tag | string | `"0.1.25"` | Overrides the image tag whose default is the chart appVersion. |
+| image.tag | string | `"1.0.0"` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | The secrets used to pull the image |
 | ingress.annotations | object | `{}` | The Ingress Annotations |
 | ingress.className | string | `""` | The Ingress Class Name to use |
@@ -66,11 +75,8 @@ helmfile status
 | ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}]` | The Ingress Hosts |
 | ingress.tls | list | `[]` | The TLS configuration |
 | lifecycle | object | `{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -SIGQUIT 1"]}}}` | Lifecycle hooks |
-| livenessProbe | object | `{"httpGet":{"path":"/version","port":"http"}}` | The liveness probes |
 | nameOverride | string | `""` | Name override |
 | nodeSelector | object | `{}` | Node labels for pod assignment |
-| podAnnotations | object | `{}` | Annotations to add to the pods |
-| podLabels | object | `{}` | Label to add to the pods |
 | podSecurityContext | object | `{}` | The Pod Security Context |
 | postgresUri | string | `nil` | The postgresql uri if the postgresql chart is disabled |
 | postgresql.auth.database | string | `"kyc"` | Database name |
@@ -83,8 +89,6 @@ helmfile status
 | postgresql.primary.persistence.size | string | `"1Gi"` | Size of the postgresql server volume |
 | postgresql.primary.persistence.storageClass | string | `"ebs-gp3-encrypted"` | Storage class for the postgresql server volume |
 | postgresql.primary.resourcesPreset | string | `"nano"` | Resources preset to set resource requests and limits |
-| readinessProbe | object | `{"httpGet":{"path":"/health","port":"http"},"timeoutSeconds":5}` | The readiness probes |
-| replicaCount | int | `1` | The number of replicas |
 | resources | object | `{}` | Resources |
 | securityContext | object | `{}` | The Security Context |
 | service.port | int | `3000` | The service port |
@@ -96,4 +100,11 @@ helmfile status
 | tolerations | list | `[]` | Tolerations for pod assignment |
 | volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
 | volumes | list | `[]` | Additional volumes on the output Deployment definition. |
+| web.deploymentAnnotations | object | `{}` | Annotations to add to deployments |
+| web.envVars | object | `{}` |  |
+| web.livenessProbe | object | `{"httpGet":{"path":"/version","port":"http"}}` | The liveness probes |
+| web.podAnnotations | object | `{}` | Annotations to add to the pods |
+| web.podLabels | object | `{}` | Label to add to the pods |
+| web.readinessProbe | object | `{"httpGet":{"path":"/health","port":"http"},"timeoutSeconds":5}` | The readiness probes |
+| web.replicaCount | int | `0` | The number of replicas |
 
