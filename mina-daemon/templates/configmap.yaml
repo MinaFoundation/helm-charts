@@ -24,3 +24,6 @@ data:
 {{- end }}
   healthcheck.sh: |-
 {{ (.Files.Get "scripts/healthcheck.sh") | indent 4 }}
+{{- end }}
+s3-blocks-uploader.sh: |-
+{{ (.Files.Get "scripts/gcs-block-uploader.sh") | indent 4 }}
