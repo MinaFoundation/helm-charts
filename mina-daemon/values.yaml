@@ -49,9 +49,9 @@ deployment:
       # -- AWS upload interval
       uploadInterval: 900
     gcp:
-      # -- Enable GCP storage
+      # -- Enable GCP GCS storage
       enabled: false
-      # -- GCP bucket
+      # -- GCS bucket
       bucket: mina_network_block_data
       # -- GCP keyfile
       keyfile: "{}"
