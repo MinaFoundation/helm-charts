@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kyc-management-app.fullname" . }}-hook
+  {{- with .Values.hook.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "kyc-management-app.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.hook.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: hook
+      {{- include "kyc-management-app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.hook.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/component: hook
+        {{- include "kyc-management-app.labels" . | nindent 8 }}
+        {{- with .Values.hook.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "kyc-management-app.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: init-db
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: KYC_DATABASE_URL
+              {{- if .Values.postgresql.enabled }}
+              value: postgres://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password}}@{{ include "postgresql.v1.primary.fullname" .Subcharts.postgresql }}:{{- .Values.postgresql.primary.service.ports.postgresql -}}/{{.Values.postgresql.auth.database}}
+              {{- else }}
+              value: {{ .Values.postgresUri | quote }}
+              {{- end }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 0
+          args: [db-deploy]
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          args: [api]
+          env:
+            - name: KYC_DATABASE_URL
+              {{- if .Values.postgresql.enabled }}
+              value: postgres://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password}}@{{ include "postgresql.v1.primary.fullname" .Subcharts.postgresql }}:{{- .Values.postgresql.primary.service.ports.postgresql -}}/{{.Values.postgresql.auth.database}}
+              {{- else }}
+              value: {{ .Values.postgresUri | quote }}
+              {{- end }}
+            {{- if .Values.envVars }}
+            {{- toYaml .Values.envVars | nindent 12 }}
+            {{- end }}
+            {{- if .Values.hook.envVars }}
+            {{- toYaml .Values.hook.envVars | nindent 12 }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.hook.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.hook.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name:  {{ .Release.Name }}-gcp-sa
+              mountPath: /app/gcloud
+          {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: {{ .Release.Name }}-gcp-sa
+          secret:
+            secretName: {{ .Release.Name }}
+            defaultMode: 0600
+            items:
+              - key: gcp-sa-json
+                path: gcp-sa.json
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

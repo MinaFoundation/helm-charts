@@ -1,29 +1,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "kyc-management-app.fullname" . }}
-  {{- with .Values.deploymentAnnotations }}
+  name: {{ include "kyc-management-app.fullname" . }}-dashboard
+  {{- with .Values.dashboard.deploymentAnnotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   labels:
     {{- include "kyc-management-app.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
-  {{- end }}
+  replicas: {{ .Values.dashboard.replicaCount }}
   selector:
     matchLabels:
+      app.kubernetes.io/component: dashboard
       {{- include "kyc-management-app.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
+      {{- with .Values.dashboard.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
+        app.kubernetes.io/component: dashboard
         {{- include "kyc-management-app.labels" . | nindent 8 }}
-        {{- with .Values.podLabels }}
+        {{- with .Values.dashboard.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
@@ -39,7 +39,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: DATABASE_URL
+            - name: KYC_DATABASE_URL
               {{- if .Values.postgresql.enabled }}
               value: postgres://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password}}@{{ include "postgresql.v1.primary.fullname" .Subcharts.postgresql }}:{{- .Values.postgresql.primary.service.ports.postgresql -}}/{{.Values.postgresql.auth.database}}
               {{- else }}
@@ -48,12 +48,7 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             runAsUser: 0
-          #NOTE: This is a temporary solution until the application manages the DB population and migrations
-          command:
-            - npx
-            - prisma
-            - migrate
-            - deploy
+          args: [db-deploy]
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -64,8 +59,9 @@ spec:
           lifecycle:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          args: [dashboard]
           env:
-            - name: DATABASE_URL
+            - name: KYC_DATABASE_URL
               {{- if .Values.postgresql.enabled }}
               value: postgres://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password}}@{{ include "postgresql.v1.primary.fullname" .Subcharts.postgresql }}:{{- .Values.postgresql.primary.service.ports.postgresql -}}/{{.Values.postgresql.auth.database}}
               {{- else }}
@@ -76,14 +72,17 @@ spec:
             {{- if .Values.envVars }}
             {{- toYaml .Values.envVars | nindent 12 }}
             {{- end }}
+            {{- if .Values.dashboard.envVars }}
+            {{- toYaml .Values.dashboard.envVars | nindent 12 }}
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           livenessProbe:
-            {{- toYaml .Values.livenessProbe | nindent 12 }}
+            {{- toYaml .Values.dashboard.livenessProbe | nindent 12 }}
           readinessProbe:
-            {{- toYaml .Values.readinessProbe | nindent 12 }}
+            {{- toYaml .Values.dashboard.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
