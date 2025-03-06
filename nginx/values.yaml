@@ -155,4 +155,4 @@ lifecycle:
       command:
       - sh
       - -c
-      - sleep 15 && kill -SIGQUIT 1
+      - sleep 15 && kill -3 1

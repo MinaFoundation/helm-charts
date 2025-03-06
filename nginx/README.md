@@ -1,6 +1,6 @@
 # nginx
 
-![Version: 0.1.1](https://img.shields.io/badge/Version-0.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
+![Version: 0.1.2](https://img.shields.io/badge/Version-0.1.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -62,7 +62,7 @@ helmfile status
 | ingress.hosts[0].paths[0].path | string | `"/"` |  |
 | ingress.hosts[0].paths[0].pathType | string | `"ImplementationSpecific"` |  |
 | ingress.tls | list | `[]` | TLS configuration |
-| lifecycle | object | `{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -SIGQUIT 1"]}}}` | Lifecycle hooks |
+| lifecycle | object | `{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -3 1"]}}}` | Lifecycle hooks |
 | livenessProbe | object | `{"httpGet":{"path":"/_/health","port":"http"}}` | Live and Readiness Probes |
 | nameOverride | string | `""` | The release name override |
 | nodeSelector | object | `{}` | Node selector labels |
