@@ -616,3 +616,62 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+
+    {{ - if .Values.deployment.storeBlocks.gcp.enabled }}
+    - name: gcs-block-uploader
+      image: "{{ .Values.gcsBlocksUploader.image.repository }}:{{ .Values.gcsBlocksUploader.image.tag }}"
+      imagePullPolicy: {{ .Values.gcsBlocksUploader.image.pullPolicy }}
+      command: ["/bin/sh", "/scripts/gcs-blocks-uploader.sh"]
+      env:
+        - name: UPLOAD_INTERVAL
+          value: {{ .Values.deployment.storeBlocks.gcp.uploadInterval | quote }}
+        - name: SOURCE_DIR
+          value: {{ .Values.deployment.storeBlocks.directory | quote }}
+        - name: GCS_BUCKET
+          value: {{ .Values.deployment.storeBlocks.gcp.bucket | quote }}
+        {{- if .Values.deployment.storeBlocks.gcp.prefix }}
+        - name: PREFIX
+          value: {{ .Values.deployment.storeBlocks.gcp.prefix | quote }}
+        {{- end }}
+        {{- if not .Values.deployment.storeBlocks.gcp.useWorkloadIdentity }}
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: "/gcloud/keyfile.json"
+        {{- end }}
+      resources:
+        limits:
+          memory: {{ .Values.gcsBlocksUploader.resources.memoryLimit }}
+          cpu: {{ .Values.gcsBlocksUploader.resources.cpuLimit }}
+          {{- if .Values.gcsBlocksUploader.resources.ephemeralStorageLimit }}
+          ephemeral-storage: {{ .Values.gcsBlocksUploader.resources.ephemeralStorageLimit }}
+          {{- end }}
+        requests:
+          memory: {{ .Values.gcsBlocksUploader.resources.memoryRequest }}
+          cpu: {{ .Values.gcsBlocksUploader.resources.cpuRequest }}
+          {{- if .Values.gcsBlocksUploader.resources.ephemeralStorageRequest }}
+          ephemeral-storage: {{ .Values.gcsBlocksUploader.resources.ephemeralStorageRequest }}
+          {{- end }}
+      volumeMounts:
+        - name: {{ .Release.Name }}-scripts
+          mountPath: /scripts/gcs-blocks-uploader.sh
+          subPath: gcs-blocks-uploader.sh
+        - name: {{ .Release.Name }}-precomputed-blocks
+          mountPath: {{ .Values.deployment.storeBlocks.directory }}
+        {{- if not .Values.deployment.storeBlocks.gcp.useWorkloadIdentity }}
+        - name: {{ .Release.Name }}-gcloud-keyfile
+          mountPath: /gcloud
+          readOnly: true
+        {{- end }}
+      {{- end }}
+
+      volumes:
+      {{- if .Values.deployment.storeBlocks.gcp.enabled }}
+        {{- if not .Values.deployment.storeBlocks.gcp.useWorkloadIdentity }}
+      - name: {{ .Release.Name }}-gcloud-keyfile
+        secret:
+          secretName: {{ .Release.Name }}
+          defaultMode: 0400
+          items:
+            - key: gcloud-keyfile
+              path: keyfile.json
+        {{- end }}
+      {{- end }}
