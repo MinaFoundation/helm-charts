@@ -44,6 +44,14 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels for backend
 */}}
+{{- define "mina-payout-reports.selectorLabelsCron" -}}
+app.kubernetes.io/name: {{ include "mina-payout-reports.name" . }}-cron
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Selector labels for backend
+*/}}
 {{- define "mina-payout-reports.selectorLabelsApi" -}}
 app.kubernetes.io/name: {{ include "mina-payout-reports.name" . }}-api
 app.kubernetes.io/instance: {{ .Release.Name }}

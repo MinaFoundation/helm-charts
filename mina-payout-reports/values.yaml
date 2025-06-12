@@ -16,6 +16,82 @@ serviceAccount:
   name: ""
 
 # Configuration options for `mina-payout-reports` frontend deployment
+payoutReportsCron:
+  # -- The url of the Epoch API
+  epochApi: "https://api.mina.tools/v1/epoch"
+  # -- The url of the Slack webhook to send notifications to
+  slackWebhookUrl: "https://slack.com/api/webhook"
+  # -- The number of replicas
+  replicaCount: 1
+  image:
+    # -- The repository of the image
+    repository: registry.gitlab.com/gitlab-ci-utils/curl-jq
+    # -- The pullPolicy used when pulling the image
+    pullPolicy: IfNotPresent
+    # -- The tag of the image
+    tag: "latest"
+
+  # -- The secrets used to pull the image
+  imagePullSecrets: []
+
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+
+  # -- The Pod Security Context
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  # -- The Security Context
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  extraEnvVars: []
+    # See Application's README(or source code).
+    # - name: FOO
+    #   value: FOO
+    # - name: BAR
+    #   valueFrom:
+    #     secretKeyRef:
+    #       name: mySecret
+    #       key: bar  offline:
+
+  # -- Resource limitations for the pods
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  # -- Node selector labels
+  nodeSelector: {}
+
+  # -- Tolerations
+  tolerations: []
+
+  # -- Affinity rules
+  affinity: {}
+
+  # -- Lifecycle hooks
+  lifecycle:
+    preStop:
+      exec:
+        command:
+        - sh
+        - -c
+        - sleep 15 && kill -SIGQUIT 1
+
+# Configuration options for `mina-payout-reports` frontend deployment
 payoutReportsWeb:
   # -- Payout reports backend public url accessible from the client
   backendPublicUrl: localhost:5000

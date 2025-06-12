@@ -141,7 +141,7 @@ spec:
       volumes:
         - name: entrypoint-initdb
           configMap:
-            name: {{ include "mina-payout-reports.fullname" $ }}-initdb
+            name: {{ include "mina-payout-reports.fullname" $ }}
             defaultMode: 0777
             items:
               - key: "entrypoint-initdb.sh"

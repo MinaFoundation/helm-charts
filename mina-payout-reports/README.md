@@ -1,6 +1,6 @@
 # mina-payout-reports
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
+![Version: 0.1.1](https://img.shields.io/badge/Version-0.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -93,6 +93,22 @@ helmfile status
 | payoutReportsApi.tolerations | list | `[]` | Tolerations |
 | payoutReportsApi.walletMappingSpreadsheetTab | string | `""` | Google's public spreadsheet sheet(tab) name |
 | payoutReportsApi.walletMappingSpreadsheetUrl | string | `""` | Google's public spreadsheet url containing wallet mappings |
+| payoutReportsCron.affinity | object | `{}` | Affinity rules |
+| payoutReportsCron.epochApi | string | `"https://api.mina.tools/v1/epoch"` | The url of the Epoch API |
+| payoutReportsCron.extraEnvVars | list | `[]` |  |
+| payoutReportsCron.image.pullPolicy | string | `"IfNotPresent"` | The pullPolicy used when pulling the image |
+| payoutReportsCron.image.repository | string | `"registry.gitlab.com/gitlab-ci-utils/curl-jq"` | The repository of the image |
+| payoutReportsCron.image.tag | string | `"latest"` | The tag of the image |
+| payoutReportsCron.imagePullSecrets | list | `[]` | The secrets used to pull the image |
+| payoutReportsCron.lifecycle | object | `{"preStop":{"exec":{"command":["sh","-c","sleep 15 && kill -SIGQUIT 1"]}}}` | Lifecycle hooks |
+| payoutReportsCron.nodeSelector | object | `{}` | Node selector labels |
+| payoutReportsCron.podAnnotations | object | `{}` | Annotations to add to the pods |
+| payoutReportsCron.podSecurityContext | object | `{}` | The Pod Security Context |
+| payoutReportsCron.replicaCount | int | `1` | The number of replicas |
+| payoutReportsCron.resources | object | `{}` | Resource limitations for the pods |
+| payoutReportsCron.securityContext | object | `{}` | The Security Context |
+| payoutReportsCron.slackWebhookUrl | string | `"https://slack.com/api/webhook"` | The url of the Slack webhook to send notifications to |
+| payoutReportsCron.tolerations | list | `[]` | Tolerations |
 | payoutReportsWeb.affinity | object | `{}` | Affinity rules |
 | payoutReportsWeb.backendPublicUrl | string | `"localhost:5000"` | Payout reports backend public url accessible from the client |
 | payoutReportsWeb.extraEnvVars | list | `[]` | Additional list of Environment Variables |
