@@ -21,6 +21,10 @@ payoutReportsCron:
   epochApi: "https://api.mina.tools/v1/epoch"
   # -- The url of the Slack webhook to send notifications to
   slackWebhookUrl: "https://slack.com/api/webhook"
+  # -- The url of the Payout Reports API
+  reportAPI: "https://production-mainnet-mina-payout-reports-api.minaprotocol.tools/reports"
+  # -- The source url used for CORS purposes
+  sourceUrl: "https://production-mainnet-mina-payout-reports.minaprotocol.tools"
   # -- The number of replicas
   replicaCount: 1
   image:

@@ -2,6 +2,7 @@
 
 : "${EPOCH_API:?Environment variable EPOCH_API must be set}"
 : "${REPORT_API:?Environment variable REPORT_API must be set}"
+: "${SOURCE_URL:?Environment variable SOURCE_URL must be set}"
 : "${SLACK_WEBHOOK:?Environment variable SLACK_WEBHOOK must be set}"
 
 # Function to send Slack message
@@ -27,7 +28,12 @@ while true; do
 
     resp=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$REPORT_API" \
       -H "Content-Type: application/json" \
-      -d "{\"epoch_no\": $epoch, \"report_type\": \"obligation_report_slot_100\"}")
+      -H "Origin: $SOURCE_URL" \
+      -H "Referer: $SOURCE_URL/" \
+      -H "Sec-Fetch-Site: same-site" \
+      -H "Sec-Fetch-Mode: cors" \
+      -H "Sec-Fetch-Dest: empty" \
+      -d "{\"epoch_no\": "$epoch", \"report_type\": \"obligation_report_slot_100\"}")
 
     if [ "$resp" == "200" ]; then
       send_slack "✅ Obligation report for slot 100 successfully triggered"
@@ -44,6 +50,11 @@ while true; do
 
     resp=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$REPORT_API" \
       -H "Content-Type: application/json" \
+      -H "Origin: $SOURCE_URL" \
+      -H "Referer: $SOURCE_URL/" \
+      -H "Sec-Fetch-Site: same-site" \
+      -H "Sec-Fetch-Mode: cors" \
+      -H "Sec-Fetch-Dest: empty" \
       -d "{\"epoch_no\": $epoch, \"report_type\": \"validation_report_slot_3500\"}")
 
     if [ "$resp" == "200" ]; then

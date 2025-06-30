@@ -105,9 +105,11 @@ helmfile status
 | payoutReportsCron.podAnnotations | object | `{}` | Annotations to add to the pods |
 | payoutReportsCron.podSecurityContext | object | `{}` | The Pod Security Context |
 | payoutReportsCron.replicaCount | int | `1` | The number of replicas |
+| payoutReportsCron.reportAPI | string | `"https://production-mainnet-mina-payout-reports-api.minaprotocol.tools/reports"` | The url of the Payout Reports API |
 | payoutReportsCron.resources | object | `{}` | Resource limitations for the pods |
 | payoutReportsCron.securityContext | object | `{}` | The Security Context |
 | payoutReportsCron.slackWebhookUrl | string | `"https://slack.com/api/webhook"` | The url of the Slack webhook to send notifications to |
+| payoutReportsCron.sourceUrl | string | `"https://production-mainnet-mina-payout-reports.minaprotocol.tools"` | The source url used for CORS purposes |
 | payoutReportsCron.tolerations | list | `[]` | Tolerations |
 | payoutReportsWeb.affinity | object | `{}` | Affinity rules |
 | payoutReportsWeb.backendPublicUrl | string | `"localhost:5000"` | Payout reports backend public url accessible from the client |
