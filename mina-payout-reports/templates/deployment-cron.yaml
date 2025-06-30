@@ -46,7 +46,9 @@ spec:
             - name: EPOCH_API
               value: {{ .epochApi | quote }}
             - name: REPORT_API
-              value: 'http://{{ include "mina-payout-reports.fullname" $ }}-api:{{ $.Values.payoutReportsApi.service.port }}'
+              value: {{ $.Values.payoutReportsCron.reportAPI | quote }}
+            - name: SOURCE_URL
+              value: {{ $.Values.payoutReportsCron.sourceUrl | quote }}
             - name: SLACK_WEBHOOK
               value: {{ .slackWebhookUrl | quote }}
             {{- if .extraEnvVars }}
