@@ -20,6 +20,8 @@ serviceAccount:
 postgresql:
   # -- Enable local postgresql database server
   enabled: true
+  image:
+    tag: 17.6.0-debian-12-r4
   primary:
     # -- Resources preset to set resource requests and limits
     resourcesPreset: "nano"
@@ -59,7 +61,7 @@ externalDatabase:
   password: password
 
 # -- Image to use as postgresql client, to export dumps for example
-postgresClientDockerImage: bitnami/postgresql:16.2.0-debian-12-r18
+postgresClientDockerImage: bitnami/postgresql:17.6.0-debian-12-r4
 # postgresClientDockerImage: postgres:16-alpine
 
 dbBootstrap:
@@ -89,8 +91,8 @@ dbBootstrap:
 
   # -- Annotations to apply to the job
   annotations: {}
-  
-  # -- Annotations to apply to the pod 
+
+  # -- Annotations to apply to the pod
   podAnnotations: {}
 
 node:
@@ -133,7 +135,7 @@ missingBlocksGuardian:
   suspend: false
   # -- Frequency to execute the missing blocks guardian
   schedule: "@hourly"
-  # -- Annotations to the missing blocks guardian 
+  # -- Annotations to the missing blocks guardian
   podAnnotations: {}
   # -- Seconds before cleaning up the missing blocks guardian execution
   ttlSecondsAfterFinished: 86400
@@ -143,13 +145,13 @@ missingBlocksGuardian:
   autoImportBlockUrl: ""
 
 dumpExporter:
-  # -- Enabled dump exporter 
+  # -- Enabled dump exporter
   enabled: false
   # -- Suspend the  dump exporter execution
   suspend: false
   # -- Frequency to execute the  dump exporter
   schedule: "@midnight"
-  # -- Annotations to the  dump exporter 
+  # -- Annotations to the  dump exporter
   podAnnotations: {}
   # -- Seconds before cleaning up the  dump exporter execution
   ttlSecondsAfterFinished: 86400

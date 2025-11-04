@@ -1,6 +1,6 @@
 # mina-archive
 
-![Version: 3.0.0](https://img.shields.io/badge/Version-3.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.0.0](https://img.shields.io/badge/AppVersion-2.0.0-informational?style=flat-square)
+![Version: 3.1.0](https://img.shields.io/badge/Version-3.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.1.0](https://img.shields.io/badge/AppVersion-2.1.0-informational?style=flat-square)
 
 A Helm chart for Mina Protocol's berkeley archive node
 
@@ -56,11 +56,11 @@ helmfile status
 | dbBootstrap.enabled | bool | `false` | Enable to dbBootstrap job to populate the database schema or dump |
 | dbBootstrap.extraSqlFileUrls | list | `[]` | SQL file urls to pre-download before executing the SQL file urls |
 | dbBootstrap.maxExpectedDurationInSeconds | int | `1800` | Set the bootstrap duration expected to be used by other pods when waiting for the bootstrap to complete, before reaching timeout |
-| dbBootstrap.podAnnotations | object | `{}` | Annotations to apply to the pod  |
+| dbBootstrap.podAnnotations | object | `{}` | Annotations to apply to the pod |
 | dbBootstrap.postCustomSql | string | `"ALTER DATABASE {{ .Values.databaseName }} SET DEFAULT_TRANSACTION_ISOLATION TO SERIALIZABLE"` | Execute SQL inline command after loading the SQL file urls |
 | dbBootstrap.sqlFileUrls | list | `[]` | SQL file urls to execute |
-| dumpExporter.enabled | bool | `false` | Enabled dump exporter  |
-| dumpExporter.podAnnotations | object | `{}` | Annotations to the  dump exporter  |
+| dumpExporter.enabled | bool | `false` | Enabled dump exporter |
+| dumpExporter.podAnnotations | object | `{}` | Annotations to the  dump exporter |
 | dumpExporter.s3.bucket | string | `""` | S3 bucket to export the dump to |
 | dumpExporter.schedule | string | `"@midnight"` | Frequency to execute the  dump exporter |
 | dumpExporter.suspend | bool | `false` | Suspend the  dump exporter execution |
@@ -75,7 +75,7 @@ helmfile status
 | image.tag | string | `"2.0.0berkeley-rc1-1551e2f-focal"` | Docker image tag |
 | missingBlocksGuardian.autoImportBlockUrl | string | `""` | URL to auto import a block when running the missing blocks guardian |
 | missingBlocksGuardian.enabled | bool | `true` | Enabled missing blocks guardian |
-| missingBlocksGuardian.podAnnotations | object | `{}` | Annotations to the missing blocks guardian  |
+| missingBlocksGuardian.podAnnotations | object | `{}` | Annotations to the missing blocks guardian |
 | missingBlocksGuardian.precomputedBlocksUrl | string | `""` | URL to fetch the pre-computed blocks from |
 | missingBlocksGuardian.schedule | string | `"@hourly"` | Frequency to execute the missing blocks guardian |
 | missingBlocksGuardian.suspend | bool | `false` | Suspend the missing blocks guardian execution |
@@ -94,11 +94,12 @@ helmfile status
 | node.service.annotations | object | `{}` | Annotations to the mina archive service |
 | node.service.labels | object | `{}` | Labels to the mina archive service |
 | nodeSelector | object | `{}` | Node selector for all the pods |
-| postgresClientDockerImage | string | `"bitnami/postgresql:16.2.0-debian-12-r18"` | Image to use as postgresql client, to export dumps for example |
+| postgresClientDockerImage | string | `"bitnami/postgresql:17.6.0-debian-12-r4"` | Image to use as postgresql client, to export dumps for example |
 | postgresql.auth.enablePostgresUser | bool | `false` | Enable the default postgres user |
 | postgresql.auth.password | string | `"password"` | Password for the database |
 | postgresql.auth.username | string | `"username"` | Username for the database |
 | postgresql.enabled | bool | `true` | Enable local postgresql database server |
+| postgresql.image.tag | string | `"17.6.0-debian-12-r4"` |  |
 | postgresql.primary.extendedConfiguration | string | `"max_connections=500\nmax_locks_per_transaction=100\nmax_pred_locks_per_relation=100\nmax_pred_locks_per_transaction=5000\nmax_wal_size=2048\n"` | Extended configuration to configure postgresql server |
 | postgresql.primary.persistence.enabled | bool | `true` | Enable the persistence for the postgresql server |
 | postgresql.primary.persistence.size | string | `"8Gi"` | Size of the postgresql server volume |

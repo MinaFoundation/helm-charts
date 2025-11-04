@@ -2,8 +2,8 @@ apiVersion: v2
 name: mina-archive
 description: A Helm chart for Mina Protocol's berkeley archive node
 type: application
-version: 3.0.0
-appVersion: 2.0.0
+version: 3.1.0
+appVersion: 2.1.0
 dependencies:
   - name: postgresql
     version: "*"
