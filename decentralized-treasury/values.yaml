@@ -1,0 +1,826 @@
+# Default values for decentralized-treasury.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+## Images.
+## Each service ships as its own image, all built from the same monorepo. These
+## are the chart-wide defaults; every component may override them under its own
+## `image:` block.
+image:
+  # -- Tag applied to every component image unless it overrides it
+  tag: latest
+  # -- Pull policy applied to every component image unless it overrides it
+  pullPolicy: IfNotPresent
+
+# -- The secrets used to pull the image
+imagePullSecrets: []
+# -- The release name override
+nameOverride: ""
+# -- The full release name override
+fullnameOverride: ""
+
+# -- Path to the api workspace inside the image. The wait-for-* scripts resolve
+# the `pg` package and the shipped migration files relative to this.
+apiDirectory: /app/apps/api
+
+# -- Mina network this release targets. Doubles as the S3 key prefix, which is
+# what keeps lifecycle ids from colliding between networks: a lifecycle id is a
+# small integer counted from TREASURY_DEPLOYED_AT_SLOT, so singlenet and mainnet
+# both start at 0.
+network: singlenet
+
+## S3 backing for the lifecycle SQLite cache.
+## Credentials come from IRSA: annotate serviceAccount with
+## eks.amazonaws.com/role-arn and nothing secret needs to live in the chart.
+s3:
+  # -- Region the buckets live in
+  region: us-east-1
+  # -- Bucket holding the lifecycle SQLite databases and their markers
+  sqliteBucket: 673156464838-mina-decentralized-treasury-sqlite
+  # -- Bucket holding generated proofs
+  proofsBucket: 673156464838-mina-decentralized-treasury-proofs
+  # -- Bucket holding staking ledger archives, in <epoch>-<hash>.tar.gz form
+  stakingLedgersBucket: 673156464838-mina-staking-ledgers
+  # -- Image used by the cache sync containers. Deliberately not the application
+  # image, which ships no AWS CLI.
+  syncImage:
+    repository: amazon/aws-cli
+    tag: "2.36.23"
+    pullPolicy: IfNotPresent
+    # -- Security context for the sync containers. Needs an explicit runAsUser
+    # because the aws-cli image defines no non-root user of its own.
+    securityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      runAsUser: 1000
+      capabilities:
+        drop:
+          - ALL
+    # -- The Resources
+    resources: {}
+
+## Local cache of the lifecycle SQLite databases.
+sqlite:
+  # -- Where the databases are mounted inside every pod that reads them
+  dataDirectory: /data/sqlite
+  # -- How often the sidecar re-syncs from S3. Lifecycles are ~15 days apart, so
+  # this can be generous.
+  syncIntervalSeconds: 60
+  # -- Use an existing PersistentVolumeClaim instead of an emptyDir. Worth it
+  # only if re-downloading the cache on every pod start becomes slow.
+  existingClaim: ""
+  # -- Size limit for the emptyDir cache. Empty means no limit.
+  sizeLimit: ""
+
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use.
+  name: ""
+
+# -- Label to add to the pods
+podLabels: {}
+
+# -- The Pod Security Context. fsGroup makes the shared SQLite cache writable by
+# both the application container (which runs as the image's `node` user, uid
+# 1000) and the aws-cli sync sidecar.
+podSecurityContext:
+  fsGroup: 1000
+
+# -- The Security Context. Mirrors the compose stack's `no-new-privileges` and
+# `cap_drop: ALL`; the image already runs as the unprivileged `node` user.
+securityContext:
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  capabilities:
+    drop:
+      - ALL
+
+## Database
+## Exactly one of postgresql.enabled / externalDatabase.enabled must be set.
+
+# -- Bundled Postgres, deployed as a subchart.
+postgresql:
+  # -- Enable the bundled postgresql database server
+  enabled: true
+  auth:
+    # -- Username for the database
+    username: treasury
+    # -- Password for the database
+    password: ""
+    # -- Name of the database to create
+    database: treasury_api
+  primary:
+    service:
+      ports:
+        # -- Port the database server listens on
+        postgresql: 5432
+    persistence:
+      # -- Enable persistence for the postgresql server
+      enabled: true
+      # -- Storage class for the postgresql server volume
+      storageClass: ""
+      # -- Size of the postgresql server volume
+      size: 8Gi
+
+# -- An already-running Postgres to use instead of the bundled subchart.
+externalDatabase:
+  # -- Use an existing external database server, ignoring the bundled subchart
+  enabled: false
+  # -- Host for external database connection
+  host: ""
+  # -- Port for external database connection
+  port: 5432
+  # -- Username for external database connection
+  username: treasury
+  # -- Password for external database connection
+  password: ""
+  # -- Database name for external database connection
+  database: treasury_api
+
+database:
+  # -- Postgres schema the api workspace reads and migrates
+  schema: public
+  # -- Use an existing Secret holding the connection URL instead of rendering
+  # one from the values above. Recommended in production, and required if the
+  # password contains characters that do not survive URL assembly.
+  existingSecret: ""
+  # -- Key within the Secret that holds the full `postgres://` URL
+  existingSecretUrlKey: database-url
+
+# -- Schema migrations, run as a plain Job rather than a Helm hook.
+apiMigrate:
+  # -- Whether to run schema migrations
+  enabled: true
+  # -- What makes the Job run again. Job pod specs are immutable, so migrations
+  # only re-run when the Job name changes.
+  #   revision - a new Job on every helm upgrade. Required with a mutable tag
+  #              such as `latest`, where keying on the tag would mean the Job
+  #              never changes and migrations silently stop running.
+  #   tag      - a new Job only when the image tag changes. Only correct if you
+  #              publish immutable tags.
+  rerunPolicy: revision
+  image:
+    # -- The image repository
+    repository: minafoundation/dt-api-migrate
+    # -- Overrides the chart-wide tag
+    tag: ""
+    # -- Overrides the chart-wide pull policy
+    pullPolicy: ""
+  # -- Number of retries before the Job is marked failed
+  backoffLimit: 6
+  # -- How long a finished Job is retained before it is garbage collected
+  ttlSecondsAfterFinished: 600
+  # -- How long the init container waits for Postgres to accept connections
+  waitTimeoutSeconds: 600
+  # -- Annotations to add to the Job
+  annotations: {}
+  # -- Annotations to add to the Job pod
+  podAnnotations: {}
+  # -- Additional environment variables for the migration container
+  extraEnvVars: []
+  # -- The Resources
+  resources: {}
+
+# -- Init container that blocks a workload until the schema is migrated. Added
+# to every workload that reads the database, so they can all be applied
+# alongside the migration Job and still converge in the right order.
+migrationWait:
+  # -- Whether dependent workloads wait for migrations before starting
+  enabled: true
+  # -- How long to wait before the init container gives up and fails the pod
+  timeoutSeconds: 600
+  # -- How often to re-check whether migrations have been applied
+  pollIntervalSeconds: 5
+  # -- The Resources
+  resources: {}
+
+## Application configuration shared by every service built from the apps/api
+## workspace. apps/api/src/config.ts validates these at startup, so a missing
+## required value crashes the pod rather than degrading quietly.
+config:
+  # -- Archive node GraphQL endpoint. Defaults to the shared devops archive
+  # node; point this at an in-cluster archive (e.g. http://mina-archive:8282)
+  # when the release has one of its own.
+  archiveNodeUrl: "http://devops.hz.minaprotocol.network:8080"
+  # -- Treasury owner zkApp address. Network-specific: pointing this at an
+  # address from another network yields a service that indexes nothing at all
+  # rather than erroring, so set it deliberately per network.
+  treasuryOwnerContractAddress: B62qpExe8CAaGkR4HRxyXvkziQpE6Aq3U71MJLHivP8pCsiDk1BbU9Z
+  # -- Origins allowed to call the HTTP APIs. Empty keeps the application default.
+  corsAllowedOrigins: []
+  # -- Default page size for list endpoints
+  apiPageLimitDefault: 50
+  # -- Maximum page size for list endpoints
+  apiPageLimitMax: 200
+  # -- Timeout for archive node requests, in milliseconds
+  archiveRequestTimeoutMs: 15000
+  # -- Maximum proposal content length in characters. Empty keeps the
+  # application default (32768).
+  proposalContentMaxChars: ""
+  # -- Slots in one lifecycle period. Required by voting-ledger-scheduler.
+  lifecyclePeriodDuration: 7140
+  # -- Slot at which the treasury contract was deployed. Lifecycle ids are
+  # counted from here, which is why they differ per network.
+  treasuryDeployedAtSlot: 0
+  # -- Whether the stack produces real proofs
+  proofsEnabled: false
+  # -- Override the in-cluster URL of api. Empty derives it from the Service.
+  apiUrl: ""
+  # -- Override the in-cluster URL of indexer-api. Empty derives it from the Service.
+  indexerApiUrl: ""
+  # -- Override the in-cluster URL of processor-api. Empty derives it from the Service.
+  processorApiUrl: ""
+  # -- Processor identity, used as the key for stored processor offsets. Shared
+  # by processor and processor-api, which must agree or the API reports on a
+  # different processor's progress. Empty keeps the application default.
+  processorName: ""
+
+# -- Read-only HTTP API over indexed archive events (apps/api start:indexer-api).
+indexerApi:
+  # -- Whether to deploy the indexer API
+  enabled: true
+  image:
+    # -- The image repository
+    repository: minafoundation/dt-indexer-api
+    # -- Overrides the chart-wide tag
+    tag: ""
+    # -- Overrides the chart-wide pull policy
+    pullPolicy: ""
+  # -- Replica count. Stateless and safe to scale horizontally.
+  replicaCount: 1
+  # -- Port the container listens on
+  port: 4001
+  service:
+    # -- The service type
+    type: ClusterIP
+    # -- The service port
+    port: 4001
+    # -- Annotations to add to the service
+    annotations: {}
+  # -- Annotations to add to the deployment
+  deploymentAnnotations: {}
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+  # -- Additional environment variables
+  extraEnvVars: []
+  # -- The Resources
+  resources: {}
+  # -- Liveness probe. /healthz returns a static OK and does not check the
+  # database, so it detects a hung process but not a broken dependency.
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+  # -- Readiness probe
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# -- Public treasury HTTP API (apps/api start:api). Reads proposal state from
+# Postgres and lifecycle witnesses from the SQLite cache.
+api:
+  # -- Whether to deploy the API
+  enabled: true
+  image:
+    # -- The image repository
+    repository: minafoundation/dt-api
+    # -- Overrides the chart-wide tag
+    tag: ""
+    # -- Overrides the chart-wide pull policy
+    pullPolicy: ""
+  # -- Replica count. Stateless and safe to scale horizontally; each replica
+  # keeps its own copy of the SQLite cache.
+  replicaCount: 1
+  # -- Port the container listens on
+  port: 4000
+  service:
+    # -- The service type
+    type: ClusterIP
+    # -- The service port
+    port: 4000
+    # -- Annotations to add to the service
+    annotations: {}
+  sqlite:
+    # -- Mirror the lifecycle SQLite cache from S3 into this pod. Disable only
+    # if the witness and voting-ledger endpoints are not needed.
+    enabled: true
+    # -- Number of most recent lifecycle bodies to keep locally; 0 keeps all.
+    # Safe to bound here because the API turns a missing lifecycle into a
+    # structured LIFECYCLE_DATA_UNAVAILABLE_ERROR, unlike the processor.
+    # Requests for older lifecycles will fail with that error.
+    keepLastN: 0
+  # -- Annotations to add to the deployment
+  deploymentAnnotations: {}
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+  # -- Additional environment variables
+  extraEnvVars: []
+  # -- The Resources
+  resources: {}
+  # -- Liveness probe. /healthz returns a static OK and checks neither the
+  # database nor the SQLite cache.
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+  # -- Readiness probe
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# -- Archive event indexer worker (apps/api start:indexer). No HTTP server and
+# no Service; its progress is observable through indexer-api's status routes.
+indexer:
+  # -- Whether to deploy the indexer worker
+  enabled: true
+  image:
+    # -- The image repository
+    repository: minafoundation/dt-indexer
+    # -- Overrides the chart-wide tag
+    tag: ""
+    # -- Overrides the chart-wide pull policy
+    pullPolicy: ""
+  # -- Replica count. Must stay 1 — the archive cursor is a blind upsert with no
+  # lock or leader election, so a second replica can rewind indexing progress.
+  # The template refuses to render any other value.
+  replicaCount: 1
+  # -- Annotations to add to the deployment
+  deploymentAnnotations: {}
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+  # -- How often to poll for pending blocks, in milliseconds
+  pollPendingIntervalMs: 5000
+  # -- How often to poll for canonical blocks, in milliseconds
+  pollCanonicalIntervalMs: 15000
+  # -- Blocks fetched per archive request. Empty keeps the application default (10).
+  eventsBlockBatchSize: ""
+  # -- Blocks re-scanned behind the pending cursor. Empty keeps the default (20).
+  pendingOverlapBlocks: ""
+  # -- Blocks re-scanned behind the canonical cursor. Empty keeps the default (100).
+  canonicalOverlapBlocks: ""
+  # -- Depth at which forks are treated as orphaned. Empty keeps the default (30).
+  orphanDepthBlocks: ""
+  # -- Additional environment variables
+  extraEnvVars: []
+  # -- The Resources
+  resources: {}
+
+# -- Read/write HTTP API over processed proposal state (apps/api start:processor-api).
+processorApi:
+  # -- Whether to deploy the processor API
+  enabled: true
+  image:
+    # -- The image repository
+    repository: minafoundation/dt-processor-api
+    # -- Overrides the chart-wide tag
+    tag: ""
+    # -- Overrides the chart-wide pull policy
+    pullPolicy: ""
+  # -- Replica count. Stateless and safe to scale horizontally.
+  replicaCount: 1
+  # -- Port the container listens on
+  port: 4002
+  service:
+    # -- The service type
+    type: ClusterIP
+    # -- The service port
+    port: 4002
+    # -- Annotations to add to the service
+    annotations: {}
+  # -- Annotations to add to the deployment
+  deploymentAnnotations: {}
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+  # -- Additional environment variables
+  extraEnvVars: []
+  # -- The Resources
+  resources: {}
+  # -- Liveness probe. /healthz returns a static OK and does not check the
+  # database, so it detects a hung process but not a broken dependency.
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+  # -- Readiness probe
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# -- Event processor worker (apps/api start:processor). Consumes events from
+# indexer-api and writes proposal state to Postgres.
+processor:
+  # -- Whether to deploy the processor
+  enabled: true
+  image:
+    # -- The image repository
+    repository: minafoundation/dt-processor
+    # -- Overrides the chart-wide tag
+    tag: ""
+    # -- Overrides the chart-wide pull policy
+    pullPolicy: ""
+  # -- Replica count. Must stay 1 — the stored offset takes no lock and the vote
+  # handlers apply deltas, so a second replica would double-count votes. The
+  # template refuses to render any other value.
+  replicaCount: 1
+  sqlite:
+    # -- Mirror the lifecycle SQLite cache from S3 into this pod
+    enabled: true
+    # -- Number of recent lifecycle bodies to keep; 0 keeps all.
+    #
+    # Leave this at 0. This workload walks a backlog from a stored offset, so it
+    # can need any lifecycle, and a missing voting ledger is not graceful here:
+    # the handler throws, the offset is not advanced, and the same batch retries
+    # every poll interval indefinitely. The process stays up and healthy-looking
+    # while indexing has silently stopped.
+    keepLastN: 0
+  # -- How often to poll for new events, in milliseconds. Empty keeps the
+  # application default (2000).
+  pollIntervalMs: ""
+  # -- Events fetched per batch. Empty keeps the application default (200).
+  batchSize: ""
+  # -- Annotations to add to the deployment
+  deploymentAnnotations: {}
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+  # -- Additional environment variables
+  extraEnvVars: []
+  # -- The Resources
+  resources: {}
+
+# -- Builds voting ledgers from staking ledger archives. The sole producer of
+# the lifecycle SQLite databases, and the only workload that never touches
+# Postgres.
+votingLedgerScheduler:
+  # -- Whether to deploy the voting ledger scheduler
+  enabled: true
+  image:
+    # -- The image repository. NOTE: not published yet as of 2026-08-14 — the
+    # built images so far are dt-api, dt-api-migrate, dt-indexer, dt-indexer-api,
+    # dt-processor and dt-processor-api.
+    repository: minafoundation/dt-voting-ledger-scheduler
+    # -- Overrides the chart-wide tag
+    tag: ""
+    # -- Overrides the chart-wide pull policy
+    pullPolicy: ""
+  # -- Replica count. Must stay 1 — it deletes and rebuilds lifecycle databases
+  # in place. The template refuses to render any other value.
+  replicaCount: 1
+  # -- Where staking ledger archives are mounted
+  stakingLedgersDirectory: /staking-ledgers
+  # -- Number of most recent staking ledger epochs to keep locally; 0 keeps all.
+  # Safe to bound: the scheduler only reaches for the epoch matching the
+  # lifecycle it is processing, and reports a missing archive explicitly.
+  stakingLedgersKeepLastN: 10
+  # -- How often to re-check S3 for new staking ledger epochs, in seconds
+  stakingLedgersSyncIntervalSeconds: 300
+  # -- Use an existing claim for staking ledgers instead of an emptyDir
+  stakingLedgersExistingClaim: ""
+  # -- Size limit for the staking ledger emptyDir
+  stakingLedgersSizeLimit: ""
+  sqlite:
+    # -- Number of recent lifecycle bodies to keep; 0 keeps all. Markers are
+    # never pruned regardless, which is what stops the scheduler from
+    # reprocessing historical lifecycles after a restart.
+    keepLastN: 0
+  # -- How often to look for a new lifecycle to build, in seconds
+  pollIntervalSeconds: 30
+  # -- Annotations to add to the deployment
+  deploymentAnnotations: {}
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+  # -- Additional environment variables
+  extraEnvVars: []
+  # -- The Resources
+  resources: {}
+
+# -- Proof generation, matching the compose `proving` profile. Off by default.
+proving:
+  # -- Whether to deploy any proving workload
+  enabled: false
+  # -- BullMQ queue shared by the scheduler and the workers
+  queueName: staking-ledger-to-voting-ledger
+  redis:
+    # -- Deploy redis as part of this chart
+    enabled: true
+    # -- Use an existing redis instead. Set to a hostname to skip the bundled one.
+    externalHost: ""
+    # -- Redis port
+    port: 6379
+    image:
+      repository: redis
+      tag: 7-alpine
+      pullPolicy: IfNotPresent
+    # -- The Security Context
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+    # -- The Resources
+    resources: {}
+  worker:
+    # -- Whether to deploy proving workers
+    enabled: true
+    image:
+      # -- The image repository. NOTE: not published yet.
+      repository: minafoundation/dt-proving-worker
+      # -- Overrides the chart-wide tag
+      tag: ""
+      # -- Overrides the chart-wide pull policy
+      pullPolicy: ""
+    # -- Number of workers. This is the size of the proving cluster: BullMQ
+    # hands each job to whichever replica is free.
+    replicaCount: 3
+    # -- Defaults to true unlike the stack-wide config.proofsEnabled, since
+    # producing real proofs is the only reason to run this workload.
+    proofsEnabled: true
+    # -- Size limit for the per-pod compiled circuit cache
+    cacheSizeLimit: ""
+    # -- Annotations to add to the deployment
+    deploymentAnnotations: {}
+    # -- Annotations to add to the pods
+    podAnnotations: {}
+    # -- Node selector, overriding the chart-wide one. Proving is CPU and memory
+    # hungry and often wants its own node pool.
+    nodeSelector: {}
+    # -- Tolerations, overriding the chart-wide ones
+    tolerations: []
+    # -- Affinity, overriding the chart-wide one
+    affinity: {}
+    # -- Additional environment variables
+    extraEnvVars: []
+    # -- The Resources
+    resources: {}
+  scheduler:
+    # -- Whether to deploy the proving scheduler
+    enabled: true
+    image:
+      # -- The image repository. NOTE: not published yet.
+      repository: minafoundation/dt-proving-scheduler
+      # -- Overrides the chart-wide tag
+      tag: ""
+      # -- Overrides the chart-wide pull policy
+      pullPolicy: ""
+    # -- Replica count. Must stay 1 — it walks the backlog oldest-first from
+    # local markers. The template refuses to render any other value.
+    replicaCount: 1
+    sqlite:
+      # -- Keep all bodies: this scheduler works oldest-first, so a recent-window
+      # cache would prune exactly the lifecycles it still has to prove.
+      keepLastN: 0
+    # -- Where generated proofs are written before being published
+    outputDirectory: /data/proofs
+    # -- Size limit for the proofs emptyDir
+    outputSizeLimit: ""
+    # -- How often to look for a lifecycle to prove, in seconds
+    pollIntervalSeconds: 30
+    # -- Annotations to add to the deployment
+    deploymentAnnotations: {}
+    # -- Annotations to add to the pods
+    podAnnotations: {}
+    # -- Additional environment variables
+    extraEnvVars: []
+    # -- The Resources
+    resources: {}
+
+# -- Next.js frontend (apps/web). Built from the `web` stage of the Dockerfile,
+# so it is a different image from every other service.
+web:
+  # -- Whether to deploy the web frontend
+  enabled: true
+  # -- Replica count
+  replicaCount: 1
+  image:
+    # -- The image repository. NOTE: not published yet.
+    repository: minafoundation/dt-web
+    # -- Overrides the chart-wide tag
+    tag: ""
+    # -- Overrides the chart-wide pull policy
+    pullPolicy: ""
+  # -- Port the container listens on
+  port: 3100
+  service:
+    # -- The service type
+    type: ClusterIP
+    # -- The service port
+    port: 3100
+    # -- Annotations to add to the service
+    annotations: {}
+  # -- Public origin the browser reaches this deployment on. Used to derive the
+  # same-origin API URLs, mirroring the Caddyfile's /api, /indexer and
+  # /processor prefixes. Usually the same host as ingress.host.
+  publicBaseUrl: ""
+  # -- Browser-facing configuration.
+  #
+  # These are inlined into the client bundle at BUILD time, so the image must be
+  # built with the values for its target network. What is set here only reaches
+  # server-side rendering and cannot correct a mismatched build. Entries set
+  # here win over the values derived from publicBaseUrl.
+  publicEnv:
+    NEXT_PUBLIC_SLOT_DURATION_MS: "180000"
+    NEXT_PUBLIC_NETWORK_ID: MAINNET
+    NEXT_PUBLIC_VOTE_REDUCER_VERIFICATION_KEY_JSON: ""
+    NEXT_PUBLIC_STAKING_LEDGER_TO_VOTING_LEDGER_VERIFICATION_KEY_JSON: ""
+    NEXT_PUBLIC_TREASURY_PROPOSAL_VERIFICATION_KEY_JSON: ""
+    NEXT_PUBLIC_EMPTY_VOTING_LEDGER_ROOT: ""
+    NEXT_PUBLIC_EMPTY_NULLIFIER_ROOT: ""
+  # -- Annotations to add to the deployment
+  deploymentAnnotations: {}
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+  # -- Additional environment variables
+  extraEnvVars: []
+  # -- The Resources
+  resources: {}
+  # -- Liveness probe
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 20
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+  # -- Readiness probe
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# -- In-cluster reverse proxy, the compose stack's Caddy service translated to
+# nginx. Required by ingress.mode `proxy` and ignored by the other modes: it is
+# what strips /api, /indexer and /processor and fronts the Mina node at /mina,
+# so a single hostname works on a controller that cannot rewrite.
+proxy:
+  # -- Whether to deploy the proxy
+  enabled: false
+  # -- Replica count. Stateless, and on the request path of every page load, so
+  # more than one is worth it wherever the web frontend has more than one.
+  replicaCount: 1
+  image:
+    # -- The image repository. Unprivileged variant: it listens on a high port
+    # and runs as a non-root user, which the chart-wide securityContext needs.
+    repository: nginxinc/nginx-unprivileged
+    # -- Tag. Pinned here rather than falling back to the chart-wide tag, which
+    # belongs to the application images.
+    tag: 1.27-alpine
+    # -- Overrides the chart-wide pull policy
+    pullPolicy: ""
+  # -- Port the container listens on. The unprivileged image defaults to 8080.
+  port: 8080
+  service:
+    # -- The service type
+    type: ClusterIP
+    # -- The service port
+    port: 80
+    # -- Annotations to add to the service
+    annotations: {}
+  # -- Upstream for /mina, reproducing the Caddyfile's Mina node route. A plain
+  # URL, since the node is not part of this chart: an in-cluster Service or an
+  # external host, whichever fronts the daemon's GraphQL endpoint. Empty leaves
+  # the route out entirely, and the browser's NEXT_PUBLIC_MINA_NODE_URL 404s.
+  minaNodeUpstream: ""
+  # -- DNS server used to resolve the /mina upstream at request time. Resolving
+  # lazily is what keeps an unreachable node from stopping nginx from starting,
+  # which would take the web app down with it.
+  resolver: kube-dns.kube-system.svc.cluster.local
+  # -- Largest request body accepted. Proposal content and vote payloads are
+  # the big ones; nginx's own default of 1m is on the tight side for proofs.
+  clientMaxBodySize: 10m
+  # -- How long to wait on an upstream response. Generous because some API
+  # reads rebuild witnesses from the lifecycle cache.
+  readTimeoutSeconds: 120
+  # -- Annotations to add to the deployment
+  deploymentAnnotations: {}
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+  # -- The Resources
+  resources: {}
+  # -- Liveness probe. /healthz is served by nginx itself and proxies nowhere,
+  # so it reports on the proxy alone and not on what sits behind it.
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+  # -- Readiness probe
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# -- Ingress, replacing the Caddy reverse-proxy services from compose. Renders
+# two objects: one for web and one for the API paths, which need a prefix
+# rewrite that must not apply to web.
+ingress:
+  # -- Enable Ingress
+  enabled: false
+  # -- Ingress class name
+  className: nginx
+  # -- Routing mode.
+  #   path  - one hostname, with /api, /indexer and /processor stripped before
+  #           proxying (needs a rewrite annotation; works on nginx).
+  #   host  - a separate hostname per service and no rewriting. Use this on ALB:
+  #           the AWS Load Balancer Controller has no rewrite-target equivalent,
+  #           so path mode cannot strip the prefix and the APIs would 404.
+  #   proxy - one hostname routed to the in-cluster proxy, which does the
+  #           stripping itself. Also for ALB, and the only one of the two that
+  #           works with a web image built against same-origin paths, since
+  #           those URLs are baked into the client bundle at build time.
+  #           Requires proxy.enabled.
+  mode: path
+  # -- Hostname the web app is served on. Required when enabled.
+  host: ""
+  # -- Per-service hostnames, used only when mode is `host`. Any left empty is
+  # simply not exposed.
+  hosts:
+    api: ""
+    indexer: ""
+    processor: ""
+  # -- Optional prefix in front of /api, /indexer and /processor
+  apiPathPrefix: ""
+  # -- Annotations for the web Ingress
+  annotations: {}
+  # -- Annotations for the API Ingress. The rewrite is what reproduces Caddy's
+  # `handle_path`, which strips the prefix before proxying — the APIs serve
+  # their routes at the root. Adjust if you use a controller other than nginx.
+  apiAnnotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+  # -- TLS configuration, e.g. from cert-manager
+  tls: []
+  #  - secretName: treasury-tls
+  #    hosts:
+  #      - treasury.example.com
+  # -- Extra paths appended to the web Ingress. Use this for the Mina node
+  # GraphQL route the Caddyfile proxied at /mina, pointing at whatever Service
+  # fronts your node.
+  extraPaths: []
+
+# -- Node selector labels
+nodeSelector: {}
+
+# -- Tolerations for pod assignment
+tolerations: []
+
+# -- Affinity for pod assignment
+affinity: {}
+
+# -- Secrets configuration
+secrets: []
+# - name: my-secret
+#   items:
+#   - key: username
+#     value: myuser
+
+# -- Extra Kubernetes objects to deploy
+extraObjects: []
+# - apiVersion: v1
+#   kind: ConfigMap
+#   metadata:
+#     name: my-configmap
+#   data:
+#     config.yaml: |
+#       key: value

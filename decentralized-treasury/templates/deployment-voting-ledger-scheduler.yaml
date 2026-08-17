@@ -1,0 +1,125 @@
+{{- if .Values.votingLedgerScheduler.enabled }}
+{{- $component := "voting-ledger-scheduler" }}
+{{- $ctx := dict "root" $ "component" $component }}
+{{- if gt (.Values.votingLedgerScheduler.replicaCount | int) 1 }}
+{{- fail "votingLedgerScheduler.replicaCount must be 1: it deletes and rebuilds lifecycle databases in place, so a second replica would corrupt them" }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "decentralized-treasury.componentName" $ctx }}
+  labels:
+    {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
+  {{- with .Values.votingLedgerScheduler.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.votingLedgerScheduler.replicaCount }}
+  # Recreate, not RollingUpdate: two schedulers rebuilding the same lifecycle
+  # database concurrently would corrupt it.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "decentralized-treasury.componentSelectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        # Roll the pods when any mounted script changes.
+        checksum/scripts: {{ include (print $.Template.BasePath "/configmap-scripts.yaml") . | sha256sum }}
+        {{- with .Values.votingLedgerScheduler.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "decentralized-treasury.componentLabels" $ctx | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "decentralized-treasury.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        # No wait-for-migrations here: unlike every other workload this one
+        # never touches Postgres. Compose declares a dependency on api-migrate,
+        # but its environment omits DATABASE_URL entirely and the CLI commands
+        # it shells out to work purely on SQLite.
+        #
+        # Both caches are hydrated before start. The .done markers matter most:
+        # the scheduler decides what is already processed purely from local
+        # marker presence, so starting with an empty directory would make it
+        # rebuild every historical lifecycle from scratch.
+        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync-init" "oneshot" true "keepLastN" .Values.votingLedgerScheduler.sqlite.keepLastN) | nindent 8 }}
+        {{- include "decentralized-treasury.s3SyncStakingLedgers" (dict "root" $ "name" "staking-ledgers-init" "oneshot" true) | nindent 8 }}
+      containers:
+        - name: {{ $component }}
+          image: {{ include "decentralized-treasury.componentImage" (dict "root" $ "image" .Values.votingLedgerScheduler.image) }}
+          imagePullPolicy: {{ include "decentralized-treasury.componentPullPolicy" (dict "root" $ "image" .Values.votingLedgerScheduler.image) }}
+          command: ["/bin/sh", "devops/docker/voting-ledger-scheduler-entrypoint.sh"]
+          env:
+            - name: SQLITE_DATA_DIRECTORY
+              value: {{ .Values.sqlite.dataDirectory | quote }}
+            - name: STAKING_LEDGERS_DIRECTORY
+              value: {{ .Values.votingLedgerScheduler.stakingLedgersDirectory | quote }}
+            - name: LIFECYCLE_PERIOD_DURATION
+              value: {{ required "config.lifecyclePeriodDuration is required" .Values.config.lifecyclePeriodDuration | quote }}
+            - name: TREASURY_DEPLOYED_AT_SLOT
+              value: {{ .Values.config.treasuryDeployedAtSlot | quote }}
+            - name: PROOFS_ENABLED
+              value: {{ .Values.config.proofsEnabled | quote }}
+            - name: VOTING_LEDGER_SCHEDULER_POLL_INTERVAL_SECONDS
+              value: {{ .Values.votingLedgerScheduler.pollIntervalSeconds | quote }}
+            {{- with .Values.votingLedgerScheduler.extraEnvVars }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.votingLedgerScheduler.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            {{- include "decentralized-treasury.scriptsVolumeMount" . | nindent 12 }}
+            {{- include "decentralized-treasury.sqliteVolumeMount" . | nindent 12 }}
+            - name: staking-ledgers
+              mountPath: {{ .Values.votingLedgerScheduler.stakingLedgersDirectory }}
+              readOnly: true
+        # Keeps new staking ledger epochs arriving without a pod restart.
+        {{- include "decentralized-treasury.s3SyncStakingLedgers" (dict "root" $ "name" "staking-ledgers-sync" "oneshot" false) | nindent 8 }}
+        # Publishes each rebuilt lifecycle: bodies first, then .done markers.
+        {{- include "decentralized-treasury.s3SyncPush" (dict "root" $ "name" "s3-push" "source" .Values.sqlite.dataDirectory "target" (printf "s3://%s/%s" .Values.s3.sqliteBucket .Values.network) "payloads" "*.sqlite" "markers" "*.sqlite.done") | nindent 8 }}
+      volumes:
+        {{- include "decentralized-treasury.scriptsVolume" . | nindent 8 }}
+        {{- include "decentralized-treasury.sqliteVolume" . | nindent 8 }}
+        - name: staking-ledgers
+          {{- if .Values.votingLedgerScheduler.stakingLedgersExistingClaim }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.votingLedgerScheduler.stakingLedgersExistingClaim }}
+          {{- else }}
+          emptyDir:
+            {{- with .Values.votingLedgerScheduler.stakingLedgersSizeLimit }}
+            sizeLimit: {{ . }}
+            {{- end }}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

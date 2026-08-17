@@ -1,0 +1,127 @@
+---
+# Deploys the decentralized treasury stack to singlenet.
+#
+#   helmfile -f decentralized-treasury/examples/helmfile.yaml template
+#   helmfile -f decentralized-treasury/examples/helmfile.yaml apply
+#
+# Uses `host` ingress mode, since the AWS Load Balancer Controller has no
+# equivalent of nginx's rewrite-target and therefore cannot strip the /api,
+# /indexer and /processor prefixes. On an nginx ingress use `mode: path` with a
+# single hostname instead - see the block at the bottom of this file.
+
+repositories:
+  - name: bitnami
+    url: https://charts.bitnami.com/bitnami
+
+environments:
+  default:
+    values:
+      - network: singlenet
+        domain: singlenet.minaprotocol.tools
+        namespace: decentralized-treasury
+
+---
+releases:
+  - name: decentralized-treasury
+    namespace: "{{ .Values.namespace }}"
+    chart: ../
+    #chart: git::ssh://git@github.com/MinaFoundation/helm-charts.git@decentralized-treasury?ref=main
+    values:
+      - network: "{{ .Values.network }}"
+
+      # Every service runs its own minafoundation/dt-* image on this tag.
+      - image:
+          tag: latest
+          pullPolicy: Always
+
+      # IRSA supplies the S3 credentials for the cache sync containers, so no
+      # secrets are needed in the chart. The role needs:
+      #   read       673156464838-mina-staking-ledgers/<network>/*
+      #   read/write 673156464838-mina-decentralized-treasury-sqlite/<network>/*
+      #   write      673156464838-mina-decentralized-treasury-proofs/<network>/*
+      - serviceAccount:
+          annotations:
+            eks.amazonaws.com/role-arn: arn:aws:iam::673156464838:role/decentralized-treasury
+
+      - config:
+          # The shared devops archive node. Swap for an in-cluster address
+          # (e.g. http://mina-archive:8282) if this release gets its own.
+          archiveNodeUrl: http://devops.hz.minaprotocol.network:8080
+          # Network-specific. A wrong address indexes nothing rather than
+          # erroring, so set it deliberately.
+          treasuryOwnerContractAddress: B62qpExe8CAaGkR4HRxyXvkziQpE6Aq3U71MJLHivP8pCsiDk1BbU9Z
+          lifecyclePeriodDuration: 7140
+          treasuryDeployedAtSlot: 0
+          proofsEnabled: false
+          corsAllowedOrigins:
+            - "https://{{ .Values.domain }}"
+
+      - postgresql:
+          enabled: true
+          auth:
+            username: treasury
+            database: treasury_api
+            # The secret path is written out in full on purpose: Go templates
+            # are NOT expanded inside a ref+ value, so `{{ .Values.network }}`
+            # here would be sent to Secrets Manager literally and rejected.
+            #
+            # `vals` resolves this during `helmfile template`, not just apply,
+            # so the secret has to exist before either will render.
+            password: ref+awssecrets://decentralized-treasury/singlenet?region=us-east-1&mode=singleparam#/postgres-password
+          primary:
+            persistence:
+              size: 20Gi
+
+      # Bound only on api: it degrades a missing lifecycle into a structured
+      # LIFECYCLE_DATA_UNAVAILABLE_ERROR. processor and proving-scheduler walk
+      # backlogs and must keep everything - see values.yaml for why.
+      - api:
+          sqlite:
+            keepLastN: 20
+
+      - votingLedgerScheduler:
+          stakingLedgersKeepLastN: 10
+
+      # Off until the dt-proving-* images exist.
+      - proving:
+          enabled: false
+
+      - web:
+          publicBaseUrl: "https://{{ .Values.domain }}"
+          publicEnv:
+            NEXT_PUBLIC_NETWORK_ID: DEVNET
+            NEXT_PUBLIC_SLOT_DURATION_MS: "180000"
+
+      - ingress:
+          enabled: true
+          className: alb
+          mode: host
+          host: "{{ .Values.domain }}"
+          hosts:
+            api: "api.{{ .Values.domain }}"
+            indexer: "indexer.{{ .Values.domain }}"
+            processor: "processor.{{ .Values.domain }}"
+          annotations:
+            alb.ingress.kubernetes.io/backend-protocol: HTTP
+            alb.ingress.kubernetes.io/certificate-arn: valid_arn
+            alb.ingress.kubernetes.io/group.name: decentralized-treasury
+            alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+            alb.ingress.kubernetes.io/scheme: internet-facing
+            alb.ingress.kubernetes.io/ssl-redirect: "443"
+            alb.ingress.kubernetes.io/target-type: ip
+            external-dns.alpha.kubernetes.io/hostname: "{{ .Values.domain }},api.{{ .Values.domain }},indexer.{{ .Values.domain }},processor.{{ .Values.domain }}"
+
+      # On an nginx ingress, swap the block above for path mode - one hostname,
+      # with the prefixes stripped exactly as the compose Caddyfile did:
+      #
+      # - ingress:
+      #     enabled: true
+      #     className: nginx
+      #     mode: path
+      #     host: "{{ .Values.domain }}"
+      #     apiAnnotations:
+      #       nginx.ingress.kubernetes.io/rewrite-target: /$2
+      #     tls:
+      #       - secretName: decentralized-treasury-tls
+      #         hosts:
+      #           - "{{ .Values.domain }}"

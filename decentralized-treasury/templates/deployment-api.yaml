@@ -1,0 +1,115 @@
+{{- if .Values.api.enabled }}
+{{- $component := "api" }}
+{{- $ctx := dict "root" $ "component" $component }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "decentralized-treasury.componentName" $ctx }}
+  labels:
+    {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
+  {{- with .Values.api.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.api.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "decentralized-treasury.componentSelectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        # Roll the pods when any mounted script changes.
+        checksum/scripts: {{ include (print $.Template.BasePath "/configmap-scripts.yaml") . | sha256sum }}
+        {{- with .Values.api.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "decentralized-treasury.componentLabels" $ctx | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "decentralized-treasury.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- include "decentralized-treasury.waitForMigrations" (dict "root" $ "image" .Values.api.image) | nindent 8 }}
+        {{- if .Values.api.sqlite.enabled }}
+        # Hydrate the cache before serving: the lifecycle registries are lazy,
+        # so without this the pod would come up Ready and answer requests with
+        # LIFECYCLE_DATA_UNAVAILABLE_ERROR until the sidecar caught up.
+        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync-init" "oneshot" true "keepLastN" .Values.api.sqlite.keepLastN) | nindent 8 }}
+        {{- end }}
+      containers:
+        # Read-only consumer of the lifecycle databases: both registries call
+        # existsSync and raise LifecycleStakingLedgerFileNotFoundError /
+        # LifecycleVotingLedgerFileNotFoundError rather than creating anything,
+        # and the routes turn those into a structured
+        # LIFECYCLE_DATA_UNAVAILABLE_ERROR response. That is what makes
+        # keep-last-N retention safe here but not on the processor.
+        - name: {{ $component }}
+          image: {{ include "decentralized-treasury.componentImage" (dict "root" $ "image" .Values.api.image) }}
+          imagePullPolicy: {{ include "decentralized-treasury.componentPullPolicy" (dict "root" $ "image" .Values.api.image) }}
+          command: ["pnpm", "--dir", "apps/api", "run", "start:api"]
+          ports:
+            - name: http
+              containerPort: {{ .Values.api.port }}
+              protocol: TCP
+          env:
+            {{- include "decentralized-treasury.apiEnv" . | nindent 12 }}
+            - name: API_PORT
+              value: {{ .Values.api.port | quote }}
+            - name: SQLITE_DATA_DIRECTORY
+              value: {{ .Values.sqlite.dataDirectory | quote }}
+            {{- with .Values.config.proposalContentMaxChars }}
+            - name: PROPOSAL_CONTENT_MAX_CHARS
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.api.extraEnvVars }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.api.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.api.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.api.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            {{- include "decentralized-treasury.scriptsVolumeMount" . | nindent 12 }}
+            {{- include "decentralized-treasury.sqliteVolumeMount" . | nindent 12 }}
+        {{- if .Values.api.sqlite.enabled }}
+        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync" "oneshot" false "keepLastN" .Values.api.sqlite.keepLastN) | nindent 8 }}
+        {{- end }}
+      volumes:
+        {{- include "decentralized-treasury.scriptsVolume" . | nindent 8 }}
+        {{- include "decentralized-treasury.sqliteVolume" . | nindent 8 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

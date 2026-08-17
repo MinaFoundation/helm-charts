@@ -1,0 +1,111 @@
+{{- if .Values.processor.enabled }}
+{{- $component := "processor" }}
+{{- $ctx := dict "root" $ "component" $component }}
+{{- if gt (.Values.processor.replicaCount | int) 1 }}
+{{- fail "processor.replicaCount must be 1: the stored offset takes no lock, and vote handlers apply deltas, so a second replica would double-count votes" }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "decentralized-treasury.componentName" $ctx }}
+  labels:
+    {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
+  {{- with .Values.processor.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.processor.replicaCount }}
+  # Recreate, not RollingUpdate: a surge pod would process the same events as
+  # the outgoing one.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "decentralized-treasury.componentSelectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        # Roll the pods when any mounted script changes.
+        checksum/scripts: {{ include (print $.Template.BasePath "/configmap-scripts.yaml") . | sha256sum }}
+        {{- with .Values.processor.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "decentralized-treasury.componentLabels" $ctx | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "decentralized-treasury.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- include "decentralized-treasury.waitForMigrations" (dict "root" $ "image" .Values.processor.image) | nindent 8 }}
+        {{- if .Values.processor.sqlite.enabled }}
+        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync-init" "oneshot" true "keepLastN" .Values.processor.sqlite.keepLastN) | nindent 8 }}
+        {{- end }}
+      containers:
+        # Consumes events from indexer-api over HTTP and reads lifecycle
+        # witnesses from the SQLite cache. A missing voting ledger is NOT
+        # graceful here: the handler throws, processOnce swallows it without
+        # advancing the offset, and the same batch retries every poll interval
+        # forever. The process stays up, so there is no crash to alert on -
+        # which is why sqlite.keepLastN defaults to 0 for this workload.
+        - name: {{ $component }}
+          image: {{ include "decentralized-treasury.componentImage" (dict "root" $ "image" .Values.processor.image) }}
+          imagePullPolicy: {{ include "decentralized-treasury.componentPullPolicy" (dict "root" $ "image" .Values.processor.image) }}
+          command: ["pnpm", "--dir", "apps/api", "run", "start:processor"]
+          env:
+            {{- include "decentralized-treasury.apiEnv" . | nindent 12 }}
+            - name: INDEXER_API_URL
+              value: {{ include "decentralized-treasury.indexerApiUrl" . | quote }}
+            - name: SQLITE_DATA_DIRECTORY
+              value: {{ .Values.sqlite.dataDirectory | quote }}
+            {{- with .Values.processor.pollIntervalMs }}
+            - name: PROCESSOR_POLL_INTERVAL_MS
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.processor.batchSize }}
+            - name: PROCESSOR_BATCH_SIZE
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.processor.extraEnvVars }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.processor.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            {{- include "decentralized-treasury.scriptsVolumeMount" . | nindent 12 }}
+            {{- include "decentralized-treasury.sqliteVolumeMount" . | nindent 12 }}
+        {{- if .Values.processor.sqlite.enabled }}
+        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync" "oneshot" false "keepLastN" .Values.processor.sqlite.keepLastN) | nindent 8 }}
+        {{- end }}
+      volumes:
+        {{- include "decentralized-treasury.scriptsVolume" . | nindent 8 }}
+        {{- include "decentralized-treasury.sqliteVolume" . | nindent 8 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

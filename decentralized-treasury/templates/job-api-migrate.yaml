@@ -1,0 +1,94 @@
+{{- if .Values.apiMigrate.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "decentralized-treasury.apiMigrateName" . }}
+  labels:
+    {{- include "decentralized-treasury.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api-migrate
+  {{- with .Values.apiMigrate.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  backoffLimit: {{ .Values.apiMigrate.backoffLimit }}
+  {{- with .Values.apiMigrate.ttlSecondsAfterFinished }}
+  ttlSecondsAfterFinished: {{ . }}
+  {{- end }}
+  template:
+    metadata:
+      {{- with .Values.apiMigrate.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "decentralized-treasury.labels" . | nindent 8 }}
+        app.kubernetes.io/component: api-migrate
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      restartPolicy: Never
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "decentralized-treasury.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: wait-for-db
+          image: {{ include "decentralized-treasury.componentImage" (dict "root" $ "image" .Values.apiMigrate.image) }}
+          imagePullPolicy: {{ include "decentralized-treasury.componentPullPolicy" (dict "root" $ "image" .Values.apiMigrate.image) }}
+          command: ["node", "/scripts/wait-for-db.mjs"]
+          env:
+            {{- include "decentralized-treasury.databaseEnv" . | nindent 12 }}
+            - name: API_DIRECTORY
+              value: {{ .Values.apiDirectory | quote }}
+            - name: WAIT_TIMEOUT_SECONDS
+              value: {{ .Values.apiMigrate.waitTimeoutSeconds | quote }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            {{- include "decentralized-treasury.scriptsVolumeMount" . | nindent 12 }}
+      containers:
+        # Postgres-only: apps/api/src/db/typeorm-cli-data-source.ts needs just
+        # DATABASE_URL and DATABASE_SCHEMA. The SQLite volume that compose
+        # mounts here comes from a shared YAML anchor and is never touched by
+        # the migration, so it is deliberately absent.
+        - name: api-migrate
+          image: {{ include "decentralized-treasury.componentImage" (dict "root" $ "image" .Values.apiMigrate.image) }}
+          imagePullPolicy: {{ include "decentralized-treasury.componentPullPolicy" (dict "root" $ "image" .Values.apiMigrate.image) }}
+          command: ["pnpm", "--dir", "apps/api", "run", "migration:run"]
+          env:
+            {{- include "decentralized-treasury.databaseEnv" . | nindent 12 }}
+            {{- with .Values.apiMigrate.extraEnvVars }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.apiMigrate.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        {{- include "decentralized-treasury.scriptsVolume" . | nindent 8 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

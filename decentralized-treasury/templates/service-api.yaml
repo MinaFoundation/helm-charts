@@ -1,0 +1,22 @@
+{{- if .Values.api.enabled }}
+{{- $ctx := dict "root" $ "component" "api" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "decentralized-treasury.componentName" $ctx }}
+  labels:
+    {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
+  {{- with .Values.api.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.api.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.api.service.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "decentralized-treasury.componentSelectorLabels" $ctx | nindent 4 }}
+{{- end }}

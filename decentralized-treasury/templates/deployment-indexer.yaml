@@ -1,0 +1,113 @@
+{{- if .Values.indexer.enabled }}
+{{- $component := "indexer" }}
+{{- $ctx := dict "root" $ "component" $component }}
+{{- if gt (.Values.indexer.replicaCount | int) 1 }}
+{{- fail "indexer.replicaCount must be 1: the archive cursor is a blind upsert with no lock or leader election, so a second replica can rewind indexing progress" }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "decentralized-treasury.componentName" $ctx }}
+  labels:
+    {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
+  {{- with .Values.indexer.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.indexer.replicaCount }}
+  # Recreate, not RollingUpdate: a surge pod would briefly run a second indexer
+  # against the same cursor.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "decentralized-treasury.componentSelectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        # Roll the pods when the wait-for-migrations script changes.
+        checksum/scripts: {{ include (print $.Template.BasePath "/configmap-scripts.yaml") . | sha256sum }}
+        {{- with .Values.indexer.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "decentralized-treasury.componentLabels" $ctx | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "decentralized-treasury.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- include "decentralized-treasury.waitForMigrations" (dict "root" $ "image" .Values.indexer.image) | nindent 8 }}
+      containers:
+        # A polling worker with no HTTP server, so there is nothing to probe:
+        # Kubernetes restarts it if the process exits, but a hung poll loop is
+        # only visible through indexer-api's status routes, which report this
+        # indexer's cursor progress.
+        - name: {{ $component }}
+          image: {{ include "decentralized-treasury.componentImage" (dict "root" $ "image" .Values.indexer.image) }}
+          imagePullPolicy: {{ include "decentralized-treasury.componentPullPolicy" (dict "root" $ "image" .Values.indexer.image) }}
+          command: ["pnpm", "--dir", "apps/api", "run", "start:indexer"]
+          env:
+            {{- include "decentralized-treasury.apiEnv" . | nindent 12 }}
+            {{- with .Values.indexer.pollPendingIntervalMs }}
+            - name: POLL_PENDING_INTERVAL_MS
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.indexer.pollCanonicalIntervalMs }}
+            - name: POLL_CANONICAL_INTERVAL_MS
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.indexer.eventsBlockBatchSize }}
+            - name: EVENTS_BLOCK_BATCH_SIZE
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.indexer.pendingOverlapBlocks }}
+            - name: PENDING_OVERLAP_BLOCKS
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.indexer.canonicalOverlapBlocks }}
+            - name: CANONICAL_OVERLAP_BLOCKS
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.indexer.orphanDepthBlocks }}
+            - name: ORPHAN_DEPTH_BLOCKS
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.indexer.extraEnvVars }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.indexer.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            {{- include "decentralized-treasury.scriptsVolumeMount" . | nindent 12 }}
+      volumes:
+        {{- include "decentralized-treasury.scriptsVolume" . | nindent 8 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
