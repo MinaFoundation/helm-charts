@@ -22,10 +22,11 @@
 # scheduler's local .done marker, which is written before the push and would
 # drop the input while it could still be needed for a retry.
 #
-# STAKING_LEDGERS_KEEP_LAST_N caps how many unproduced lifecycles are held
-# locally at once. The scheduler's poll loop only ever takes the newest, so 1
-# is enough to keep it fed; a slightly larger window leaves room to reprocess a
-# recent lifecycle by hand. 0 keeps every unproduced lifecycle.
+# STAKING_LEDGERS_KEEP_LAST_N is how far back from the newest lifecycle to
+# look, counted in lifecycles. Anchoring to the tip is what stops the sync and
+# the scheduler from walking backwards through the whole backlog together; see
+# wanted_archives. 1 tracks the tip only, 0 takes every unproduced lifecycle
+# and so opts into backfilling all of history.
 
 set -eu
 
@@ -80,15 +81,45 @@ produced_lifecycle_ids() {
     | sed -n 's/^\([0-9][0-9]*\)\.sqlite$/\1/p'
 }
 
-# Archives worth having locally: those that begin a lifecycle which has not
-# been produced yet, newest first, capped by STAKING_LEDGERS_KEEP_LAST_N.
+# The highest lifecycle id the bucket has a staking ledger for, produced or
+# not. This is the tip the window below is anchored to.
+newest_lifecycle_id() {
+  newest=""
+  for name in $(remote_archives); do
+    lifecycle_id=$(lifecycle_id_for_epoch "$(epoch_of "$name")") || continue
+    newest=$lifecycle_id
+  done
+  printf '%s' "$newest"
+}
+
+# Archives worth having locally: the unproduced lifecycles within
+# STAKING_LEDGERS_KEEP_LAST_N of the tip.
+#
+# The window is anchored to the newest lifecycle rather than simply taking the
+# newest unproduced ones, and that is the whole point of it. The scheduler
+# processes the newest *unproduced* lifecycle, so feeding it any unproduced
+# archive from anywhere in history makes the pair walk steadily backwards
+# through the entire backlog. That is unusable on a network where one ledger
+# takes hours. Anchored to the tip, the sync goes quiet as soon as the recent
+# lifecycles are built, and only wakes when a genuinely new epoch lands.
+#
+# Backfilling old lifecycles is therefore opt-in: widen the window, or set it
+# to 0 for every unproduced lifecycle.
 wanted_archives() {
   produced=$1
-  wanted=""
+  tip=$(newest_lifecycle_id)
+  [ -n "$tip" ] || return 0
 
+  floor=0
+  if [ "$STAKING_LEDGERS_KEEP_LAST_N" -gt 0 ]; then
+    floor=$(( tip - STAKING_LEDGERS_KEEP_LAST_N + 1 ))
+    [ "$floor" -lt 0 ] && floor=0
+  fi
+
+  wanted=""
   for name in $(remote_archives); do
-    epoch=$(epoch_of "$name")
-    lifecycle_id=$(lifecycle_id_for_epoch "$epoch") || continue
+    lifecycle_id=$(lifecycle_id_for_epoch "$(epoch_of "$name")") || continue
+    [ "$lifecycle_id" -ge "$floor" ] || continue
     if echo "$produced" | grep -qx "$lifecycle_id"; then
       continue
     fi
@@ -96,14 +127,7 @@ wanted_archives() {
 "
   done
 
-  wanted=$(printf '%s' "$wanted" | grep -v '^$' || true)
-  [ -n "$wanted" ] || return 0
-
-  if [ "$STAKING_LEDGERS_KEEP_LAST_N" -gt 0 ]; then
-    printf '%s\n' "$wanted" | tail -n "$STAKING_LEDGERS_KEEP_LAST_N"
-  else
-    printf '%s\n' "$wanted"
-  fi
+  printf '%s' "$wanted" | grep -v '^$' || true
 }
 
 # Drops anything not on the wanted list - which covers both the archives whose
@@ -128,7 +152,7 @@ sync_once() {
   wanted=$(wanted_archives "$produced")
 
   if [ -z "$wanted" ]; then
-    log "nothing to fetch: every lifecycle in ${S3_PREFIX} has a voting ledger in ${SQLITE_S3_PREFIX}"
+    log "nothing to fetch: every lifecycle within keep-last-${STAKING_LEDGERS_KEEP_LAST_N} of the newest already has a voting ledger in ${SQLITE_S3_PREFIX}"
     prune_archives ""
     return 0
   fi
