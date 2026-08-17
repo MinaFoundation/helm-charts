@@ -499,10 +499,20 @@ votingLedgerScheduler:
   replicaCount: 1
   # -- Where staking ledger archives are mounted
   stakingLedgersDirectory: /staking-ledgers
-  # -- Number of most recent staking ledger epochs to keep locally; 0 keeps all.
-  # Safe to bound: the scheduler only reaches for the epoch matching the
-  # lifecycle it is processing, and reports a missing archive explicitly.
-  stakingLedgersKeepLastN: 10
+  # -- How many *unproduced* lifecycles to hold staking ledgers for locally;
+  # 0 keeps every unproduced one. The sync only ever fetches archives that
+  # begin a lifecycle whose voting ledger is not in the SQLite bucket yet, and
+  # discards each one as soon as that voting ledger is published - so this is
+  # just the ceiling on work-in-hand, not a window over the whole bucket.
+  #
+  # The poll loop only takes the newest, so 1 keeps it fed; a slightly larger
+  # value leaves room to reprocess a recent lifecycle by hand.
+  stakingLedgersKeepLastN: 2
+  # -- Staking ledger epochs spanned by one treasury lifecycle. Must match
+  # NUMBER_OF_PERIODS_PER_LIFECYCLE in the scheduler entrypoint: the sync uses
+  # it to work out which epochs begin a lifecycle and are therefore worth
+  # fetching at all.
+  periodsPerLifecycle: 4
   # -- How often to re-check S3 for new staking ledger epochs, in seconds
   stakingLedgersSyncIntervalSeconds: 300
   # -- Use an existing claim for staking ledgers instead of an emptyDir

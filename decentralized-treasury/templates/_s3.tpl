@@ -120,6 +120,20 @@ Staking ledger mirror for voting-ledger-scheduler. Call with:
       value: {{ required "s3.stakingLedgersBucket is required" .root.Values.s3.stakingLedgersBucket | quote }}
     - name: STAKING_LEDGERS_KEEP_LAST_N
       value: {{ .root.Values.votingLedgerScheduler.stakingLedgersKeepLastN | quote }}
+    {{/*
+    The sync only fetches archives that begin a lifecycle, and drops them once
+    the voting ledger they produce is published - so it needs the same
+    epoch-to-lifecycle arithmetic the scheduler entrypoint does, plus the
+    bucket the products land in.
+    */}}
+    - name: SQLITE_S3_BUCKET
+      value: {{ required "s3.sqliteBucket is required" .root.Values.s3.sqliteBucket | quote }}
+    - name: LIFECYCLE_PERIOD_DURATION
+      value: {{ required "config.lifecyclePeriodDuration is required" .root.Values.config.lifecyclePeriodDuration | quote }}
+    - name: TREASURY_DEPLOYED_AT_SLOT
+      value: {{ .root.Values.config.treasuryDeployedAtSlot | quote }}
+    - name: PERIODS_PER_LIFECYCLE
+      value: {{ .root.Values.votingLedgerScheduler.periodsPerLifecycle | quote }}
     - name: NETWORK
       value: {{ required "network is required" .root.Values.network | quote }}
     - name: AWS_REGION

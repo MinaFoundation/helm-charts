@@ -48,21 +48,23 @@ spec:
         - name: {{ $component }}
           image: {{ include "decentralized-treasury.componentImage" (dict "root" $ "image" .Values.web.image) }}
           imagePullPolicy: {{ include "decentralized-treasury.componentPullPolicy" (dict "root" $ "image" .Values.web.image) }}
+          # The image is a Next.js *standalone* build: it ships a self-contained
+          # server.js and no package manager, so `pnpm run start` is not
+          # available here - it exits 128 with "pnpm: executable file not
+          # found". This mirrors the image's own CMD. Host and port come from
+          # the environment below, which is what server.js reads.
           command:
-            - pnpm
-            - --dir
-            - apps/web
-            - run
-            - start
-            - --hostname
-            - 0.0.0.0
-            - --port
-            - {{ .Values.web.port | quote }}
+            - node
+            - apps/web/server.js
           ports:
             - name: http
               containerPort: {{ .Values.web.port }}
               protocol: TCP
           env:
+            - name: PORT
+              value: {{ .Values.web.port | quote }}
+            - name: HOSTNAME
+              value: "0.0.0.0"
             {{- include "decentralized-treasury.webPublicEnv" . | nindent 12 }}
             {{- with .Values.web.extraEnvVars }}
             {{- toYaml . | nindent 12 }}
