@@ -15,7 +15,14 @@ spec:
   # Unlike every other worker in this chart, replicas here are the point: BullMQ
   # hands each queued proving job to whichever replica is free, so this count is
   # the size of the proving cluster.
+  #
+  # Omitted entirely when the autoscale sidecar owns the count - rendering it
+  # would reset the Deployment to replicaCount on every apply and fight the
+  # sidecar, which is the classic way an autoscaled Deployment ends up
+  # flapping.
+  {{- if not .Values.proving.worker.autoscale.enabled }}
   replicas: {{ .Values.proving.worker.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "decentralized-treasury.componentSelectorLabels" $ctx | nindent 6 }}

@@ -571,8 +571,40 @@ proving:
       # -- Overrides the chart-wide pull policy
       pullPolicy: ""
     # -- Number of workers. This is the size of the proving cluster: BullMQ
-    # hands each job to whichever replica is free.
+    # hands each job to whichever replica is free. Ignored when
+    # `autoscale.enabled` is set, which manages the count instead.
     replicaCount: 3
+    # -- Scale the workers from the depth of the proving queue.
+    #
+    # Proving is by far the most expensive workload here, and it is idle
+    # whenever there is nothing to prove - but idle replicas still hold their
+    # CPU and memory requests and so keep nodes alive. A sidecar on
+    # proving-scheduler watches the queue and scales this Deployment between
+    # minReplicas and maxReplicas.
+    #
+    # The chart stops rendering `replicas` when this is on, so that applying
+    # the release does not keep resetting the count the sidecar chose.
+    autoscale:
+      # -- Whether to scale the workers from the queue depth. Requires the Role
+      # this chart creates, which grants scale access to this Deployment alone.
+      enabled: false
+      # -- Replicas to hold while the queue is empty. 0 releases the nodes
+      # entirely, at the cost of recompiling the circuits (~100s) on scale-up.
+      # Set 1 to keep a warm worker instead.
+      minReplicas: 0
+      # -- Ceiling on the proving cluster. Empty follows replicaCount.
+      maxReplicas: ""
+      # -- How often to compare queue depth against the current count
+      pollIntervalSeconds: 15
+      # -- How long the queue must stay empty before scaling down. Scaling up
+      # is immediate; scaling down waits, because the queue also empties
+      # briefly between the scheduler's prove-digest / prove-merge /
+      # prove-exhaust phases and dropping the workers there would recompile the
+      # circuits for no reason. Keep this comfortably above the longest gap
+      # between phases.
+      scaleDownAfterSeconds: 180
+      # -- The Resources
+      resources: {}
     # -- Defaults to true unlike the stack-wide config.proofsEnabled, since
     # producing real proofs is the only reason to run this workload.
     proofsEnabled: true

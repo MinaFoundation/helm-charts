@@ -85,6 +85,50 @@ spec:
             {{- include "decentralized-treasury.sqliteVolumeMount" . | nindent 12 }}
             - name: proofs
               mountPath: {{ .Values.proving.scheduler.outputDirectory }}
+        {{- if .Values.proving.worker.autoscale.enabled }}
+        # Owns the worker replica count, from the depth of the queue this
+        # scheduler fills. Sits here rather than in its own workload because it
+        # needs exactly the redis coordinates the scheduler already has.
+        - name: proving-autoscale
+          image: {{ include "decentralized-treasury.componentImage" (dict "root" $ "image" .Values.proving.scheduler.image) }}
+          imagePullPolicy: {{ include "decentralized-treasury.componentPullPolicy" (dict "root" $ "image" .Values.proving.scheduler.image) }}
+          command: ["node", "/scripts/proving-autoscale.mjs"]
+          env:
+            - name: PROVING_QUEUE_NAME
+              value: {{ .Values.proving.queueName | quote }}
+            - name: REDIS_HOST
+              value: {{ include "decentralized-treasury.redisHost" . | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.proving.redis.port | quote }}
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: WORKER_DEPLOYMENT_NAME
+              value: {{ include "decentralized-treasury.componentName" (dict "root" $ "component" "proving-worker") | quote }}
+            - name: AUTOSCALE_MIN_REPLICAS
+              value: {{ .Values.proving.worker.autoscale.minReplicas | quote }}
+            - name: AUTOSCALE_MAX_REPLICAS
+              value: {{ .Values.proving.worker.autoscale.maxReplicas | default .Values.proving.worker.replicaCount | quote }}
+            - name: AUTOSCALE_POLL_INTERVAL_SECONDS
+              value: {{ .Values.proving.worker.autoscale.pollIntervalSeconds | quote }}
+            - name: AUTOSCALE_SCALE_DOWN_AFTER_SECONDS
+              value: {{ .Values.proving.worker.autoscale.scaleDownAfterSeconds | quote }}
+            # global fetch is undici and takes no per-request CA, so the API
+            # server's CA is trusted process-wide instead.
+            - name: NODE_EXTRA_CA_CERTS
+              value: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.proving.worker.autoscale.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            {{- include "decentralized-treasury.scriptsVolumeMount" . | nindent 12 }}
+        {{- end }}
         # Keeps newly finished lifecycles arriving without a pod restart.
         {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync" "oneshot" false "keepLastN" .Values.proving.scheduler.sqlite.keepLastN) | nindent 8 }}
         # Two publishers, because the two artifact kinds live in separate
