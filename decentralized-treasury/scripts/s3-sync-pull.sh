@@ -87,17 +87,22 @@ sync_once() {
     local_path="${SQLITE_DATA_DIRECTORY}/${id}.sqlite"
     remote_size=$(remote_body_size "$id")
 
-    # Compare sizes rather than testing existence alone. A body already pulled
-    # while it was still being written stays wrong forever otherwise - there is
-    # no later event that would refetch it, and the lifecycle retries and fails
-    # on every cycle. Bodies are immutable once marked done, so a size that
-    # differs can only mean the local copy is stale.
+    # Refetch only a body that is SMALLER than the remote one. A copy pulled
+    # while it was still being written stays wrong forever otherwise: nothing
+    # would ever refetch it, and the lifecycle fails on every cycle.
+    #
+    # Strictly smaller, not merely different, because these databases are not
+    # read-only here - proving-scheduler writes its base proofs back into the
+    # lifecycle body, so a healthy local copy grows past the remote one (~30 MB
+    # local against ~27 MB in S3). Treating any difference as staleness would
+    # redownload the file mid-digest and discard exactly those base proofs,
+    # leaving merge with "No base proofs found".
     if [ -f "$local_path" ] && [ -n "$remote_size" ]; then
       local_size=$(wc -c < "$local_path" | tr -d ' ')
-      if [ "$local_size" = "$remote_size" ]; then
+      if [ "$local_size" -ge "$remote_size" ]; then
         continue
       fi
-      log "refetching lifecycle ${id}: local ${local_size} bytes, remote ${remote_size}"
+      log "refetching lifecycle ${id}: local ${local_size} bytes is short of remote ${remote_size}"
       rm -f "$local_path" "$local_path-wal" "$local_path-shm" "$local_path-journal"
     elif [ -f "$local_path" ]; then
       continue
