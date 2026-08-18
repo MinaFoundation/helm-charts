@@ -120,6 +120,10 @@ Staking ledger mirror for voting-ledger-scheduler. Call with:
       value: {{ required "s3.stakingLedgersBucket is required" .root.Values.s3.stakingLedgersBucket | quote }}
     - name: STAKING_LEDGERS_KEEP_LAST_N
       value: {{ .root.Values.votingLedgerScheduler.stakingLedgersKeepLastN | quote }}
+    {{- with .root.Values.votingLedgerScheduler.lifecycleIds }}
+    - name: LIFECYCLE_IDS
+      value: {{ join "," . | quote }}
+    {{- end }}
     {{/*
     The sync only fetches archives that begin a lifecycle, and drops them once
     the voting ledger they produce is published - so it needs the same

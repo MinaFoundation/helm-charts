@@ -32,6 +32,8 @@ set -eu
 
 STAKING_LEDGERS_DIRECTORY="${STAKING_LEDGERS_DIRECTORY:-/staking-ledgers}"
 STAKING_LEDGERS_KEEP_LAST_N="${STAKING_LEDGERS_KEEP_LAST_N:-0}"
+# Comma-separated lifecycle ids. Overrides the window when set.
+LIFECYCLE_IDS="${LIFECYCLE_IDS:-}"
 SYNC_INTERVAL_SECONDS="${SYNC_INTERVAL_SECONDS:-300}"
 SYNC_ONESHOT="${SYNC_ONESHOT:-false}"
 LIFECYCLE_PERIOD_DURATION="${LIFECYCLE_PERIOD_DURATION:?Set LIFECYCLE_PERIOD_DURATION}"
@@ -107,6 +109,29 @@ newest_lifecycle_id() {
 # to 0 for every unproduced lifecycle.
 wanted_archives() {
   produced=$1
+
+  # An explicit list replaces the window entirely: name the lifecycles and only
+  # those are fetched, whatever the tip is. Backfilling a specific gap is the
+  # point, so it is the one case where reaching far back is deliberate.
+  #
+  # Still filtered by `produced`, which is what makes naming a lifecycle
+  # idempotent - a list can be left in place across deploys and the ones
+  # already built are simply skipped rather than rebuilt.
+  if [ -n "$LIFECYCLE_IDS" ]; then
+    wanted=""
+    for name in $(remote_archives); do
+      lifecycle_id=$(lifecycle_id_for_epoch "$(epoch_of "$name")") || continue
+      echo "$LIFECYCLE_IDS" | tr ',' '\n' | grep -qx "$lifecycle_id" || continue
+      if echo "$produced" | grep -qx "$lifecycle_id"; then
+        continue
+      fi
+      wanted="${wanted}${name}
+"
+    done
+    printf '%s' "$wanted" | grep -v '^$' || true
+    return 0
+  fi
+
   tip=$(newest_lifecycle_id)
   [ -n "$tip" ] || return 0
 
@@ -152,7 +177,11 @@ sync_once() {
   wanted=$(wanted_archives "$produced")
 
   if [ -z "$wanted" ]; then
-    log "nothing to fetch: every lifecycle within keep-last-${STAKING_LEDGERS_KEEP_LAST_N} of the newest already has a voting ledger in ${SQLITE_S3_PREFIX}"
+    if [ -n "$LIFECYCLE_IDS" ]; then
+      log "nothing to fetch: every lifecycle in [${LIFECYCLE_IDS}] already has a voting ledger in ${SQLITE_S3_PREFIX}"
+    else
+      log "nothing to fetch: every lifecycle within keep-last-${STAKING_LEDGERS_KEEP_LAST_N} of the newest already has a voting ledger in ${SQLITE_S3_PREFIX}"
+    fi
     prune_archives ""
     return 0
   fi
@@ -169,7 +198,11 @@ sync_once() {
 }
 
 main() {
-  log "source=${S3_PREFIX} dir=${STAKING_LEDGERS_DIRECTORY} keepLastN=${STAKING_LEDGERS_KEEP_LAST_N} deployedEpoch=${DEPLOYED_EPOCH} periodsPerLifecycle=${PERIODS_PER_LIFECYCLE}"
+  if [ -n "$LIFECYCLE_IDS" ]; then
+    log "source=${S3_PREFIX} dir=${STAKING_LEDGERS_DIRECTORY} lifecycleIds=[${LIFECYCLE_IDS}] deployedEpoch=${DEPLOYED_EPOCH} periodsPerLifecycle=${PERIODS_PER_LIFECYCLE}"
+  else
+    log "source=${S3_PREFIX} dir=${STAKING_LEDGERS_DIRECTORY} keepLastN=${STAKING_LEDGERS_KEEP_LAST_N} deployedEpoch=${DEPLOYED_EPOCH} periodsPerLifecycle=${PERIODS_PER_LIFECYCLE}"
+  fi
 
   if [ "$SYNC_ONESHOT" = "true" ]; then
     sync_once
