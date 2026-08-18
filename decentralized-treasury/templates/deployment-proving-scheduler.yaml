@@ -1,0 +1,159 @@
+{{- if and .Values.proving.enabled .Values.proving.scheduler.enabled }}
+{{- $component := "proving-scheduler" }}
+{{- $ctx := dict "root" $ "component" $component }}
+{{- if gt (.Values.proving.scheduler.replicaCount | int) 1 }}
+{{- fail "proving.scheduler.replicaCount must be 1: it walks the backlog oldest-first from local markers, so a second replica would queue duplicate proving jobs" }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "decentralized-treasury.componentName" $ctx }}
+  labels:
+    {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
+  {{- with .Values.proving.scheduler.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.proving.scheduler.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "decentralized-treasury.componentSelectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        # Roll the pods when any mounted script changes.
+        checksum/scripts: {{ include (print $.Template.BasePath "/configmap-scripts.yaml") . | sha256sum }}
+        {{- with .Values.proving.scheduler.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "decentralized-treasury.componentLabels" $ctx | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "decentralized-treasury.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        # keepLastN is deliberately 0: this scheduler walks the backlog
+        # oldest-first, so it needs bodies that a recent-window cache would
+        # already have pruned.
+        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync-init" "oneshot" true "keepLastN" .Values.proving.scheduler.sqlite.keepLastN) | nindent 8 }}
+      containers:
+        - name: {{ $component }}
+          image: {{ include "decentralized-treasury.componentImage" (dict "root" $ "image" .Values.proving.scheduler.image) }}
+          imagePullPolicy: {{ include "decentralized-treasury.componentPullPolicy" (dict "root" $ "image" .Values.proving.scheduler.image) }}
+          command: ["/bin/sh", "devops/docker/proving-scheduler-entrypoint.sh"]
+          env:
+            - name: SQLITE_DATA_DIRECTORY
+              value: {{ .Values.sqlite.dataDirectory | quote }}
+            # Split onto its own volume so proofs can be published to their own
+            # bucket, rather than the entrypoint's <sqlite dir>/proofs default.
+            - name: PROVING_OUTPUT_DIRECTORY
+              value: {{ .Values.proving.scheduler.outputDirectory | quote }}
+            - name: PROVING_QUEUE_NAME
+              value: {{ .Values.proving.queueName | quote }}
+            - name: REDIS_HOST
+              value: {{ include "decentralized-treasury.redisHost" . | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.proving.redis.port | quote }}
+            - name: PROVING_SCHEDULER_POLL_INTERVAL_SECONDS
+              value: {{ .Values.proving.scheduler.pollIntervalSeconds | quote }}
+            {{- with .Values.proving.scheduler.extraEnvVars }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.proving.scheduler.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            {{- include "decentralized-treasury.scriptsVolumeMount" . | nindent 12 }}
+            {{- include "decentralized-treasury.sqliteVolumeMount" . | nindent 12 }}
+            - name: proofs
+              mountPath: {{ .Values.proving.scheduler.outputDirectory }}
+        {{- if .Values.proving.worker.autoscale.enabled }}
+        # Owns the worker replica count, from the depth of the queue this
+        # scheduler fills. Sits here rather than in its own workload because it
+        # needs exactly the redis coordinates the scheduler already has.
+        - name: proving-autoscale
+          image: {{ include "decentralized-treasury.componentImage" (dict "root" $ "image" .Values.proving.scheduler.image) }}
+          imagePullPolicy: {{ include "decentralized-treasury.componentPullPolicy" (dict "root" $ "image" .Values.proving.scheduler.image) }}
+          command: ["node", "/scripts/proving-autoscale.mjs"]
+          env:
+            - name: PROVING_QUEUE_NAME
+              value: {{ .Values.proving.queueName | quote }}
+            - name: REDIS_HOST
+              value: {{ include "decentralized-treasury.redisHost" . | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.proving.redis.port | quote }}
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: WORKER_DEPLOYMENT_NAME
+              value: {{ include "decentralized-treasury.componentName" (dict "root" $ "component" "proving-worker") | quote }}
+            - name: AUTOSCALE_MIN_REPLICAS
+              value: {{ .Values.proving.worker.autoscale.minReplicas | quote }}
+            - name: AUTOSCALE_MAX_REPLICAS
+              value: {{ .Values.proving.worker.autoscale.maxReplicas | default .Values.proving.worker.replicaCount | quote }}
+            - name: AUTOSCALE_POLL_INTERVAL_SECONDS
+              value: {{ .Values.proving.worker.autoscale.pollIntervalSeconds | quote }}
+            - name: AUTOSCALE_SCALE_DOWN_AFTER_SECONDS
+              value: {{ .Values.proving.worker.autoscale.scaleDownAfterSeconds | quote }}
+            # global fetch is undici and takes no per-request CA, so the API
+            # server's CA is trusted process-wide instead.
+            - name: NODE_EXTRA_CA_CERTS
+              value: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.proving.worker.autoscale.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            {{- include "decentralized-treasury.scriptsVolumeMount" . | nindent 12 }}
+        {{- end }}
+        # Keeps newly finished lifecycles arriving without a pod restart.
+        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync" "oneshot" false "keepLastN" .Values.proving.scheduler.sqlite.keepLastN) | nindent 8 }}
+        # Two publishers, because the two artifact kinds live in separate
+        # buckets. Only .proven markers go back to the sqlite bucket - the
+        # bodies there belong to voting-ledger-scheduler.
+        {{- include "decentralized-treasury.s3SyncPush" (dict "root" $ "name" "s3-push-markers" "source" .Values.sqlite.dataDirectory "target" (printf "s3://%s/%s" .Values.s3.sqliteBucket .Values.network) "markers" "*.sqlite.proven") | nindent 8 }}
+        {{- include "decentralized-treasury.s3SyncPush" (dict "root" $ "name" "s3-push-proofs" "source" .Values.proving.scheduler.outputDirectory "target" (printf "s3://%s/%s" .Values.s3.proofsBucket .Values.network) "payloads" "*" "volumeName" "proofs") | nindent 8 }}
+      volumes:
+        {{- include "decentralized-treasury.scriptsVolume" . | nindent 8 }}
+        {{- include "decentralized-treasury.sqliteVolume" . | nindent 8 }}
+        - name: proofs
+          emptyDir:
+            {{- with .Values.proving.scheduler.outputSizeLimit }}
+            sizeLimit: {{ . }}
+            {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

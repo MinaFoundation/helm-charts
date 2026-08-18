@@ -1,0 +1,41 @@
+{{- if and .Values.proving.enabled .Values.proving.worker.enabled .Values.proving.worker.autoscale.enabled }}
+{{- $ctx := dict "root" $ "component" "proving-autoscale" }}
+{{- $workerName := include "decentralized-treasury.componentName" (dict "root" $ "component" "proving-worker") }}
+{{/*
+The only Kubernetes access anything in this chart is granted.
+
+Scoped as tightly as the API allows: a namespaced Role, and resourceNames
+limited to the proving worker Deployment, so the token cannot read or scale
+anything else in the namespace - including the other workloads of this same
+release.
+
+`deployments` itself is readable because the scale subresource is reached
+through it; the sidecar only ever GETs and PATCHes .../scale.
+*/}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "decentralized-treasury.componentName" $ctx }}
+  labels:
+    {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments/scale"]
+    resourceNames: [{{ $workerName | quote }}]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "decentralized-treasury.componentName" $ctx }}
+  labels:
+    {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "decentralized-treasury.componentName" $ctx }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "decentralized-treasury.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

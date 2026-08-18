@@ -1,0 +1,92 @@
+{{- if .Values.proxy.enabled }}
+{{- $ctx := dict "root" $ "component" "proxy" }}
+{{/*
+The compose stack's Caddyfile, translated to nginx.
+
+Caddy's `handle_path /api/*` strips the prefix before proxying, because every
+API serves its routes at the root. Reproducing that inside the cluster is what
+lets the browser stay on a single origin behind an Ingress controller that
+cannot rewrite - ALB has no equivalent of nginx's rewrite-target.
+
+`proxy_pass` with a trailing slash is the strip: the part of the URI that
+matched the location prefix is replaced by the path in proxy_pass.
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "decentralized-treasury.componentName" $ctx }}
+  labels:
+    {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
+data:
+  default.conf: |
+    # Keep the client's scheme when something in front of us terminated TLS,
+    # so the app does not build http:// URLs behind an HTTPS load balancer.
+    map $http_x_forwarded_proto $forwarded_proto {
+        default $scheme;
+        "~."    $http_x_forwarded_proto;
+    }
+
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ""      close;
+    }
+
+    server {
+        listen {{ .Values.proxy.port }};
+        server_name _;
+
+        client_max_body_size {{ .Values.proxy.clientMaxBodySize }};
+
+        gzip on;
+        gzip_proxied any;
+        gzip_types application/json application/javascript text/css text/plain;
+
+        # Probed by the kubelet, never routed anywhere.
+        location = /healthz {
+            access_log off;
+            add_header Content-Type text/plain;
+            return 200 "ok\n";
+        }
+
+        {{- range $service := include "decentralized-treasury.proxyServices" $ | fromJsonArray }}
+
+        location = /{{ $service.key }} {
+            return 308 /{{ $service.key }}/;
+        }
+
+        location /{{ $service.key }}/ {
+            proxy_pass http://{{ $service.host }}:{{ $service.port }}/;
+            {{- include "decentralized-treasury.proxyHeaders" $ | nindent 12 }}
+        }
+        {{- end }}
+        {{- with .Values.proxy.minaNodeUpstream }}
+
+        # The Mina daemon is not part of this chart, so this is a plain URL
+        # rather than a Service reference. Resolved through a variable so a node
+        # that is down or renamed fails this route only, instead of stopping
+        # nginx - and with it the web app - from starting at all.
+        #
+        # Unlike the Caddyfile this does not rewrite the content type of the
+        # GraphiQL page served on GET /mina/graphql; the browser gets it as the
+        # daemon sends it. The GraphQL API itself, which is POST, is unaffected.
+        location = /mina {
+            return 308 /mina/;
+        }
+
+        location ~ ^/mina/(?<mina_path>.*)$ {
+            resolver {{ $.Values.proxy.resolver }} valid=30s ipv6=off;
+            set $mina_upstream {{ . | trimSuffix "/" | quote }};
+            proxy_pass $mina_upstream/$mina_path$is_args$args;
+            {{- include "decentralized-treasury.proxyHeaders" $ | nindent 12 }}
+        }
+        {{- end }}
+        {{- if .Values.web.enabled }}
+
+        # Everything else is the Next.js app, proxied without stripping.
+        location / {
+            proxy_pass http://{{ include "decentralized-treasury.componentName" (dict "root" $ "component" "web") }}:{{ .Values.web.service.port }};
+            {{- include "decentralized-treasury.proxyHeaders" $ | nindent 12 }}
+        }
+        {{- end }}
+    }
+{{- end }}

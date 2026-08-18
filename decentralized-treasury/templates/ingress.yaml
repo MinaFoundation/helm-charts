@@ -1,0 +1,134 @@
+{{- if .Values.ingress.enabled }}
+{{- $host := required "ingress.host is required when ingress.enabled" .Values.ingress.host }}
+{{- $webName := include "decentralized-treasury.componentName" (dict "root" $ "component" "web") }}
+{{- $webLabels := include "decentralized-treasury.componentLabels" (dict "root" $ "component" "web") }}
+{{/*
+Replaces the Caddy reverse-proxy services from compose, in one of three modes.
+
+  path (nginx and friends)
+    One host, with /api, /indexer and /processor stripped before proxying, the
+    way Caddy's `handle_path` did. Stripping needs a rewrite annotation, and
+    that annotation applies to every path in the object it is set on - so web
+    gets its own Ingress with no rewrite, and the APIs share a second one.
+    nginx matches the longest path, so the API prefixes win over web's `/`.
+
+  host (ALB)
+    A separate hostname per service and no rewriting at all. The AWS Load
+    Balancer Controller has no equivalent of rewrite-target, so path mode
+    cannot strip prefixes there and the APIs would receive /api/... and 404.
+    This mirrors the PUBLIC_API_DOMAIN / PUBLIC_INDEXER_DOMAIN /
+    PUBLIC_PROCESSOR_DOMAIN split in the compose stack's Caddyfile.https.
+
+  proxy (ALB, one hostname)
+    One host, routed to the in-cluster proxy, which strips the prefixes itself.
+    The controller only ever sees `/`, so this keeps the browser on a single
+    origin without needing a controller that can rewrite. Use it when the web
+    image was built against same-origin paths, which is what makes host mode
+    unavailable: those URLs are baked into the client bundle at build time.
+
+The Caddyfile also proxied /mina/* to a Mina node outside this stack. In proxy
+mode that is proxy.minaNodeUpstream; otherwise add it via ingress.extraPaths.
+*/}}
+{{- $rootName := $webName }}
+{{- $rootLabels := $webLabels }}
+{{- $rootPort := .Values.web.service.port }}
+{{- if eq .Values.ingress.mode "proxy" }}
+{{- if not .Values.proxy.enabled }}
+{{- fail "ingress.mode is `proxy` but proxy.enabled is false: the mode routes everything to the in-cluster proxy, so it has to be deployed" }}
+{{- end }}
+{{- $rootName = include "decentralized-treasury.componentName" (dict "root" $ "component" "proxy") }}
+{{- $rootLabels = include "decentralized-treasury.componentLabels" (dict "root" $ "component" "proxy") }}
+{{- $rootPort = .Values.proxy.service.port }}
+{{- end }}
+{{- $services := list }}
+{{- if .Values.api.enabled }}
+{{- $services = append $services (dict "key" "api" "component" "api" "port" .Values.api.service.port) }}
+{{- end }}
+{{- if .Values.indexerApi.enabled }}
+{{- $services = append $services (dict "key" "indexer" "component" "indexer-api" "port" .Values.indexerApi.service.port) }}
+{{- end }}
+{{- if .Values.processorApi.enabled }}
+{{- $services = append $services (dict "key" "processor" "component" "processor-api" "port" .Values.processorApi.service.port) }}
+{{- end }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $rootName }}
+  labels:
+    {{- $rootLabels | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- with .Values.ingress.tls }}
+  tls:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    - host: {{ $host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $rootName }}
+                port:
+                  number: {{ $rootPort }}
+          {{- with .Values.ingress.extraPaths }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+    {{- if eq .Values.ingress.mode "host" }}
+    {{- range $service := $services }}
+    {{- $serviceHost := index $.Values.ingress.hosts $service.key }}
+    {{- if $serviceHost }}
+    - host: {{ $serviceHost | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "decentralized-treasury.componentName" (dict "root" $ "component" $service.component) }}
+                port:
+                  number: {{ $service.port }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
+{{- if eq .Values.ingress.mode "path" }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ printf "%s-apis" $webName | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- $webLabels | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.ingress.apiAnnotations | nindent 4 }}
+spec:
+  {{- with .Values.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- with .Values.ingress.tls }}
+  tls:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    - host: {{ $host | quote }}
+      http:
+        paths:
+          {{- range $service := $services }}
+          - path: {{ $.Values.ingress.apiPathPrefix }}/{{ $service.key }}(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ include "decentralized-treasury.componentName" (dict "root" $ "component" $service.component) }}
+                port:
+                  number: {{ $service.port }}
+          {{- end }}
+{{- end }}
+{{- end }}
