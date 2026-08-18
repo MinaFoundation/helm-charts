@@ -546,6 +546,20 @@ votingLedgerScheduler:
   extraEnvVars: []
   # -- The Resources
   resources: {}
+  # -- Node selector for this workload alone. Empty follows the chart-wide
+  # `nodeSelector`. Worth setting separately because `trace-digest` is the one
+  # single-threaded step on the critical path: it wants sustained single-core
+  # speed and an uninterruptible node, which is the opposite of what the
+  # proving workers want.
+  #
+  # Replaces the chart-wide value rather than merging with it, so restate
+  # everything that still applies.
+  nodeSelector: {}
+  # -- Affinity for this workload alone. Empty follows the chart-wide `affinity`.
+  affinity: {}
+  # -- Tolerations for this workload alone. Empty follows the chart-wide
+  # `tolerations`. Restate these whenever `nodeSelector` targets a tainted pool.
+  tolerations: []
 
 # -- Proof generation, matching the compose `proving` profile. Off by default.
 proving:
@@ -604,8 +618,19 @@ proving:
       # entirely, at the cost of recompiling the circuits (~100s) on scale-up.
       # Set 1 to keep a warm worker instead.
       minReplicas: 0
-      # -- Ceiling on the proving cluster. Empty follows replicaCount.
-      maxReplicas: ""
+      # -- Ceiling on the proving cluster.
+      #
+      # Deliberately conservative: each replica takes a whole node (the worker
+      # sets podAntiAffinity and a 16 vCPU floor), so this is the one value here
+      # that turns into machines. A deployment that wants a wider proving
+      # cluster has to ask for it, sized against its own ledger, rather than
+      # inheriting a ceiling that quietly provisions a fleet.
+      #
+      # Measured cost per proof to size it against: ~39s per digest proof and
+      # ~19s per merge proof, with batches = ceil(accounts / ACCOUNT_BATCH_SIZE).
+      # Raising this stops helping once proving drops below the single-threaded
+      # trace-digest that has to finish first.
+      maxReplicas: 3
       # -- How often to compare queue depth against the current count
       pollIntervalSeconds: 15
       # -- How long the queue must stay empty before scaling down. Scaling up
