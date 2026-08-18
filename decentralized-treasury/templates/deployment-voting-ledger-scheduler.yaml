@@ -110,15 +110,15 @@ spec:
             sizeLimit: {{ . }}
             {{- end }}
           {{- end }}
-      {{- with .Values.nodeSelector }}
+      {{- with .Values.votingLedgerScheduler.nodeSelector | default .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.affinity }}
+      {{- with .Values.votingLedgerScheduler.affinity | default .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
+      {{- with .Values.votingLedgerScheduler.tolerations | default .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
