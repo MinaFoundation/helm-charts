@@ -26,12 +26,24 @@ log() {
   echo "[s3-sync-pull] $*"
 }
 
-# Lifecycle ids that have a body in S3, oldest first.
+# Lifecycle ids whose body is *complete* in S3, oldest first.
+#
+# Keyed on the .done marker rather than on the body, because s3-sync-push
+# uploads the body first and the marker only once it is whole. Listing bodies
+# instead means fetching a database that is still being written: the local copy
+# is then a truncated prefix of a valid SQLite file, which opens cleanly and
+# simply contains fewer accounts. Proving it produces a root that fails
+# prove-exhaust's assertEquals, forever, since nothing ever re-reads it.
 remote_lifecycle_ids() {
   aws s3 ls "${S3_PREFIX}/" \
     | awk '{ print $4 }' \
-    | sed -n 's/^\([0-9][0-9]*\)\.sqlite$/\1/p' \
+    | sed -n 's/^\([0-9][0-9]*\)\.sqlite\.done$/\1/p' \
     | sort -n
+}
+
+# Size of a remote body, or empty if it cannot be read.
+remote_body_size() {
+  aws s3 ls "${S3_PREFIX}/$1.sqlite" 2>/dev/null | awk '{ print $3 }' | tail -n1
 }
 
 retained_lifecycle_ids() {
@@ -72,11 +84,28 @@ sync_once() {
   retained=$(retained_lifecycle_ids)
 
   for id in $retained; do
-    if [ ! -f "${SQLITE_DATA_DIRECTORY}/${id}.sqlite" ]; then
+    local_path="${SQLITE_DATA_DIRECTORY}/${id}.sqlite"
+    remote_size=$(remote_body_size "$id")
+
+    # Compare sizes rather than testing existence alone. A body already pulled
+    # while it was still being written stays wrong forever otherwise - there is
+    # no later event that would refetch it, and the lifecycle retries and fails
+    # on every cycle. Bodies are immutable once marked done, so a size that
+    # differs can only mean the local copy is stale.
+    if [ -f "$local_path" ] && [ -n "$remote_size" ]; then
+      local_size=$(wc -c < "$local_path" | tr -d ' ')
+      if [ "$local_size" = "$remote_size" ]; then
+        continue
+      fi
+      log "refetching lifecycle ${id}: local ${local_size} bytes, remote ${remote_size}"
+      rm -f "$local_path" "$local_path-wal" "$local_path-shm" "$local_path-journal"
+    elif [ -f "$local_path" ]; then
+      continue
+    else
       log "fetching lifecycle ${id}"
-      aws s3 cp "${S3_PREFIX}/${id}.sqlite" \
-        "${SQLITE_DATA_DIRECTORY}/${id}.sqlite" --only-show-errors
     fi
+
+    aws s3 cp "${S3_PREFIX}/${id}.sqlite" "$local_path" --only-show-errors
   done
 
   prune_bodies "$retained"
