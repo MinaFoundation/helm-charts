@@ -57,7 +57,7 @@ spec:
         # marker presence, so starting with an empty directory would make it
         # rebuild every historical lifecycle from scratch.
         {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync-init" "oneshot" true "keepLastN" .Values.votingLedgerScheduler.sqlite.keepLastN) | nindent 8 }}
-        {{- include "decentralized-treasury.s3SyncStakingLedgers" (dict "root" $ "name" "staking-ledgers-init" "oneshot" true) | nindent 8 }}
+        {{- include "decentralized-treasury.stakingLedgersSync" (dict "root" $ "name" "staking-ledgers-init" "oneshot" true) | nindent 8 }}
       containers:
         - name: {{ $component }}
           image: {{ include "decentralized-treasury.componentImage" (dict "root" $ "image" .Values.votingLedgerScheduler.image) }}
@@ -68,10 +68,11 @@ spec:
               value: {{ .Values.sqlite.dataDirectory | quote }}
             - name: STAKING_LEDGERS_DIRECTORY
               value: {{ .Values.votingLedgerScheduler.stakingLedgersDirectory | quote }}
-            - name: LIFECYCLE_PERIOD_DURATION
-              value: {{ required "config.lifecyclePeriodDuration is required" .Values.config.lifecyclePeriodDuration | quote }}
-            - name: TREASURY_DEPLOYED_AT_SLOT
-              value: {{ .Values.config.treasuryDeployedAtSlot | quote }}
+            {{/*
+            No LIFECYCLE_PERIOD_DURATION or TREASURY_DEPLOYED_AT_SLOT here: this
+            container follows the lifecycle-<id>.hash pointers the sync sidecar
+            writes and does no lifecycle or epoch arithmetic of its own.
+            */}}
             - name: PROOFS_ENABLED
               value: {{ .Values.config.proofsEnabled | quote }}
             - name: VOTING_LEDGER_SCHEDULER_POLL_INTERVAL_SECONDS
@@ -93,8 +94,10 @@ spec:
             - name: staking-ledgers
               mountPath: {{ .Values.votingLedgerScheduler.stakingLedgersDirectory }}
               readOnly: true
-        # Keeps new staking ledger epochs arriving without a pod restart.
-        {{- include "decentralized-treasury.s3SyncStakingLedgers" (dict "root" $ "name" "staking-ledgers-sync" "oneshot" false) | nindent 8 }}
+        # Keeps new staking ledgers arriving without a pod restart. The liveness
+        # probe reads the heartbeat it writes each successful cycle: without it a
+        # sync that silently stops resolving anything looks perfectly healthy.
+        {{- include "decentralized-treasury.stakingLedgersSync" (dict "root" $ "name" "staking-ledgers-sync" "oneshot" false "liveness" true) | nindent 8 }}
         # Publishes each rebuilt lifecycle: bodies first, then .done markers.
         {{- include "decentralized-treasury.s3SyncPush" (dict "root" $ "name" "s3-push" "source" .Values.sqlite.dataDirectory "target" (printf "s3://%s/%s" .Values.s3.sqliteBucket .Values.network) "payloads" "*.sqlite" "markers" "*.sqlite.done") | nindent 8 }}
       volumes:
