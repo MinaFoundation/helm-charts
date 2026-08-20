@@ -1,0 +1,99 @@
+{{- if .Values.nodeApi.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mina-archive.nodeApi.fullname" . }}
+  labels:
+    {{- include "mina-archive.nodeApi.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.nodeApi.replicas }}
+  selector:
+    matchLabels:
+      {{- include "mina-archive.nodeApi.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap-scripts.yaml") . | sha256sum }}
+        {{- with .Values.nodeApi.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "mina-archive.nodeApi.labels" . | nindent 8 }}
+        network: {{ .Values.network }}
+        role: archive-node-api
+    spec:
+      serviceAccountName: {{ include "mina-archive.fullname" . }}
+      initContainers:
+        # The API image has no psql client, so the archive image waits for the
+        # database bootstrap to release its lock before the API starts querying.
+        - name: node-api-init
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["bash", "/scripts/wait-for-db.sh"]
+          env:
+            {{- include "pgEnvVars" . | nindent 12 }}
+            - name: DB_BOOTSTRAP_LOCKING_DATABASE_NAME
+              value: {{ include "bootstrapLockingDatabaseName" . }}
+            - name: DB_BOOTSTRAP_TIMEOUT_SEC
+              value: {{ .Values.dbBootstrap.maxExpectedDurationInSeconds | quote }}
+          volumeMounts:
+            - name: scripts
+              mountPath: "/scripts/"
+      containers:
+        - name: node-api
+          image: "{{ .Values.nodeApi.image.repository }}:{{ .Values.nodeApi.image.tag }}"
+          imagePullPolicy: {{ .Values.nodeApi.image.pullPolicy }}
+          env:
+            - name: PG_CONN
+              value: {{ include "postgresUri" . }}
+            - name: PORT
+              value: {{ .Values.nodeApi.ports.http | quote }}
+            - name: ENABLE_GRAPHIQL
+              value: {{ .Values.nodeApi.enableGraphiql | quote }}
+            - name: ENABLE_INTROSPECTION
+              value: {{ .Values.nodeApi.enableIntrospection | quote }}
+            - name: ENABLE_LOGGING
+              value: {{ .Values.nodeApi.enableLogging | quote }}
+            - name: ENABLE_JAEGER
+              value: {{ .Values.nodeApi.jaeger.enabled | quote }}
+          {{- if .Values.nodeApi.jaeger.enabled }}
+            - name: JAEGER_ENDPOINT
+              value: {{ .Values.nodeApi.jaeger.endpoint | quote }}
+            - name: JAEGER_SERVICE_NAME
+              value: {{ .Values.nodeApi.jaeger.serviceName | quote }}
+          {{- end }}
+          {{- with .Values.nodeApi.extraEnvVars }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              protocol: TCP
+              containerPort: {{ .Values.nodeApi.ports.http }}
+          {{- with .Values.nodeApi.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.nodeApi.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.nodeApi.resources | nindent 12 }}
+      volumes:
+        - name: scripts
+          configMap:
+            name: {{ include "mina-archive.fullname" . }}-scripts
+            defaultMode: 0777
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

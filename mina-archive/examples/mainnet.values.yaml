@@ -4,10 +4,6 @@ image:
   repository: minaprotocol/mina-archive
   tag: 3.0.0-93e0279-bullseye
 
-serviceAccount:
-  annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::673156464838:role/MinaNodesS3_sandbox
-
 postgresql:
   enabled: true
   primary:
@@ -17,19 +13,14 @@ postgresql:
       storageClass: "ebs-gp3-encrypted"
       size: 48Gi
 
+# The dump url and the pre-computed blocks url both default to the buckets
+# o1-labs publishes, resolved for the network above, so neither is repeated
+# here. The dump creates the database itself, hence createDatabase stays off.
 dbBootstrap:
   enabled: true
 
-  createDatabase: false
-  sqlFileUrls:
-    - https://673156464838-mina-archive-node-backups.s3-us-west-2.amazonaws.com/mainnet/mainnet-archive-dump-[DATE]_0000.sql.tar.gz
-
 missingBlocksGuardian:
   enabled: true
-  precomputedBlocksUrl: https://673156464838-mina-precomputed-blocks.s3.us-west-2.amazonaws.com/mainnet
-  autoImportBlockUrl: https://673156464838-mina-precomputed-blocks.s3.us-west-2.amazonaws.com/mainnet/mainnet-350000-3NLGassgPE49SrxMtvz5buEukiAZJjNHSJaqo3cmUjbUfDC8Jrm3.json
 
-dumpExporter:
-  enabled: true
-  s3:
-    bucket: 673156464838-mina-archive-node-backups
+node:
+  replicas: 1

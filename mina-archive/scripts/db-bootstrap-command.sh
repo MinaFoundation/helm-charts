@@ -9,6 +9,10 @@ DB_BOOTSTRAP_LOCKING_DATABASE_NAME=${DB_BOOTSTRAP_LOCKING_DATABASE_NAME:-bootstr
 DB_BOOTSTRAP_POST_CUSTOM_SQL=${DB_BOOTSTRAP_POST_CUSTOM_SQL:-}
 DB_BOOTSTRAP_PRE_CUSTOM_SQL=${DB_BOOTSTRAP_PRE_CUSTOM_SQL:-}
 
+# Set once this run becomes responsible for the locking database, so the
+# cleanup handler only ever releases a lock it is accountable for.
+LOCKING_DATABASE_OWNED=false
+
 main() {
   info "Database bootstrap started"
   info "Host: $PGHOST"
@@ -35,6 +39,7 @@ main() {
 
   info "Adding bootstrap locking database"
   add_locking_db
+  LOCKING_DATABASE_OWNED=true
 
   if [[ $DB_BOOTSTRAP_CREATE_DATABASE == "true" ]]; then
     info "Creating database"
@@ -105,6 +110,23 @@ remove_locking_db() {
   psql postgres -c "DROP DATABASE $DB_BOOTSTRAP_LOCKING_DATABASE_NAME"
 }
 
+# Every other pod waits on the locking database before starting, so a bootstrap
+# that fails after taking the lock would block the whole stack indefinitely.
+# Release it on any failing exit to let the next attempt retry from scratch.
+# Note this cannot run when the container is SIGKILLed, an out of memory kill
+# for instance, in which case the lock still has to be dropped by hand.
+cleanup_locking_db() {
+  local exit_code=$?
+  trap - EXIT
+
+  if [[ $exit_code -ne 0 ]] && [[ $LOCKING_DATABASE_OWNED == "true" ]]; then
+    echo "ERROR: Bootstrap failed, removing the locking database to unblock the next attempt"
+    remove_locking_db || echo "ERROR: Unable to remove the locking database $DB_BOOTSTRAP_LOCKING_DATABASE_NAME"
+  fi
+
+  exit "$exit_code"
+}
+
 run_pre_custom_sql() {
   echo "$DB_BOOTSTRAP_PRE_CUSTOM_SQL" | psql --set=ON_ERROR_STOP=1 -f -
 }
@@ -171,5 +193,10 @@ retry_while() {
   done
   return $return_value
 }
+
+trap cleanup_locking_db EXIT
+# Turn a graceful termination into a normal exit so the EXIT handler runs.
+trap 'exit 143' TERM
+trap 'exit 130' INT
 
 main

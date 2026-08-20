@@ -21,6 +21,12 @@ postgresql:
   # -- Enable local postgresql database server
   enabled: true
   image:
+    # Bitnami stopped publishing versioned tags under `bitnami/` in August 2025;
+    # only `latest` and digests remain there. The pinned tag still exists under
+    # `bitnamilegacy/`, which is frozen and receives no further updates.
+    # The subchart expects the Bitnami image layout (/opt/bitnami paths,
+    # POSTGRESQL_* env vars), so the official `postgres` image is not a drop-in.
+    repository: bitnamilegacy/postgresql
     tag: 17.6.0-debian-12-r4
   primary:
     # -- Resources preset to set resource requests and limits
@@ -60,25 +66,30 @@ externalDatabase:
   # -- Password of external database connection
   password: password
 
-# -- Image to use as postgresql client, to export dumps for example
-postgresClientDockerImage: bitnami/postgresql:17.6.0-debian-12-r4
-# postgresClientDockerImage: postgres:16-alpine
+# -- Image to use as postgresql client, used by the dump exporter.
+# Only needs psql/pg_dump, so it is not tied to the Bitnami image layout.
+# Keep the major version at or above the server, pg_dump refuses a newer one.
+postgresClientDockerImage: postgres:17-alpine
 
 dbBootstrap:
   # -- Enable to dbBootstrap job to populate the database schema or dump
   enabled: false
 
-  # -- Instanciate the database on the database server
-  createDatabase: true
+  # -- Instanciate the database on the database server.
+  # The published dump opens with its own `CREATE DATABASE`, so leave this
+  # disabled when restoring one. Enable it when loading a bare schema instead.
+  createDatabase: false
 
-  # -- SQL file urls to execute
-  sqlFileUrls: []
-    # - https://673156464838-mina-archive-node-backups.s3.us-west-2.amazonaws.com/mainnet/mainnet-archive-dump-2024-04-29_0000.sql.tar.gz
+  # -- SQL file urls to execute. Templated, so `.Values` are available, and
+  # `[DATE]` is replaced at runtime with the current date (YYYY-MM-DD).
+  # Defaults to the daily dump o1-labs publishes for the network.
+  sqlFileUrls:
+    - https://storage.googleapis.com/mina-archive-dumps/{{ .Values.network }}-archive-dump-[DATE]_0000.sql.tar.gz
     # - https://raw.githubusercontent.com/MinaProtocol/mina/develop/src/app/archive/create_schema.sql
 
-  # -- SQL file urls to pre-download before executing the SQL file urls
+  # -- SQL file urls to pre-download before executing the SQL file urls.
+  # Templated in the same way as sqlFileUrls.
   extraSqlFileUrls: []
-    # - https://raw.githubusercontent.com/MinaProtocol/mina/develop/src/app/archive/zkapp_tables.sql
 
   # -- Execute SQL inline command before loading the SQL file urls
   # preCustomSql: SELECT session_user, current_database()
@@ -86,8 +97,10 @@ dbBootstrap:
   # -- Execute SQL inline command after loading the SQL file urls
   postCustomSql: ALTER DATABASE {{ .Values.databaseName }} SET DEFAULT_TRANSACTION_ISOLATION TO SERIALIZABLE
 
-  # -- Set the bootstrap duration expected to be used by other pods when waiting for the bootstrap to complete, before reaching timeout
-  maxExpectedDurationInSeconds: 1800 # 30 minutes
+  # -- Set the bootstrap duration expected to be used by other pods when waiting for the bootstrap to complete, before reaching timeout.
+  # Restoring a published dump is a long job, the devnet one is around 400MB
+  # compressed, so this allows well beyond the download and restore time.
+  maxExpectedDurationInSeconds: 7200 # 2 hours
 
   # -- Annotations to apply to the job
   annotations: {}
@@ -128,6 +141,87 @@ node:
   # -- Resources for the mina archive pods
   resources: {}
 
+nodeApi:
+  # -- Enable the archive node GraphQL API (o1-labs/Archive-Node-API)
+  enabled: false
+  # -- Replicas number for the archive node API deployment
+  replicas: 1
+  image:
+    # -- Docker image repository
+    repository: ghcr.io/o1-labs/archive-node-api
+    # -- Image pull policy
+    pullPolicy: IfNotPresent
+    # -- Docker image tag
+    tag: "0.0.9"
+  ports:
+    # -- Port the GraphQL server listens on
+    http: 8080
+  # -- Serve the GraphiQL playground at `/`
+  enableGraphiql: false
+  # -- Allow GraphQL schema introspection
+  enableIntrospection: false
+  # -- Enable request logging
+  enableLogging: false
+  jaeger:
+    # -- Emit traces to a Jaeger collector
+    enabled: false
+    # -- Jaeger collector endpoint (e.g.: `http://jaeger:14268/api/traces`)
+    endpoint: ""
+    # -- Service name reported to Jaeger
+    serviceName: archive-api
+  # -- Extra environment variables for the archive node API process
+  extraEnvVars: []
+  # -- Annotations to the archive node API pods
+  podAnnotations: {}
+  # -- Resources for the archive node API pods
+  resources: {}
+
+  # -- Readiness probe configuration
+  readinessProbe:
+    httpGet:
+      path: /healthcheck
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+  # -- Liveness probe configuration
+  livenessProbe:
+    httpGet:
+      path: /healthcheck
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 20
+
+  service:
+    # -- Type of the archive node API service
+    type: ClusterIP
+    # -- Port of the archive node API service
+    port: 8080
+    # -- Labels to the archive node API service
+    labels: {}
+    # -- Annotations to the archive node API service
+    annotations: {}
+
+  ingress:
+    # -- Whether to create an Ingress for the archive node API
+    enabled: false
+    # -- The Ingress Class Name to use
+    className: ""
+    # -- The Ingress Annotations
+    annotations: {}
+      # kubernetes.io/tls-acme: "true"
+    # -- The Ingress Hosts
+    hosts: []
+      # - host: archive-api.example.com
+      #   paths:
+      #     - path: /
+      #       pathType: Prefix
+    # -- The TLS configuration
+    tls: []
+    #  - secretName: archive-api-tls
+    #    hosts:
+    #      - archive-api.example.com
+
 missingBlocksGuardian:
   # -- Enabled missing blocks guardian
   enabled: true
@@ -139,13 +233,16 @@ missingBlocksGuardian:
   podAnnotations: {}
   # -- Seconds before cleaning up the missing blocks guardian execution
   ttlSecondsAfterFinished: 86400
-  # -- URL to fetch the pre-computed blocks from
-  precomputedBlocksUrl: ""
+  # -- URL to fetch the pre-computed blocks from. The guardian appends
+  # /<network>-<height>-<state_hash>.json, which matches the layout of the
+  # bucket o1-labs publishes.
+  precomputedBlocksUrl: https://storage.googleapis.com/mina_network_block_data
   # -- URL to auto import a block when running the missing blocks guardian
   autoImportBlockUrl: ""
 
 dumpExporter:
-  # -- Enabled dump exporter
+  # -- Enabled dump exporter. Opt in, it publishes a dump of your own database
+  # to an S3 bucket you control and needs credentials for it.
   enabled: false
   # -- Suspend the  dump exporter execution
   suspend: false

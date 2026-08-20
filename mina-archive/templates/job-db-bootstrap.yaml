@@ -30,9 +30,9 @@ spec:
             - name: DB_BOOTSTRAP_CREATE_DATABASE
               value: {{ .Values.dbBootstrap.createDatabase | quote }}
             - name: DB_BOOTSTRAP_CSV_EXTRA_SQL_FILE_URLS
-              value: {{ join "," .Values.dbBootstrap.extraSqlFileUrls | quote }}
+              value: {{ tpl (join "," .Values.dbBootstrap.extraSqlFileUrls) . | quote }}
             - name: DB_BOOTSTRAP_CSV_SQL_FILE_URLS
-              value: {{ join "," .Values.dbBootstrap.sqlFileUrls | quote }}
+              value: {{ tpl (join "," .Values.dbBootstrap.sqlFileUrls) . | quote }}
             - name: DB_BOOTSTRAP_POST_CUSTOM_SQL
               value: {{ tpl (default "" .Values.dbBootstrap.postCustomSql) . | quote }}
             - name: DB_BOOTSTRAP_PRE_CUSTOM_SQL

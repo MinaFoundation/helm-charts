@@ -34,12 +34,18 @@ check_bootstrap_is_done() {
     || error -n "INFO: Database is online but the bootsrap lock ($DB_BOOTSTRAP_LOCKING_DATABASE_NAME) is still present. "
 }
 
+# `psql -l` queries pg_database with a catalog layout that changed in
+# PostgreSQL 17 (daticulocale was renamed to datlocale), so a client older than
+# the server fails the listing even though the connection itself is healthy.
+# The mina image ships psql 13, so connect with a plain query instead, which is
+# version agnostic and keeps the same semantics: both honour the database name
+# and both fail when that database is absent.
 check_database_connection() {
-  timeout 1 psql "$PGDATABASE" -l > /dev/null 2>&1
+  timeout 1 psql "$PGDATABASE" -c 'SELECT 1' > /dev/null 2>&1
 }
 
 check_locking_database_is_present() {
-  timeout 1 psql "$DB_BOOTSTRAP_LOCKING_DATABASE_NAME" -l > /dev/null 2>&1
+  timeout 1 psql "$DB_BOOTSTRAP_LOCKING_DATABASE_NAME" -c 'SELECT 1' > /dev/null 2>&1
 }
 
 info() {

@@ -127,3 +127,33 @@ Create the name of the service account to use
 - name: PG_CONN
   value: {{ include "postgresUri" . }}
 {{- end}}
+
+{{/*
+Selector labels for the archive node API
+*/}}
+{{- define "mina-archive.nodeApi.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "mina-archive.name" . }}-node-api
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Common labels for the archive node API.
+Mirrors "mina-archive.labels" but carries the API selector labels instead of
+the archive node ones, so the two workloads never share a selector.
+*/}}
+{{- define "mina-archive.nodeApi.labels" -}}
+helm.sh/chart: {{ include "mina-archive.chart" . }}
+{{ include "mina-archive.nodeApi.selectorLabels" . }}
+app.kubernetes.io/component: node-api
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
+Name of the archive node API resources
+*/}}
+{{- define "mina-archive.nodeApi.fullname" -}}
+{{- printf "%s-node-api" (include "mina-archive.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- end }}

@@ -4,10 +4,6 @@ image:
   repository: minaprotocol/mina-archive
   tag: 3.0.0-93e0279-bullseye
 
-serviceAccount:
-  annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::673156464838:role/MinaNodesS3_sandbox
-
 postgresql:
   enabled: true
   primary:
@@ -17,25 +13,18 @@ postgresql:
       storageClass: "ebs-gp3-encrypted"
       size: 8Gi
 
+# A throwaway environment starts from a bare schema rather than a full dump,
+# so the job has to create the database itself.
 dbBootstrap:
   enabled: true
   createDatabase: true
   sqlFileUrls:
     - https://raw.githubusercontent.com/MinaProtocol/mina/develop/src/app/archive/create_schema.sql
-  extraSqlFileUrls:
-    - https://raw.githubusercontent.com/MinaProtocol/mina/develop/src/app/archive/zkapp_tables.sql
+  maxExpectedDurationInSeconds: 1800 # 30 minutes, no dump to restore
 
 node:
   replicas: 1
-  configFileUrl: http://673156464838-mina-genesis-ledgers.s3-us-west-2.amazonaws.com/mainnet/genesis_ledger.json
 
 missingBlocksGuardian:
   enabled: true
   suspend: true
-  precomputedBlocksUrl: https://673156464838-mina-precomputed-blocks.s3-us-west-2.amazonaws.com/mainnet
-
-dumpExporter:
-  enabled: true
-  suspend: true
-  s3:
-    bucket: 673156464838-mina-archive-node-backups

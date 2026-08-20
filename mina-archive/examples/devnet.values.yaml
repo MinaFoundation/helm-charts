@@ -1,0 +1,40 @@
+# Devnet archive node seeded from the buckets o1-labs publishes.
+#
+# The dump url, the pre-computed blocks url and createDatabase all default to
+# the right values for this now, so only the network has to be named.
+network: devnet
+databaseName: archive
+image:
+  repository: minaprotocol/mina-archive
+  tag: 3.0.0-93e0279-bullseye
+
+postgresql:
+  enabled: true
+  primary:
+    resourcesPreset: "2xlarge"
+    persistence:
+      enabled: true
+      storageClass: "ebs-gp3-encrypted"
+      size: 100Gi
+
+dbBootstrap:
+  enabled: true
+
+node:
+  replicas: 1
+
+nodeApi:
+  enabled: true
+  enableGraphiql: true
+  enableIntrospection: true
+  ingress:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: devnet-archive-api.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+
+missingBlocksGuardian:
+  enabled: true

@@ -1,0 +1,25 @@
+{{- if .Values.nodeApi.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mina-archive.nodeApi.fullname" . }}
+  labels:
+    {{- include "mina-archive.nodeApi.labels" . | nindent 4 }}
+    network: {{ .Values.network }}
+    {{- with .Values.nodeApi.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.nodeApi.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.nodeApi.service.type }}
+  selector:
+    {{- include "mina-archive.nodeApi.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.nodeApi.service.port }}
+      targetPort: http
+      protocol: TCP
+{{- end }}
