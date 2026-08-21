@@ -523,7 +523,7 @@ votingLedgerScheduler:
   stakingLedgersDirectory: /staking-ledgers
   stakingLedgers:
     # -- Transport for staking ledgers:
-    #   `http` an in-cluster staking-ledgers-fetcher, listed via nginx
+    #   `http` an in-cluster mina-staking-ledgers-provider, listed via nginx
     #          autoindex JSON. Nothing leaves the cluster.
     #   `gcs`  public Google Cloud Storage over anonymous HTTPS.
     #   `s3`   AWS, for releases whose ledgers already live there.
@@ -534,7 +534,12 @@ votingLedgerScheduler:
     # -- Where ledgers come from. For `http` a base URL; for `gcs`/`s3` a bucket
     # name (devnet GCS: mina-staking-ledgers-devnet; mainnet: mina-staking-ledgers,
     # which has no -mainnet suffix).
-    bucket: http://staking-ledgers-fetcher:8080
+    #
+    # The default assumes the provider release sets
+    # `fullnameOverride: mina-staking-ledgers-provider`, since Helm would
+    # otherwise prefix the Service with its release name. Set this explicitly if
+    # it does not.
+    bucket: http://mina-staking-ledgers-provider:8080
     # -- Object-name prefix to list under. Ignored for `http`. Empty defaults to
     # `staking-` for gcs and to `.Values.network` for s3.
     prefix: ""

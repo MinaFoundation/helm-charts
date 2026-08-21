@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "staking-ledgers-fetcher.fullname" . }}
+  name: {{ include "mina-staking-ledgers-provider.fullname" . }}
   labels:
-    {{- include "staking-ledgers-fetcher.labels" . | nindent 4 }}
+    {{- include "mina-staking-ledgers-provider.labels" . | nindent 4 }}
   annotations:
     # The ledgers are expensive to reproduce and impossible to recover once the
     # daemon has moved past that epoch, so the claim outlives the release.

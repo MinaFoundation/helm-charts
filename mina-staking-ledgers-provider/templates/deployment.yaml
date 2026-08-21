@@ -1,12 +1,12 @@
 {{- if gt (int .Values.replicaCount) 1 }}
-{{- fail "staking-ledgers-fetcher.replicaCount must be 1: the ledger volume is ReadWriteOnce and the fetch loop writes into it in place" }}
+{{- fail "mina-staking-ledgers-provider.replicaCount must be 1: the ledger volume is ReadWriteOnce and the fetch loop writes into it in place" }}
 {{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "staking-ledgers-fetcher.fullname" . }}
+  name: {{ include "mina-staking-ledgers-provider.fullname" . }}
   labels:
-    {{- include "staking-ledgers-fetcher.labels" . | nindent 4 }}
+    {{- include "mina-staking-ledgers-provider.labels" . | nindent 4 }}
 spec:
   replicas: 1
   strategy:
@@ -15,7 +15,7 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      {{- include "staking-ledgers-fetcher.selectorLabels" . | nindent 6 }}
+      {{- include "mina-staking-ledgers-provider.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
@@ -24,13 +24,13 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        {{- include "staking-ledgers-fetcher.selectorLabels" . | nindent 8 }}
+        {{- include "mina-staking-ledgers-provider.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "staking-ledgers-fetcher.serviceAccountName" . }}
+      serviceAccountName: {{ include "mina-staking-ledgers-provider.serviceAccountName" . }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -39,7 +39,7 @@ spec:
         - name: fetch
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["/bin/bash", "/scripts/fetch-staking-ledgers.sh"]
+          command: ["/bin/bash", "/scripts/provide-staking-ledgers.sh"]
           env:
             - name: APP_LEDGERS_DIRECTORY
               value: {{ .Values.ledgersDirectory | quote }}
@@ -49,6 +49,8 @@ spec:
               value: {{ .Values.minaContainer | quote }}
             - name: APP_MINA_NAMESPACE
               value: {{ .Values.minaNamespace | quote }}
+            - name: APP_MINA_NODE_URL
+              value: {{ .Values.minaNodeUrl | quote }}
             - name: APP_EXPORT_NEXT_EPOCH
               value: {{ .Values.exportNextEpoch | quote }}
             - name: APP_KEEP_LAST_N
@@ -72,7 +74,7 @@ spec:
                 - /bin/sh
                 - -c
                 - |
-                  status="{{ .Values.ledgersDirectory }}/.fetch-status"
+                  status="{{ .Values.ledgersDirectory }}/.provider-status"
                   [ -f "$status" ] || exit 1
                   last=$(sed -n 's/.*"lastSuccessEpochSeconds": *\([0-9][0-9]*\).*/\1/p' "$status" | head -n1)
                   [ -n "$last" ] || exit 1
@@ -118,11 +120,11 @@ spec:
       volumes:
         - name: scripts
           configMap:
-            name: {{ include "staking-ledgers-fetcher.fullname" . }}
+            name: {{ include "mina-staking-ledgers-provider.fullname" . }}
             defaultMode: 0555
         - name: ledgers
           persistentVolumeClaim:
-            claimName: {{ .Values.persistence.existingClaim | default (include "staking-ledgers-fetcher.fullname" .) }}
+            claimName: {{ .Values.persistence.existingClaim | default (include "mina-staking-ledgers-provider.fullname" .) }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

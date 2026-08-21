@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mina-staking-ledgers-provider.fullname" . }}
+  labels:
+    {{- include "mina-staking-ledgers-provider.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "mina-staking-ledgers-provider.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.server.port }}
+      targetPort: http
+      protocol: TCP

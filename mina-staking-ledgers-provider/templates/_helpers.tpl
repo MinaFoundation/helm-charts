@@ -1,8 +1,8 @@
-{{- define "staking-ledgers-fetcher.name" -}}
+{{- define "mina-staking-ledgers-provider.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{- define "staking-ledgers-fetcher.fullname" -}}
+{{- define "mina-staking-ledgers-provider.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -15,27 +15,27 @@
 {{- end }}
 {{- end }}
 
-{{- define "staking-ledgers-fetcher.chart" -}}
+{{- define "mina-staking-ledgers-provider.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{- define "staking-ledgers-fetcher.labels" -}}
-helm.sh/chart: {{ include "staking-ledgers-fetcher.chart" . }}
-{{ include "staking-ledgers-fetcher.selectorLabels" . }}
+{{- define "mina-staking-ledgers-provider.labels" -}}
+helm.sh/chart: {{ include "mina-staking-ledgers-provider.chart" . }}
+{{ include "mina-staking-ledgers-provider.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
-{{- define "staking-ledgers-fetcher.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "staking-ledgers-fetcher.name" . }}
+{{- define "mina-staking-ledgers-provider.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "mina-staking-ledgers-provider.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
-{{- define "staking-ledgers-fetcher.serviceAccountName" -}}
+{{- define "mina-staking-ledgers-provider.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "staking-ledgers-fetcher.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "mina-staking-ledgers-provider.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}

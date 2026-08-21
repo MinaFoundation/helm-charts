@@ -16,7 +16,9 @@ image:
 imagePullSecrets: []
 # -- The release name override
 nameOverride: ""
-# -- The full release name override
+# -- The full release name override. Worth setting to
+# `mina-staking-ledgers-provider`: consumers address this by Service name, and
+# the decentralized-treasury chart defaults to exactly that host.
 fullnameOverride: ""
 
 # -- Where ledgers are written and served from
@@ -29,6 +31,14 @@ ledgersDirectory: /data
 minaNodeLabel: ""
 # -- Container name within the daemon pod
 minaContainer: mina
+
+# -- Daemon GraphQL endpoint, e.g. http://graphql-proxy:3085/graphql. Strongly
+# recommended: it lets a cycle learn which ledger is in force and compare it
+# against what is already published WITHOUT exporting anything. Left empty the
+# chart still works, but every cycle exports a ~140MB ledger just to compute its
+# hash and usually discard it. Also used to verify an export against the hash
+# the chain advertises before publishing it.
+minaNodeUrl: ""
 # -- Namespace holding the Mina daemon. Empty means the release namespace.
 minaNamespace: ""
 
@@ -77,7 +87,7 @@ persistence:
   existingClaim: ""
   # -- Storage class for the ledger volume
   storageClass: ebs-gp3-encrypted
-  # -- Access mode. ReadWriteOnce is what EBS supports, which is why the fetcher
+  # -- Access mode. ReadWriteOnce is what EBS supports, which is why this chart
   # serves over HTTP rather than sharing the volume with its consumer.
   accessMode: ReadWriteOnce
   # -- Volume size. A devnet ledger is ~140MB raw and compresses to roughly a

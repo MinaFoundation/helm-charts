@@ -26,7 +26,7 @@
 # to sanity-check lifecycle/epoch alignment and to hint the listing prefix.
 #
 # THREE SOURCES, differing only in transport:
-#   http  in-cluster staking-ledgers-fetcher, listed via nginx autoindex JSON
+#   http  in-cluster mina-staking-ledgers-provider, via nginx autoindex JSON
 #   gcs   public GCS over anonymous HTTPS
 #   s3    AWS, for releases whose ledgers already live there
 # Object naming and unpacking are handled uniformly rather than per source, so
@@ -361,7 +361,7 @@ key_sort_key() {
   printf '%s' "$1" | sed -n 's/.*\([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]_[0-9][0-9][0-9][0-9]\).*/\1/p'
 }
 
-# In-cluster HTTP source (staking-ledgers-fetcher): the bucket value is a base
+# In-cluster HTTP source (mina-staking-ledgers-provider): the bucket is a base
 # URL and the listing is nginx's `autoindex_format json`. Nothing leaves the
 # cluster, which is the point - no object store is involved at all.
 http_list_keys() {

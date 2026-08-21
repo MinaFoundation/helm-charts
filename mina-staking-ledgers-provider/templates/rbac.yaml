@@ -7,12 +7,12 @@ exposes it over no other interface.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ include "staking-ledgers-fetcher.fullname" . }}
+  name: {{ include "mina-staking-ledgers-provider.fullname" . }}
   {{- with .Values.minaNamespace }}
   namespace: {{ . }}
   {{- end }}
   labels:
-    {{- include "staking-ledgers-fetcher.labels" . | nindent 4 }}
+    {{- include "mina-staking-ledgers-provider.labels" . | nindent 4 }}
 rules:
   - apiGroups: [""]
     resources: ["pods"]
@@ -24,18 +24,18 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ include "staking-ledgers-fetcher.fullname" . }}
+  name: {{ include "mina-staking-ledgers-provider.fullname" . }}
   {{- with .Values.minaNamespace }}
   namespace: {{ . }}
   {{- end }}
   labels:
-    {{- include "staking-ledgers-fetcher.labels" . | nindent 4 }}
+    {{- include "mina-staking-ledgers-provider.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ include "staking-ledgers-fetcher.fullname" . }}
+  name: {{ include "mina-staking-ledgers-provider.fullname" . }}
 subjects:
   - kind: ServiceAccount
-    name: {{ include "staking-ledgers-fetcher.serviceAccountName" . }}
+    name: {{ include "mina-staking-ledgers-provider.serviceAccountName" . }}
     namespace: {{ .Release.Namespace }}
 {{- end }}

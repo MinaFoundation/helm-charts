@@ -1,4 +1,4 @@
-# staking-ledgers-fetcher
+# mina-staking-ledgers-provider
 
 ![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
 
@@ -50,7 +50,7 @@ helmfile status
 | affinity | object | `{}` | Affinity rules |
 | exportNextEpoch | bool | `true` | Also export the next epoch's ledger. next(N) is byte-identical to staking(N+1), so publishing it early gives consumers up to a full epoch of head start on a build whose tracing step alone runs for hours. |
 | extraEnvVars | list | `[]` | Additional environment variables for the fetch container |
-| fullnameOverride | string | `""` | The full release name override |
+| fullnameOverride | string | `""` | The full release name override. Worth setting to `mina-staking-ledgers-provider`: consumers address this by Service name, and the decentralized-treasury chart defaults to exactly that host. |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
 | image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/github-actions-runner"` | Image for the fetch loop. Needs kubectl, python3 and tar - it drives the Mina daemon through `kubectl exec`, since a staking ledger is available by no other interface. |
 | image.tag | string | `"default-2024.03"` | Image tag |
@@ -60,9 +60,10 @@ helmfile status
 | minaContainer | string | `"mina"` | Container name within the daemon pod |
 | minaNamespace | string | `""` | Namespace holding the Mina daemon. Empty means the release namespace. |
 | minaNodeLabel | string | `""` | Label selector identifying candidate Mina daemon pods, e.g. `queryableNode=true`. Every match is probed and the first reporting `sync_status: Synced` is used - exporting from an unsynced node yields a ledger for a chain the network is not following. |
+| minaNodeUrl | string | `""` | Daemon GraphQL endpoint, e.g. http://graphql-proxy:3085/graphql. Strongly recommended: it lets a cycle learn which ledger is in force and compare it against what is already published WITHOUT exporting anything. Left empty the chart still works, but every cycle exports a ~140MB ledger just to compute its hash and usually discard it. Also used to verify an export against the hash the chain advertises before publishing it. |
 | nameOverride | string | `""` | The release name override |
 | nodeSelector | object | `{}` | Node selector labels |
-| persistence.accessMode | string | `"ReadWriteOnce"` | Access mode. ReadWriteOnce is what EBS supports, which is why the fetcher serves over HTTP rather than sharing the volume with its consumer. |
+| persistence.accessMode | string | `"ReadWriteOnce"` | Access mode. ReadWriteOnce is what EBS supports, which is why this chart serves over HTTP rather than sharing the volume with its consumer. |
 | persistence.existingClaim | string | `""` | Use an existing claim instead of creating one |
 | persistence.size | string | `"20Gi"` | Volume size. A devnet ledger is ~140MB raw and compresses to roughly a fifth of that, so this holds a comfortable number of epochs. |
 | persistence.storageClass | string | `"ebs-gp3-encrypted"` | Storage class for the ledger volume |

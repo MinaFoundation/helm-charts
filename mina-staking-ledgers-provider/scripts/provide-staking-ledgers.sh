@@ -22,6 +22,11 @@ LEDGERS_DIRECTORY="${APP_LEDGERS_DIRECTORY:-/data}"
 MINA_NODE_LABEL="${APP_MINA_NODE_LABEL:?Set APP_MINA_NODE_LABEL}"
 MINA_CONTAINER="${APP_MINA_CONTAINER:-mina}"
 MINA_NAMESPACE="${APP_MINA_NAMESPACE:-}"
+# Optional but strongly recommended: the daemon advertises the ledger hash for
+# the current and next epoch over GraphQL, so it can be compared against what is
+# already published WITHOUT exporting anything. Without it every cycle exports a
+# ~140MB ledger just to learn its hash and usually throw it away.
+MINA_NODE_URL="${APP_MINA_NODE_URL:-}"
 EXPORT_NEXT_EPOCH="${APP_EXPORT_NEXT_EPOCH:-true}"
 KEEP_LAST_N="${APP_KEEP_LAST_N:-4}"
 POLL_INTERVAL_SECONDS="${APP_POLL_INTERVAL_SECONDS:-3600}"
@@ -29,9 +34,9 @@ ONESHOT="${APP_ONESHOT:-false}"
 
 LEDGER_HASH_PATTERN='^j[1-9A-HJ-NP-Za-km-z]{40,60}$'
 
-log()       { echo "[staking-ledgers-fetcher] $*"; }
-log_warn()  { echo "[staking-ledgers-fetcher] WARN $*" >&2; }
-log_error() { echo "[staking-ledgers-fetcher] ERROR $*" >&2; }
+log()       { echo "[staking-ledgers-provider] $*"; }
+log_warn()  { echo "[staking-ledgers-provider] WARN $*" >&2; }
+log_error() { echo "[staking-ledgers-provider] ERROR $*" >&2; }
 die()       { log_error "$*"; exit 1; }
 
 kube() {
@@ -84,6 +89,37 @@ archive_count() {
   fi
 }
 
+# Ledger hashes the chain says are in force, without touching the ledger itself.
+# Sets CHAIN_STAKING_HASH / CHAIN_NEXT_HASH, or returns 1 if unavailable.
+chain_ledger_hashes() {
+  [ -n "$MINA_NODE_URL" ] || return 1
+  command -v curl >/dev/null 2>&1 || return 1
+
+  response=$(curl -sS --max-time 30 -X POST -H 'Content-Type: application/json' \
+    -d '{"query":"{ bestChain(maxLength:1){ protocolState{ consensusState{ stakingEpochData{ ledger{ hash } } nextEpochData{ ledger{ hash } } } } } }"}' \
+    "$MINA_NODE_URL" 2>/dev/null) || return 1
+
+  CHAIN_STAKING_HASH=$(printf '%s' "$response" | python3 -c '
+import json,sys
+try:
+    c = json.load(sys.stdin)["data"]["bestChain"][0]["protocolState"]["consensusState"]
+    print(c["stakingEpochData"]["ledger"]["hash"])
+except Exception:
+    sys.exit(1)
+') || return 1
+  CHAIN_NEXT_HASH=$(printf '%s' "$response" | python3 -c '
+import json,sys
+try:
+    c = json.load(sys.stdin)["data"]["bestChain"][0]["protocolState"]["consensusState"]
+    print(c["nextEpochData"]["ledger"]["hash"])
+except Exception:
+    sys.exit(1)
+') || CHAIN_NEXT_HASH=""
+
+  echo "$CHAIN_STAKING_HASH" | grep -qE "$LEDGER_HASH_PATTERN" || return 1
+  return 0
+}
+
 have_ledger_hash() {
   ls "${LEDGERS_DIRECTORY}"/*-"$1".json.tar.gz >/dev/null 2>&1
 }
@@ -91,6 +127,14 @@ have_ledger_hash() {
 publish_ledger() {
   which_ledger=$1
   epoch=$2
+  expected_hash=${3:-}
+
+  # The cheap path: the chain already told us which ledger is in force, and we
+  # already have it. No export, no load on the daemon, nothing to discard.
+  if [ -n "$expected_hash" ] && have_ledger_hash "$expected_hash"; then
+    log "${which_ledger} (epoch ${epoch}) is already published as ${expected_hash}, nothing to do"
+    return 0
+  fi
 
   log "exporting ${which_ledger} (epoch ${epoch})"
   on_pod "/usr/local/bin/mina ledger export ${which_ledger} > /tmp/${which_ledger}.json" || return 1
@@ -99,6 +143,15 @@ publish_ledger() {
     | tr -d '[:space:]' | grep -E "$LEDGER_HASH_PATTERN") \
     || { log_error "mina ledger hash returned no plausible hash for ${which_ledger}"; return 1; }
   log "  ledgerHash=${hash}"
+
+  # An export that does not hash to what the chain advertised means the daemon
+  # moved, or served a ledger for a different chain. Publishing it would put a
+  # ledger no proposal can ever match into circulation.
+  if [ -n "$expected_hash" ] && [ "$hash" != "$expected_hash" ]; then
+    log_error "exported ${which_ledger} hashes to ${hash} but the chain advertises ${expected_hash} - discarding"
+    on_pod "rm -f /tmp/${which_ledger}.json" || true
+    return 1
+  fi
 
   # The hash is the identity, so an archive already carrying it is by definition
   # the same ledger. Re-exporting 100+MB every cycle would be pure waste.
@@ -174,7 +227,7 @@ prune() {
 }
 
 heartbeat() {
-  cat > "${LEDGERS_DIRECTORY}/.fetch-status" <<EOF
+  cat > "${LEDGERS_DIRECTORY}/.provider-status" <<EOF
 {
   "lastSuccessEpochSeconds": $(date +%s),
   "lastSuccessAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
@@ -191,12 +244,20 @@ fetch_once() {
   find_synced_pod || return 1
   read_epochs || return 1
 
-  publish_ledger staking-epoch-ledger "$CURRENT_EPOCH" || return 1
+  CHAIN_STAKING_HASH=""
+  CHAIN_NEXT_HASH=""
+  if chain_ledger_hashes; then
+    log "chain advertises staking=${CHAIN_STAKING_HASH} next=${CHAIN_NEXT_HASH:-unknown}"
+  else
+    log_warn "could not read ledger hashes from the daemon (APP_MINA_NODE_URL unset or unreachable) - falling back to exporting first and hashing after, which is far more expensive"
+  fi
+
+  publish_ledger staking-epoch-ledger "$CURRENT_EPOCH" "$CHAIN_STAKING_HASH" || return 1
 
   if [ "$EXPORT_NEXT_EPOCH" = "true" ]; then
     # Not fatal: early in an epoch the daemon may not serve a next-epoch ledger
     # yet, and the current one is what is needed right now regardless.
-    publish_ledger next-epoch-ledger "$NEXT_EPOCH" \
+    publish_ledger next-epoch-ledger "$NEXT_EPOCH" "$CHAIN_NEXT_HASH" \
       || log_warn "could not export next-epoch-ledger; continuing"
   fi
 
