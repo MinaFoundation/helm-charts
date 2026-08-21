@@ -1,0 +1,46 @@
+{{- if and .Values.proving.enabled .Values.proving.scheduler.enabled .Values.proving.scheduler.server.enabled }}
+{{- $ctx := dict "root" . "component" "proving-scheduler" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "decentralized-treasury.fullname" . }}-artifacts-nginx
+  labels:
+    {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
+data:
+  nginx.conf: |
+    # Serves the two artefact trees this pod already has on disk. The proxy
+    # forwards /sqlite/ and /proofs/ WITHOUT stripping, because both arrive on
+    # this one port and the prefix is what tells them apart.
+    worker_processes 1;
+    error_log /dev/stderr warn;
+    pid /tmp/nginx.pid;
+    events { worker_connections 64; }
+    http {
+      access_log off;
+      client_body_temp_path /tmp/client_body;
+      proxy_temp_path /tmp/proxy;
+      fastcgi_temp_path /tmp/fastcgi;
+      uwsgi_temp_path /tmp/uwsgi;
+      scgi_temp_path /tmp/scgi;
+      sendfile on;
+      server {
+        listen {{ .Values.proving.scheduler.server.port }};
+        location = /healthz {
+          access_log off;
+          add_header Content-Type text/plain;
+          return 200 "ok\n";
+        }
+        location /sqlite/ {
+          alias {{ .Values.sqlite.dataDirectory | trimSuffix "/" }}/;
+          autoindex on;
+          autoindex_format json;
+        }
+        location /proofs/ {
+          alias {{ .Values.proving.scheduler.outputDirectory | trimSuffix "/" }}/;
+          autoindex on;
+          autoindex_format json;
+        }
+        location / { return 404; }
+      }
+    }
+{{- end }}

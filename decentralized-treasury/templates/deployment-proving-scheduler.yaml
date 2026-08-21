@@ -136,9 +136,57 @@ spec:
         # bodies there belong to voting-ledger-scheduler.
         {{- include "decentralized-treasury.s3SyncPush" (dict "root" $ "name" "s3-push-markers" "source" .Values.sqlite.dataDirectory "target" (printf "s3://%s/%s" .Values.s3.sqliteBucket .Values.network) "markers" "*.sqlite.proven") | nindent 8 }}
         {{- include "decentralized-treasury.s3SyncPush" (dict "root" $ "name" "s3-push-proofs" "source" .Values.proving.scheduler.outputDirectory "target" (printf "s3://%s/%s" .Values.s3.proofsBucket .Values.network) "payloads" "*" "volumeName" "proofs") | nindent 8 }}
+        {{- if .Values.proving.scheduler.server.enabled }}
+        {{/*
+        Read-only HTTP view of what this pod already holds: the lifecycle sqlite
+        cache mirrored from S3, and the proofs written beside it. S3 remains the
+        durable store and the pushes above are untouched - this only makes the
+        same bytes reachable in-cluster, so reading a proof needs no S3
+        credentials. Both mounts are readOnly; the server can never write.
+        */}}
+        - name: serve-artifacts
+          image: "{{ .Values.proving.scheduler.server.image.repository }}:{{ .Values.proving.scheduler.server.image.tag }}"
+          imagePullPolicy: {{ .Values.proving.scheduler.server.image.pullPolicy }}
+          command: ["nginx", "-c", "/etc/nginx/nginx.conf", "-g", "daemon off;"]
+          ports:
+            - name: http
+              containerPort: {{ .Values.proving.scheduler.server.port }}
+          {{- with .Values.proving.scheduler.server.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.proving.scheduler.server.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          volumeMounts:
+            - name: artifacts-nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+            - name: sqlite-data
+              mountPath: {{ .Values.sqlite.dataDirectory }}
+              readOnly: true
+            - name: proofs
+              mountPath: {{ .Values.proving.scheduler.outputDirectory }}
+              readOnly: true
+        {{- end }}
       volumes:
         {{- include "decentralized-treasury.scriptsVolume" . | nindent 8 }}
         {{- include "decentralized-treasury.sqliteVolume" . | nindent 8 }}
+        {{- if .Values.proving.scheduler.server.enabled }}
+        - name: artifacts-nginx-config
+          configMap:
+            name: {{ include "decentralized-treasury.fullname" . }}-artifacts-nginx
+            defaultMode: 0444
+        {{- end }}
         - name: proofs
           emptyDir:
             {{- with .Values.proving.scheduler.outputSizeLimit }}

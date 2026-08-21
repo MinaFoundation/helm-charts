@@ -685,6 +685,35 @@ proving:
     outputSizeLimit: ""
     # -- How often to look for a lifecycle to prove, in seconds
     pollIntervalSeconds: 30
+    ## Read-only HTTP view of the artefacts this pod already holds: the lifecycle
+    ## SQLite cache it mirrors from S3, and the proofs it writes. S3 remains the
+    ## durable store and is untouched - this only makes the same bytes reachable
+    ## inside the cluster, and through the proxy, without handing anyone S3
+    ## credentials. Served from here because this pod already has both on disk,
+    ## so it costs no extra pod, volume or S3 egress.
+    server:
+      # -- Serve the sqlite cache and proofs over HTTP from this pod
+      enabled: true
+      image:
+        # -- Image for the serving container
+        repository: nginxinc/nginx-unprivileged
+        # -- Image tag
+        tag: "1.27-alpine"
+        # -- Image pull policy
+        pullPolicy: IfNotPresent
+      # -- Port the artefacts are served on. 8080 because the unprivileged nginx
+      # image cannot bind a privileged port.
+      port: 8080
+      # -- Security context for the serving container
+      securityContext:
+        allowPrivilegeEscalation: false
+        runAsNonRoot: true
+        runAsUser: 101
+        capabilities:
+          drop:
+            - ALL
+      # -- Resources for the serving container
+      resources: {}
     # -- Annotations to add to the deployment
     deploymentAnnotations: {}
     # -- Annotations to add to the pods
@@ -767,6 +796,15 @@ web:
 # what strips /api, /indexer and /processor and fronts the Mina node at /mina,
 # so a single hostname works on a controller that cannot rewrite.
 proxy:
+  # -- Extra upstreams to expose, as a list of {key, host, port}. Rendered
+  # exactly like the built-in /api, /indexer and /processor routes. Use it to
+  # front something outside this release - e.g. the staking ledgers provider:
+  #
+  #   extraServices:
+  #     - key: staking-ledgers
+  #       host: mina-staking-ledgers-provider
+  #       port: 8080
+  extraServices: []
   # -- Whether to deploy the proxy
   enabled: false
   # -- Replica count. Stateless, and on the request path of every page load, so

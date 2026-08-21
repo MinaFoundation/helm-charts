@@ -55,7 +55,12 @@ data:
         }
 
         location /{{ $service.key }}/ {
-            proxy_pass http://{{ $service.host }}:{{ $service.port }}/;
+            {{/*
+            A trailing slash on proxy_pass replaces the matched prefix; without one
+            the full URI is forwarded. Services owning their own root are stripped;
+            those sharing a backend keep the prefix so it can tell them apart.
+            */}}
+            proxy_pass http://{{ $service.host }}:{{ $service.port }}{{ if $service.strip }}/{{ end }};
             {{- include "decentralized-treasury.proxyHeaders" $ | nindent 12 }}
         }
         {{- end }}
