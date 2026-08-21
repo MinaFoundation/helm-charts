@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mina-staking-ledgers-provider.fullname" . }}
+  labels:
+    {{- include "mina-staking-ledgers-provider.labels" . | nindent 4 }}
+data:
+{{ (.Files.Glob "scripts/*").AsConfig | indent 2 }}
+  nginx.conf: |
+    # Serves the ledger directory read-only inside the namespace. autoindex in
+    # JSON form is what lets the consumer enumerate available archives without
+    # an object-store API.
+    worker_processes 1;
+    error_log /dev/stderr warn;
+    pid /tmp/nginx.pid;
+    events { worker_connections 128; }
+    http {
+      access_log off;
+      client_body_temp_path /tmp/client_body;
+      proxy_temp_path /tmp/proxy;
+      fastcgi_temp_path /tmp/fastcgi;
+      uwsgi_temp_path /tmp/uwsgi;
+      scgi_temp_path /tmp/scgi;
+      sendfile on;
+      server {
+        listen {{ .Values.server.port }};
+        root {{ .Values.ledgersDirectory }};
+        # Hidden entries are the in-progress .part files and the heartbeat, so
+        # a consumer never sees a partial archive in the listing.
+        location = /healthz { return 200 "ok\n"; }
+        location / {
+          autoindex on;
+          autoindex_format json;
+        }
+      }
+    }

@@ -1,0 +1,141 @@
+{{- if gt (int .Values.replicaCount) 1 }}
+{{- fail "mina-staking-ledgers-provider.replicaCount must be 1: the ledger volume is ReadWriteOnce and the fetch loop writes into it in place" }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mina-staking-ledgers-provider.fullname" . }}
+  labels:
+    {{- include "mina-staking-ledgers-provider.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    # The claim is ReadWriteOnce, so the old pod has to release it before the
+    # new one can attach.
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "mina-staking-ledgers-provider.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "mina-staking-ledgers-provider.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "mina-staking-ledgers-provider.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: fetch
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/bash", "/scripts/provide-staking-ledgers.sh"]
+          env:
+            - name: APP_LEDGERS_DIRECTORY
+              value: {{ .Values.ledgersDirectory | quote }}
+            - name: APP_MINA_NODE_LABEL
+              value: {{ required "minaNodeLabel is required" .Values.minaNodeLabel | quote }}
+            - name: APP_MINA_CONTAINER
+              value: {{ .Values.minaContainer | quote }}
+            - name: APP_MINA_NAMESPACE
+              value: {{ .Values.minaNamespace | quote }}
+            - name: APP_MINA_NODE_URL
+              value: {{ .Values.minaNodeUrl | quote }}
+            - name: APP_MINA_GRAPHQL_PORT
+              value: {{ .Values.minaGraphqlPort | quote }}
+            - name: APP_EXPORT_NEXT_EPOCH
+              value: {{ .Values.exportNextEpoch | quote }}
+            - name: APP_KEEP_LAST_N
+              value: {{ .Values.keepLastN | quote }}
+            - name: APP_POLL_INTERVAL_SECONDS
+              value: {{ .Values.pollIntervalSeconds | quote }}
+            {{- with .Values.extraEnvVars }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  status="{{ .Values.ledgersDirectory }}/.provider-status"
+                  [ -f "$status" ] || exit 1
+                  last=$(sed -n 's/.*"lastSuccessEpochSeconds": *\([0-9][0-9]*\).*/\1/p' "$status" | head -n1)
+                  [ -n "$last" ] || exit 1
+                  [ $(( $(date +%s) - last )) -lt {{ mul .Values.pollIntervalSeconds 3 }} ]
+            initialDelaySeconds: {{ .Values.pollIntervalSeconds }}
+            periodSeconds: {{ .Values.pollIntervalSeconds }}
+            failureThreshold: 3
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+            - name: ledgers
+              mountPath: {{ .Values.ledgersDirectory }}
+        - name: serve
+          image: "{{ .Values.server.image.repository }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: {{ .Values.server.image.pullPolicy }}
+          command: ["nginx", "-c", "/etc/nginx/nginx.conf", "-g", "daemon off;"]
+          ports:
+            - name: http
+              containerPort: {{ .Values.server.port }}
+          {{- with .Values.server.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.server.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          volumeMounts:
+            - name: scripts
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+            - name: ledgers
+              mountPath: {{ .Values.ledgersDirectory }}
+              readOnly: true
+      volumes:
+        - name: scripts
+          configMap:
+            name: {{ include "mina-staking-ledgers-provider.fullname" . }}
+            defaultMode: 0555
+        - name: ledgers
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "mina-staking-ledgers-provider.fullname" .) }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
