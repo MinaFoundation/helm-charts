@@ -22,11 +22,13 @@ LEDGERS_DIRECTORY="${APP_LEDGERS_DIRECTORY:-/data}"
 MINA_NODE_LABEL="${APP_MINA_NODE_LABEL:?Set APP_MINA_NODE_LABEL}"
 MINA_CONTAINER="${APP_MINA_CONTAINER:-mina}"
 MINA_NAMESPACE="${APP_MINA_NAMESPACE:-}"
-# Optional but strongly recommended: the daemon advertises the ledger hash for
-# the current and next epoch over GraphQL, so it can be compared against what is
-# already published WITHOUT exporting anything. Without it every cycle exports a
-# ~140MB ledger just to learn its hash and usually throw it away.
-MINA_NODE_URL="${APP_MINA_NODE_URL:-}"
+# GraphQL port on the daemon pod. Queried on the pod's own IP rather than
+# through a Service: the ledger hash has to come from the very node the export
+# runs on, and a Service would balance across every pod matching its own
+# selector - which is not the same selector used to pick the synced pod here.
+# Reading the hash from one node and exporting from another silently compares
+# two different chains' answers.
+MINA_GRAPHQL_PORT="${APP_MINA_GRAPHQL_PORT:-3085}"
 EXPORT_NEXT_EPOCH="${APP_EXPORT_NEXT_EPOCH:-true}"
 KEEP_LAST_N="${APP_KEEP_LAST_N:-4}"
 POLL_INTERVAL_SECONDS="${APP_POLL_INTERVAL_SECONDS:-3600}"
@@ -60,7 +62,8 @@ find_synced_pod() {
     if [ "$sync" = "Synced" ]; then
       SYNCED_POD=$pod
       DAEMON_STATUS=$status
-      log "using synced node: ${pod}"
+      SYNCED_POD_IP=$(kube get pod "$pod" -o jsonpath='{.status.podIP}' 2>/dev/null || true)
+      log "using synced node: ${pod}${SYNCED_POD_IP:+ (${SYNCED_POD_IP})}"
       return 0
     fi
     log_warn "skipping ${pod}: sync_status=${sync:-unknown}"
@@ -92,12 +95,13 @@ archive_count() {
 # Ledger hashes the chain says are in force, without touching the ledger itself.
 # Sets CHAIN_STAKING_HASH / CHAIN_NEXT_HASH, or returns 1 if unavailable.
 chain_ledger_hashes() {
-  [ -n "$MINA_NODE_URL" ] || return 1
+  [ -n "${SYNCED_POD_IP:-}" ] || { log_warn "no pod IP for ${SYNCED_POD}; cannot pre-check ledger hashes"; return 1; }
   command -v curl >/dev/null 2>&1 || return 1
 
+  node_url="http://${SYNCED_POD_IP}:${MINA_GRAPHQL_PORT}/graphql"
   response=$(curl -sS --max-time 30 -X POST -H 'Content-Type: application/json' \
     -d '{"query":"{ bestChain(maxLength:1){ protocolState{ consensusState{ stakingEpochData{ ledger{ hash } } nextEpochData{ ledger{ hash } } } } } }"}' \
-    "$MINA_NODE_URL" 2>/dev/null) || return 1
+    "$node_url" 2>/dev/null) || return 1
 
   CHAIN_STAKING_HASH=$(printf '%s' "$response" | python3 -c '
 import json,sys
@@ -249,7 +253,7 @@ fetch_once() {
   if chain_ledger_hashes; then
     log "chain advertises staking=${CHAIN_STAKING_HASH} next=${CHAIN_NEXT_HASH:-unknown}"
   else
-    log_warn "could not read ledger hashes from the daemon (APP_MINA_NODE_URL unset or unreachable) - falling back to exporting first and hashing after, which is far more expensive"
+    log_warn "could not read ledger hashes from ${SYNCED_POD} on port ${MINA_GRAPHQL_PORT} - falling back to exporting first and hashing after, which is far more expensive"
   fi
 
   publish_ledger staking-epoch-ledger "$CURRENT_EPOCH" "$CHAIN_STAKING_HASH" || return 1
@@ -271,7 +275,7 @@ main() {
     command -v "$tool" >/dev/null 2>&1 || die "required tool '${tool}' is not on PATH"
   done
 
-  log "dir=${LEDGERS_DIRECTORY} nodeLabel=${MINA_NODE_LABEL} namespace=${MINA_NAMESPACE:-<release>} keepLastN=${KEEP_LAST_N}"
+  log "dir=${LEDGERS_DIRECTORY} nodeLabel=${MINA_NODE_LABEL} namespace=${MINA_NAMESPACE:-<release>} graphqlPort=${MINA_GRAPHQL_PORT} keepLastN=${KEEP_LAST_N}"
 
   if [ "$ONESHOT" = "true" ]; then
     fetch_once

@@ -32,13 +32,12 @@ minaNodeLabel: ""
 # -- Container name within the daemon pod
 minaContainer: mina
 
-# -- Daemon GraphQL endpoint, e.g. http://graphql-proxy:3085/graphql. Strongly
-# recommended: it lets a cycle learn which ledger is in force and compare it
-# against what is already published WITHOUT exporting anything. Left empty the
-# chart still works, but every cycle exports a ~140MB ledger just to compute its
-# hash and usually discard it. Also used to verify an export against the hash
-# the chain advertises before publishing it.
-minaNodeUrl: ""
+# -- GraphQL port on the daemon pod. Queried on the pod's own IP, not through a
+# Service: the ledger hash must come from the very node the export runs on, and
+# a Service balances across whatever matches its own selector - which is not the
+# selector used to pick the synced pod here. That pre-check is what lets a cycle
+# skip an export it does not need, and it also verifies the export afterwards.
+minaGraphqlPort: 3085
 # -- Namespace holding the Mina daemon. Empty means the release namespace.
 minaNamespace: ""
 

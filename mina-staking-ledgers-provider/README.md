@@ -58,9 +58,9 @@ helmfile status
 | keepLastN | int | `4` | How many archives to keep, newest first. Generous on purpose: a treasury lifecycle can need a ledger several epochs old, and one the daemon has moved past cannot be re-exported at any price. |
 | ledgersDirectory | string | `"/data"` | Where ledgers are written and served from |
 | minaContainer | string | `"mina"` | Container name within the daemon pod |
+| minaGraphqlPort | int | `3085` | GraphQL port on the daemon pod. Queried on the pod's own IP, not through a Service: the ledger hash must come from the very node the export runs on, and a Service balances across whatever matches its own selector - which is not the selector used to pick the synced pod here. That pre-check is what lets a cycle skip an export it does not need, and it also verifies the export afterwards. |
 | minaNamespace | string | `""` | Namespace holding the Mina daemon. Empty means the release namespace. |
 | minaNodeLabel | string | `""` | Label selector identifying candidate Mina daemon pods, e.g. `queryableNode=true`. Every match is probed and the first reporting `sync_status: Synced` is used - exporting from an unsynced node yields a ledger for a chain the network is not following. |
-| minaNodeUrl | string | `""` | Daemon GraphQL endpoint, e.g. http://graphql-proxy:3085/graphql. Strongly recommended: it lets a cycle learn which ledger is in force and compare it against what is already published WITHOUT exporting anything. Left empty the chart still works, but every cycle exports a ~140MB ledger just to compute its hash and usually discard it. Also used to verify an export against the hash the chain advertises before publishing it. |
 | nameOverride | string | `""` | The release name override |
 | nodeSelector | object | `{}` | Node selector labels |
 | persistence.accessMode | string | `"ReadWriteOnce"` | Access mode. ReadWriteOnce is what EBS supports, which is why this chart serves over HTTP rather than sharing the volume with its consumer. |
