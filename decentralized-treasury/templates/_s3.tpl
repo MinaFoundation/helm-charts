@@ -107,17 +107,33 @@ Push container for the two producer workloads. Call with:
 {{/*
 Staking ledger mirror for voting-ledger-scheduler. Call with:
   (dict "root" $ "name" "staking-ledgers-sync" "oneshot" false)
+
+Maintains a content-addressed store - <ledgerHash>.json payloads plus
+lifecycle-<id>.hash pointers - so the scheduler never parses an epoch number.
+Reads either a public GCS bucket or the legacy AWS layout, but the
+produced-lifecycle check is always AWS, so this container needs IRSA either way.
 */}}
-{{- define "decentralized-treasury.s3SyncStakingLedgers" -}}
+{{- define "decentralized-treasury.stakingLedgersSync" -}}
+{{- if .root.Values.s3.stakingLedgersBucket }}
+{{- fail "s3.stakingLedgersBucket has moved to votingLedgerScheduler.stakingLedgers.bucket, alongside .source (gcs|s3). Staking ledgers are no longer necessarily on S3, so the key no longer lives under s3.*" }}
+{{- end }}
 - name: {{ .name }}
   image: "{{ .root.Values.s3.syncImage.repository }}:{{ .root.Values.s3.syncImage.tag }}"
   imagePullPolicy: {{ .root.Values.s3.syncImage.pullPolicy }}
-  command: ["/bin/sh", "/scripts/s3-sync-staking-ledgers.sh"]
+  command: ["/bin/sh", "/scripts/staking-ledgers-sync.sh"]
   env:
     - name: STAKING_LEDGERS_DIRECTORY
       value: {{ .root.Values.votingLedgerScheduler.stakingLedgersDirectory | quote }}
-    - name: STAKING_LEDGERS_S3_BUCKET
-      value: {{ required "s3.stakingLedgersBucket is required" .root.Values.s3.stakingLedgersBucket | quote }}
+    - name: STAKING_LEDGERS_SOURCE
+      value: {{ .root.Values.votingLedgerScheduler.stakingLedgers.source | quote }}
+    - name: STAKING_LEDGERS_BUCKET
+      value: {{ required "votingLedgerScheduler.stakingLedgers.bucket is required" .root.Values.votingLedgerScheduler.stakingLedgers.bucket | quote }}
+    {{/*
+    For gcs this is an object-name prefix; for s3 it is the key prefix the
+    archives sit under, defaulting to the network name as before.
+    */}}
+    - name: STAKING_LEDGERS_PREFIX
+      value: {{ .root.Values.votingLedgerScheduler.stakingLedgers.prefix | default (eq .root.Values.votingLedgerScheduler.stakingLedgers.source "s3" | ternary .root.Values.network "") | quote }}
     - name: STAKING_LEDGERS_KEEP_LAST_N
       value: {{ .root.Values.votingLedgerScheduler.stakingLedgersKeepLastN | quote }}
     {{- with .root.Values.votingLedgerScheduler.lifecycleIds }}
@@ -125,10 +141,9 @@ Staking ledger mirror for voting-ledger-scheduler. Call with:
       value: {{ join "," . | quote }}
     {{- end }}
     {{/*
-    The sync only fetches archives that begin a lifecycle, and drops them once
-    the voting ledger they produce is published - so it needs the same
-    epoch-to-lifecycle arithmetic the scheduler entrypoint does, plus the
-    bucket the products land in.
+    Lifecycle ids come from slotSinceGenesis against treasuryDeployedAtSlot -
+    both on the scale the contract gates on, so no hardfork offset is involved.
+    The sqlite bucket is how the sync knows which lifecycles are already built.
     */}}
     - name: SQLITE_S3_BUCKET
       value: {{ required "s3.sqliteBucket is required" .root.Values.s3.sqliteBucket | quote }}
@@ -142,12 +157,49 @@ Staking ledger mirror for voting-ledger-scheduler. Call with:
       value: {{ required "network is required" .root.Values.network | quote }}
     - name: AWS_REGION
       value: {{ .root.Values.s3.region | quote }}
+    {{/*
+    The daemon is what makes this hardfork-proof: it supplies slotSinceGenesis,
+    slotsPerEpoch and the authoritative stakingEpochData.ledger.hash. The api is
+    consulted for lifecycles that already have proposals, whose snapshotted hash
+    is the value the circuit will actually check.
+    */}}
+    - name: MINA_NODE_URL
+      value: {{ required "config.minaNodeUrl is required" .root.Values.config.minaNodeUrl | quote }}
+    - name: API_URL
+      value: {{ include "decentralized-treasury.apiUrl" .root | quote }}
+    - name: STRICT_ALIGNMENT
+      value: {{ .root.Values.votingLedgerScheduler.stakingLedgers.strictAlignment | quote }}
+    {{- with .root.Values.votingLedgerScheduler.stakingLedgers.lifecycleLedgerHashes }}
+    - name: LIFECYCLE_LEDGER_HASHES
+      value: {{ . | quote }}
+    {{- end }}
     - name: SYNC_ONESHOT
       value: {{ .oneshot | quote }}
     - name: SYNC_INTERVAL_SECONDS
       value: {{ .root.Values.votingLedgerScheduler.stakingLedgersSyncIntervalSeconds | quote }}
     - name: HOME
       value: /tmp
+  {{- if .liveness }}
+  {{/*
+  Fails once the heartbeat is older than three sync intervals, so a sync that
+  has silently stopped making progress is restarted and alerted on rather than
+  sitting there looking healthy.
+  */}}
+  livenessProbe:
+    exec:
+      command:
+        - /bin/sh
+        - -c
+        - |
+          status="{{ .root.Values.votingLedgerScheduler.stakingLedgersDirectory }}/.sync-status"
+          [ -f "$status" ] || exit 1
+          last=$(sed -n 's/.*"lastSuccessEpochSeconds": *\([0-9][0-9]*\).*/\1/p' "$status" | head -n1)
+          [ -n "$last" ] || exit 1
+          [ $(( $(date +%s) - last )) -lt {{ mul .root.Values.votingLedgerScheduler.stakingLedgersSyncIntervalSeconds 3 }} ]
+    initialDelaySeconds: {{ .root.Values.votingLedgerScheduler.stakingLedgersSyncIntervalSeconds }}
+    periodSeconds: {{ .root.Values.votingLedgerScheduler.stakingLedgersSyncIntervalSeconds }}
+    failureThreshold: 3
+  {{- end }}
   {{- with .root.Values.s3.syncImage.securityContext }}
   securityContext:
     {{- toYaml . | nindent 4 }}

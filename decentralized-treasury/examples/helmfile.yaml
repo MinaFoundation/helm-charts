@@ -1,5 +1,5 @@
 ---
-# Deploys the decentralized treasury stack to singlenet.
+# Deploys the decentralized treasury stack to devnet.
 #
 #   helmfile -f decentralized-treasury/examples/helmfile.yaml template
 #   helmfile -f decentralized-treasury/examples/helmfile.yaml apply
@@ -16,8 +16,8 @@ repositories:
 environments:
   default:
     values:
-      - network: singlenet
-        domain: singlenet.minaprotocol.tools
+      - network: devnet
+        domain: devnet.minaprotocol.tools
         namespace: decentralized-treasury
 
 ---
@@ -36,9 +36,12 @@ releases:
 
       # IRSA supplies the S3 credentials for the cache sync containers, so no
       # secrets are needed in the chart. The role needs:
-      #   read       673156464838-mina-staking-ledgers/<network>/*
       #   read/write 673156464838-mina-decentralized-treasury-sqlite/<network>/*
       #   write      673156464838-mina-decentralized-treasury-proofs/<network>/*
+      #
+      # Staking ledgers come from a public GCS bucket and need no credentials at
+      # all. A release with stakingLedgers.source=s3 additionally needs:
+      #   read       673156464838-mina-staking-ledgers/<network>/*
       - serviceAccount:
           annotations:
             eks.amazonaws.com/role-arn: arn:aws:iam::673156464838:role/decentralized-treasury
@@ -47,6 +50,9 @@ releases:
           # The shared devops archive node. Swap for an in-cluster address
           # (e.g. http://mina-archive:8282) if this release gets its own.
           archiveNodeUrl: http://devops.hz.minaprotocol.network:8080
+          # Read server-side by the staking-ledgers sync for slotSinceGenesis,
+          # slotsPerEpoch and the authoritative staking ledger hash.
+          minaNodeUrl: http://devops.hz.minaprotocol.network:3001/graphql
           # Network-specific. A wrong address indexes nothing rather than
           # erroring, so set it deliberately.
           treasuryOwnerContractAddress: B62qpExe8CAaGkR4HRxyXvkziQpE6Aq3U71MJLHivP8pCsiDk1BbU9Z
@@ -81,6 +87,10 @@ releases:
 
       - votingLedgerScheduler:
           stakingLedgersKeepLastN: 10
+          stakingLedgers:
+            source: gcs
+            bucket: mina-staking-ledgers-devnet
+            prefix: "staking-"
 
       # Off until the dt-proving-* images exist.
       - proving:
@@ -90,7 +100,7 @@ releases:
           publicBaseUrl: "https://{{ .Values.domain }}"
           publicEnv:
             NEXT_PUBLIC_NETWORK_ID: DEVNET
-            NEXT_PUBLIC_SLOT_DURATION_MS: "180000"
+            NEXT_PUBLIC_SLOT_DURATION_MS: "90000"
 
       - ingress:
           enabled: true
