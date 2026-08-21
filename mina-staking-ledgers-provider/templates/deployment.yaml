@@ -49,6 +49,8 @@ spec:
               value: {{ .Values.minaContainer | quote }}
             - name: APP_MINA_NAMESPACE
               value: {{ .Values.minaNamespace | quote }}
+            - name: HOME
+              value: /tmp
             - name: APP_MINA_NODE_URL
               value: {{ .Values.minaNodeUrl | quote }}
             - name: APP_MINA_GRAPHQL_PORT

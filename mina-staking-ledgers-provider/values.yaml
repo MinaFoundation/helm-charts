@@ -3,12 +3,17 @@
 replicaCount: 1
 
 image:
-  # -- Image for the fetch loop. Needs kubectl, python3 and tar - it drives the
-  # Mina daemon through `kubectl exec`, since a staking ledger is available by
-  # no other interface.
-  repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/github-actions-runner
-  # -- Image tag
-  tag: "default-2024.03"
+  # -- Image for the fetch loop. Must provide kubectl, python3 and curl; it
+  # drives the Mina daemon through `kubectl exec`, since a staking ledger is
+  # available by no other interface. tar is NOT needed here - the archive is
+  # packed on the daemon pod. The script fails loudly at startup if any of the
+  # three is missing.
+  #
+  # Public on purpose, so this chart carries no private-registry dependency.
+  repository: alpine/k8s
+  # -- Image tag. Track the cluster's Kubernetes minor version: kubectl supports
+  # only +/-1 minor against the API server, and this uses exec and cp.
+  tag: "1.35.6"
   # -- Image pull policy
   pullPolicy: IfNotPresent
 
@@ -120,8 +125,16 @@ podAnnotations: {}
 # -- Pod security context
 podSecurityContext:
   fsGroup: 1000
-# -- Security context for the fetch container
-securityContext: {}
+# -- Security context for the fetch container. The image defaults to root, which
+# it does not need: kubectl, curl and python3 all run fine unprivileged, and
+# fsGroup above makes the ledger volume writable at uid 1000.
+securityContext:
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+      - ALL
 # -- Resources for the fetch container. The ledger is streamed through, but
 # `mina ledger export` output is buffered locally before it is packed.
 resources:

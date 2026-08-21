@@ -278,7 +278,7 @@ heartbeat() {
 {
   "lastSuccessEpochSeconds": $(date +%s),
   "lastSuccessAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-  "currentEpoch": ${CURRENT_EPOCH:-null},
+  "currentEpoch": ${CURRENT_EPOCH:-${CHAIN_EPOCH:-null}},
   "archives": $(archive_count)
 }
 EOF
@@ -336,8 +336,13 @@ fetch_once() {
 }
 
 main() {
-  for tool in kubectl python3 tar; do
-    command -v "$tool" >/dev/null 2>&1 || die "required tool '${tool}' is not on PATH"
+  # tar is deliberately absent: the archive is packed on the daemon pod, and
+  # `kubectl cp` needs tar in that container rather than this one. Locally this
+  # needs kubectl to reach the pod, curl for the GraphQL probe, and python3 to
+  # parse JSON and inspect the archive before publishing it.
+  for tool in kubectl python3 curl; do
+    command -v "$tool" >/dev/null 2>&1 \
+      || die "required tool '${tool}' is not on PATH - the image ${HOSTNAME:-this container} runs must provide kubectl, python3 and curl"
   done
 
   log "dir=${LEDGERS_DIRECTORY} nodeLabel=${MINA_NODE_LABEL} namespace=${MINA_NAMESPACE:-<release>} probe=${MINA_NODE_URL:-<none>} graphqlPort=${MINA_GRAPHQL_PORT} keepLastN=${KEEP_LAST_N}"

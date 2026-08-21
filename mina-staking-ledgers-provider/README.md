@@ -1,6 +1,6 @@
 # mina-staking-ledgers-provider
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
+![Version: 0.1.1](https://img.shields.io/badge/Version-0.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
 
 Exports Mina staking ledgers from an in-cluster daemon and publishes them to S3, named by ledger hash, for the decentralized treasury's voting ledger scheduler
 
@@ -52,8 +52,8 @@ helmfile status
 | extraEnvVars | list | `[]` | Additional environment variables for the fetch container |
 | fullnameOverride | string | `""` | The full release name override. Worth setting to `mina-staking-ledgers-provider`: consumers address this by Service name, and the decentralized-treasury chart defaults to exactly that host. |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
-| image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/github-actions-runner"` | Image for the fetch loop. Needs kubectl, python3 and tar - it drives the Mina daemon through `kubectl exec`, since a staking ledger is available by no other interface. |
-| image.tag | string | `"default-2024.03"` | Image tag |
+| image.repository | string | `"alpine/k8s"` | Image for the fetch loop. Must provide kubectl, python3 and curl; it drives the Mina daemon through `kubectl exec`, since a staking ledger is available by no other interface. tar is NOT needed here - the archive is packed on the daemon pod. The script fails loudly at startup if any of the three is missing.  Public on purpose, so this chart carries no private-registry dependency. |
+| image.tag | string | `"1.35.6"` | Image tag. Track the cluster's Kubernetes minor version: kubectl supports only +/-1 minor against the API server, and this uses exec and cp. |
 | imagePullSecrets | list | `[]` | Image pull secrets |
 | keepLastN | int | `4` | How many archives to keep, newest first. Generous on purpose: a treasury lifecycle can need a ledger several epochs old, and one the daemon has moved past cannot be re-exported at any price. |
 | ledgersDirectory | string | `"/data"` | Where ledgers are written and served from |
@@ -74,7 +74,7 @@ helmfile status
 | rbac.create | bool | `true` | Create the Role and RoleBinding granting pod exec on the Mina daemon |
 | replicaCount | int | `1` | Number of replicas. Must stay 1: the ledger volume is ReadWriteOnce and the fetch loop writes into it in place. The template refuses any other value. |
 | resources | object | `{"limits":{"memory":"2Gi"},"requests":{"cpu":"100m","memory":"512Mi"}}` | Resources for the fetch container. The ledger is streamed through, but `mina ledger export` output is buffered locally before it is packed. |
-| securityContext | object | `{}` | Security context for the fetch container |
+| securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"runAsNonRoot":true,"runAsUser":1000}` | Security context for the fetch container. The image defaults to root, which it does not need: kubectl, curl and python3 all run fine unprivileged, and fsGroup above makes the ledger volume writable at uid 1000. |
 | server.image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
 | server.image.repository | string | `"nginxinc/nginx-unprivileged"` | Image for the serving container |
 | server.image.tag | string | `"1.27-alpine"` | Image tag |
