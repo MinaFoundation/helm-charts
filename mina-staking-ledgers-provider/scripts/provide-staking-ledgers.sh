@@ -29,6 +29,11 @@ MINA_NAMESPACE="${APP_MINA_NAMESPACE:-}"
 # Reading the hash from one node and exporting from another silently compares
 # two different chains' answers.
 MINA_GRAPHQL_PORT="${APP_MINA_GRAPHQL_PORT:-3085}"
+# Cheap probe endpoint, typically a Service. Used only to decide whether there
+# is any work to do, before touching a pod at all: if the ledgers the chain
+# advertises are already published, the cycle ends without a single exec. It is
+# deliberately NOT trusted for the export itself - see chain_ledger_hashes.
+MINA_NODE_URL="${APP_MINA_NODE_URL:-}"
 EXPORT_NEXT_EPOCH="${APP_EXPORT_NEXT_EPOCH:-true}"
 KEEP_LAST_N="${APP_KEEP_LAST_N:-4}"
 POLL_INTERVAL_SECONDS="${APP_POLL_INTERVAL_SECONDS:-3600}"
@@ -94,14 +99,36 @@ archive_count() {
 
 # Ledger hashes the chain says are in force, without touching the ledger itself.
 # Sets CHAIN_STAKING_HASH / CHAIN_NEXT_HASH, or returns 1 if unavailable.
+# Reads the ledger hashes (and epoch) a given endpoint advertises.
+#
+# Called twice, deliberately, against different endpoints. First against
+# MINA_NODE_URL - any node will do, because the answer is only used to decide
+# whether work is needed. Then, once a pod has been chosen, against that pod's
+# own IP: the hash used to name and verify an export must come from the daemon
+# that produced it, or two different nodes' views get compared.
 chain_ledger_hashes() {
-  [ -n "${SYNCED_POD_IP:-}" ] || { log_warn "no pod IP for ${SYNCED_POD}; cannot pre-check ledger hashes"; return 1; }
+  node_url=$1
   command -v curl >/dev/null 2>&1 || return 1
 
-  node_url="http://${SYNCED_POD_IP}:${MINA_GRAPHQL_PORT}/graphql"
   response=$(curl -sS --max-time 30 -X POST -H 'Content-Type: application/json' \
-    -d '{"query":"{ bestChain(maxLength:1){ protocolState{ consensusState{ stakingEpochData{ ledger{ hash } } nextEpochData{ ledger{ hash } } } } } }"}' \
+    -d '{"query":"{ daemonStatus { syncStatus consensusConfiguration { slotsPerEpoch } } bestChain(maxLength:1){ protocolState{ consensusState{ epoch stakingEpochData{ ledger{ hash } } nextEpochData{ ledger{ hash } } } } } }"}' \
     "$node_url" 2>/dev/null) || return 1
+
+  CHAIN_SYNC_STATUS=$(printf '%s' "$response" | python3 -c '
+import json,sys
+try:
+    print(json.load(sys.stdin)["data"]["daemonStatus"]["syncStatus"])
+except Exception:
+    sys.exit(1)
+') || return 1
+
+  CHAIN_EPOCH=$(printf '%s' "$response" | python3 -c '
+import json,sys
+try:
+    print(json.load(sys.stdin)["data"]["bestChain"][0]["protocolState"]["consensusState"]["epoch"])
+except Exception:
+    sys.exit(1)
+') || return 1
 
   CHAIN_STAKING_HASH=$(printf '%s' "$response" | python3 -c '
 import json,sys
@@ -121,7 +148,23 @@ except Exception:
 ') || CHAIN_NEXT_HASH=""
 
   echo "$CHAIN_STAKING_HASH" | grep -qE "$LEDGER_HASH_PATTERN" || return 1
+  case "$CHAIN_EPOCH" in ''|*[!0-9]*) return 1 ;; esac
+
+  # An unsynced node describes a chain we are not following; its answer is not
+  # a basis for skipping work or for naming an export.
+  if [ "$CHAIN_SYNC_STATUS" != "SYNCED" ]; then
+    log_warn "${node_url} reports syncStatus=${CHAIN_SYNC_STATUS}, not SYNCED"
+    return 1
+  fi
   return 0
+}
+
+# True when everything the chain currently advertises is already on disk.
+nothing_to_do() {
+  have_ledger_hash "$CHAIN_STAKING_HASH" || return 1
+  [ "$EXPORT_NEXT_EPOCH" = "true" ] || return 0
+  [ -z "$CHAIN_NEXT_HASH" ] && return 0
+  have_ledger_hash "$CHAIN_NEXT_HASH"
 }
 
 have_ledger_hash() {
@@ -245,13 +288,35 @@ fetch_once() {
   mkdir -p "$LEDGERS_DIRECTORY"
   rm -f "${LEDGERS_DIRECTORY}"/.*.part 2>/dev/null || true
 
+  # Phase 1 - ask before doing. A cycle with nothing to do costs one GraphQL
+  # query and touches no pod at all, which is the overwhelmingly common case:
+  # an epoch lasts days, and polling is hourly.
+  if [ -n "$MINA_NODE_URL" ] && chain_ledger_hashes "$MINA_NODE_URL"; then
+    log "chain advertises epoch=${CHAIN_EPOCH} staking=${CHAIN_STAKING_HASH} next=${CHAIN_NEXT_HASH:-unknown}"
+    if nothing_to_do; then
+      log "already published; nothing to do"
+      heartbeat
+      return 0
+    fi
+  elif [ -n "$MINA_NODE_URL" ]; then
+    log_warn "probe of ${MINA_NODE_URL} failed; falling back to inspecting pods directly"
+  fi
+
+  # Phase 2 - there is work, so pick a node and commit to it. The hashes are
+  # re-read from that node rather than reused from the probe above: an export
+  # has to be named and verified against the daemon that produced it.
   find_synced_pod || return 1
   read_epochs || return 1
 
   CHAIN_STAKING_HASH=""
   CHAIN_NEXT_HASH=""
-  if chain_ledger_hashes; then
-    log "chain advertises staking=${CHAIN_STAKING_HASH} next=${CHAIN_NEXT_HASH:-unknown}"
+  if [ -n "${SYNCED_POD_IP:-}" ] && chain_ledger_hashes "http://${SYNCED_POD_IP}:${MINA_GRAPHQL_PORT}/graphql"; then
+    log "${SYNCED_POD} advertises staking=${CHAIN_STAKING_HASH} next=${CHAIN_NEXT_HASH:-unknown}"
+    if nothing_to_do; then
+      log "already published according to ${SYNCED_POD}; nothing to do"
+      heartbeat
+      return 0
+    fi
   else
     log_warn "could not read ledger hashes from ${SYNCED_POD} on port ${MINA_GRAPHQL_PORT} - falling back to exporting first and hashing after, which is far more expensive"
   fi
@@ -275,7 +340,7 @@ main() {
     command -v "$tool" >/dev/null 2>&1 || die "required tool '${tool}' is not on PATH"
   done
 
-  log "dir=${LEDGERS_DIRECTORY} nodeLabel=${MINA_NODE_LABEL} namespace=${MINA_NAMESPACE:-<release>} graphqlPort=${MINA_GRAPHQL_PORT} keepLastN=${KEEP_LAST_N}"
+  log "dir=${LEDGERS_DIRECTORY} nodeLabel=${MINA_NODE_LABEL} namespace=${MINA_NAMESPACE:-<release>} probe=${MINA_NODE_URL:-<none>} graphqlPort=${MINA_GRAPHQL_PORT} keepLastN=${KEEP_LAST_N}"
 
   if [ "$ONESHOT" = "true" ]; then
     fetch_once

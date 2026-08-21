@@ -32,6 +32,16 @@ minaNodeLabel: ""
 # -- Container name within the daemon pod
 minaContainer: mina
 
+# -- Cheap probe endpoint, typically a Service such as
+# http://graphql-proxy:3085/graphql. Used only to decide whether there is any
+# work to do: when the ledgers the chain advertises are already published the
+# cycle ends there, having touched no pod at all - the common case, since an
+# epoch lasts days and polling is hourly. Leaving it empty still works, but then
+# every cycle execs into pods just to discover there is nothing to do.
+#
+# Deliberately not trusted for the export itself; see minaGraphqlPort.
+minaNodeUrl: ""
+
 # -- GraphQL port on the daemon pod. Queried on the pod's own IP, not through a
 # Service: the ledger hash must come from the very node the export runs on, and
 # a Service balances across whatever matches its own selector - which is not the
