@@ -522,18 +522,22 @@ votingLedgerScheduler:
   # payloads plus lifecycle-<id>.hash pointers, both written by the sync.
   stakingLedgersDirectory: /staking-ledgers
   stakingLedgers:
-    # -- Where staking ledgers come from: `gcs` (public Google Cloud Storage
-    # over anonymous HTTPS, objects named
-    # `staking-<epoch>-<ledgerHash>-<md5>-<date>_<time>.json`) or `s3` (the
-    # legacy AWS layout, `<epoch>-<hash>.tar.gz`). The produced-lifecycle check
-    # is always AWS, so IRSA is required either way.
-    source: gcs
-    # -- Bucket holding the staking ledgers. devnet: mina-staking-ledgers-devnet;
-    # mainnet: mina-staking-ledgers (note there is no -mainnet suffix).
-    bucket: mina-staking-ledgers-devnet
-    # -- Object-name prefix to list under. Empty defaults to `staking-` for gcs
-    # and to `.Values.network` for s3.
-    prefix: "staking-"
+    # -- Transport for staking ledgers:
+    #   `http` an in-cluster staking-ledgers-fetcher, listed via nginx
+    #          autoindex JSON. Nothing leaves the cluster.
+    #   `gcs`  public Google Cloud Storage over anonymous HTTPS.
+    #   `s3`   AWS, for releases whose ledgers already live there.
+    # Object naming is handled uniformly rather than per transport - the ledger
+    # hash is located by pattern, so all published layouts are readable.
+    # The produced-lifecycle check is always AWS, so IRSA is needed regardless.
+    source: http
+    # -- Where ledgers come from. For `http` a base URL; for `gcs`/`s3` a bucket
+    # name (devnet GCS: mina-staking-ledgers-devnet; mainnet: mina-staking-ledgers,
+    # which has no -mainnet suffix).
+    bucket: http://staking-ledgers-fetcher:8080
+    # -- Object-name prefix to list under. Ignored for `http`. Empty defaults to
+    # `staking-` for gcs and to `.Values.network` for s3.
+    prefix: ""
     # -- Abort instead of warning when treasuryDeployedAtSlot is not on an epoch
     # boundary, or when a lifecycle period is not exactly one Mina epoch. Left
     # false so a bespoke network cannot be bricked by the check.

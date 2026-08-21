@@ -25,11 +25,14 @@
 # hardfork offset appears in that arithmetic at all. The offset is derived only
 # to sanity-check lifecycle/epoch alignment and to hint the listing prefix.
 #
-# TWO SOURCES. `gcs` (public GCS over anonymous HTTPS, plain .json) and `s3`
-# (the legacy AWS layout, <epoch>-<hash>.tar.gz). They differ only in listing,
-# naming and unpacking, which is isolated in the source_* adapter below.
-# The produced-lifecycle check always uses AWS S3 regardless of source, so this
-# container needs IRSA in both cases.
+# THREE SOURCES, differing only in transport:
+#   http  in-cluster staking-ledgers-fetcher, listed via nginx autoindex JSON
+#   gcs   public GCS over anonymous HTTPS
+#   s3    AWS, for releases whose ledgers already live there
+# Object naming and unpacking are handled uniformly rather than per source, so
+# adding a transport does not mean adding a parser. The produced-lifecycle check
+# always uses AWS S3 whatever the ledger source, so this container needs IRSA in
+# every case.
 set -eu
 
 STAKING_LEDGERS_DIRECTORY="${STAKING_LEDGERS_DIRECTORY:-/staking-ledgers}"
@@ -71,9 +74,8 @@ require_tools() {
   for tool in curl python3; do
     command -v "$tool" >/dev/null 2>&1 || die "required tool '${tool}' is not on PATH"
   done
-  if [ "$STAKING_LEDGERS_SOURCE" = "s3" ]; then
-    command -v aws >/dev/null 2>&1 || die "source=s3 needs the aws CLI on PATH"
-  fi
+  # Needed for the produced-lifecycle check regardless of ledger source: that
+  # check reads the sqlite bucket, which is always AWS.
   command -v aws >/dev/null 2>&1 || die "the produced-lifecycle check needs the aws CLI on PATH"
 }
 
@@ -329,41 +331,103 @@ s3_list_keys() {
   aws s3 ls "s3://${STAKING_LEDGERS_BUCKET}/${STAKING_LEDGERS_PREFIX}/" | awk '{ print $4 }' | grep -v '^$'
 }
 
-# staking-<epoch>-<ledgerHash>-<md5>-<YYYY-MM-DD>_<HHMM>.json
-# Base58 hashes contain no dash, so field splitting is unambiguous.
-gcs_hash_of_key()      { echo "${1%.json}" | cut -d- -f3; }
-gcs_md5_of_key()       { echo "${1%.json}" | cut -d- -f4; }
-gcs_epoch_of_key()     { echo "${1%.json}" | cut -d- -f2; }
-gcs_sort_key_of_key()  { echo "${1%.json}" | cut -d- -f5-; }
-
-# <epoch>-<hash>.tar.gz
-s3_hash_of_key()       { echo "${1%.tar.gz}" | cut -d- -f2-; }
-s3_md5_of_key()        { echo ""; }
-s3_epoch_of_key()      { echo "${1%.tar.gz}" | cut -d- -f1; }
-s3_sort_key_of_key()   { echo ""; }
-
-gcs_install() {
-  key=$1
-  destination=$2
-  url="https://storage.googleapis.com/${STAKING_LEDGERS_BUCKET}/${key}"
-  curl -sS --max-time 3600 -o "${destination}.part" "$url" || return 1
-  mv "${destination}.part" "$destination"
+# Filename parsing is deliberately NOT positional. At least three layouts are in
+# use for the same thing:
+#
+#   staking-<epoch>-<hash>-<md5>-<YYYY-MM-DD>_<HHMM>.json   o1-labs, GCS
+#   <epoch>-<hash>.tar.gz                                   legacy, S3
+#   <network>-<epoch>-<hash>.json.tar.gz                    mina-staking-ledgers-exporter, S3
+#
+# Any positional rule breaks on the next one. Instead the key is split on
+# non-alphanumerics and the first token shaped like a Mina ledger hash wins,
+# which reads all three and tolerates a fourth. A false positive would have to
+# be a valid base58 ledger hash that also equals the hash being searched for, so
+# the subsequent match is what makes this safe rather than merely convenient.
+key_ledger_hash() {
+  printf '%s' "$1" | tr -c '[:alnum:]' '\n' \
+    | grep "^j[1-9A-HJ-NP-Za-km-z]\{40,60\}$" | head -n1
 }
 
-s3_install() {
+# Optional integrity check; only the GCS layout carries one.
+key_md5() {
+  printf '%s' "$1" | tr -c '[:alnum:]' '\n' | grep "^[0-9a-f]\{32\}$" | head -n1
+}
+
+# Tiebreak when several objects carry the same ledger hash (the GCS layout
+# re-exports daily). Lexicographic order on YYYY-MM-DD_HHMM is chronological.
+# Layouts without a timestamp publish one object per hash, so an empty key is
+# correct rather than merely tolerable.
+key_sort_key() {
+  printf '%s' "$1" | sed -n 's/.*\([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]_[0-9][0-9][0-9][0-9]\).*/\1/p'
+}
+
+# In-cluster HTTP source (staking-ledgers-fetcher): the bucket value is a base
+# URL and the listing is nginx's `autoindex_format json`. Nothing leaves the
+# cluster, which is the point - no object store is involved at all.
+http_list_keys() {
+  body=$(curl -sS --max-time 60 "${STAKING_LEDGERS_BUCKET%/}/") || return 1
+  printf '%s' "$body" | python3 -c '
+import json,sys
+try:
+    entries = json.load(sys.stdin)
+except Exception:
+    sys.exit(1)
+for entry in entries:
+    name = entry.get("name")
+    if name and entry.get("type", "file") == "file":
+        print(name)
+'
+}
+
+http_fetch() {
+  curl -sS --max-time 3600 --fail -o "$2" "${STAKING_LEDGERS_BUCKET%/}/$1"
+}
+
+gcs_fetch() {
+  curl -sS --max-time 3600 -o "$2" "https://storage.googleapis.com/${STAKING_LEDGERS_BUCKET}/$1"
+}
+
+s3_fetch() {
+  key_path=$1
+  [ -n "$STAKING_LEDGERS_PREFIX" ] && key_path="${STAKING_LEDGERS_PREFIX}/$1"
+  aws s3 cp "s3://${STAKING_LEDGERS_BUCKET}/${key_path}" "$2" --only-show-errors
+}
+
+source_list_keys() {
+  case "$STAKING_LEDGERS_SOURCE" in
+    gcs)  gcs_list_keys ;;
+    s3)   s3_list_keys ;;
+    http) http_list_keys ;;
+  esac
+}
+
+source_fetch() {
+  case "$STAKING_LEDGERS_SOURCE" in
+    gcs)  gcs_fetch "$1" "$2" ;;
+    s3)   s3_fetch "$1" "$2" ;;
+    http) http_fetch "$1" "$2" ;;
+  esac
+}
+
+# Download, then unpack based on what the object actually is rather than on
+# which bucket it came from - .tar.gz appears on S3 in two different layouts and
+# nothing stops a plain .json appearing there too.
+source_install() {
   key=$1
   destination=$2
+
   tmp_dir=$(mktemp -d)
-  if ! aws s3 cp "s3://${STAKING_LEDGERS_BUCKET}/${STAKING_LEDGERS_PREFIX}/${key}" \
-      "${tmp_dir}/archive.tar.gz" --only-show-errors; then
+  if ! source_fetch "$key" "${tmp_dir}/download"; then
     rm -rf "$tmp_dir"
     return 1
   fi
 
-  # tar/gzip are absent from the aws-cli image, so unpacking goes through
-  # python3. The member name is not assumed - the legacy layout called it
-  # <epoch>.json, which is precisely the epoch coupling being removed.
-  if ! python3 -c '
+  case "$key" in
+    *.tar.gz|*.tgz)
+      # tar and gzip are both absent from the aws-cli image, so this goes
+      # through python3. The member name is not assumed: the layouts variously
+      # call it <epoch>.json and <network>-<epoch>-<hash>.json.
+      if ! python3 -c '
 import sys, tarfile
 archive, destination = sys.argv[1], sys.argv[2]
 with tarfile.open(archive, "r:gz") as tar:
@@ -379,20 +443,19 @@ with tarfile.open(archive, "r:gz") as tar:
             if not chunk:
                 break
             out.write(chunk)
-' "${tmp_dir}/archive.tar.gz" "$destination"; then
-    rm -rf "$tmp_dir"
-    return 1
-  fi
+' "${tmp_dir}/download" "${tmp_dir}/unpacked"; then
+        rm -rf "$tmp_dir"
+        return 1
+      fi
+      mv "${tmp_dir}/unpacked" "$destination"
+      ;;
+    *)
+      mv "${tmp_dir}/download" "$destination"
+      ;;
+  esac
 
   rm -rf "$tmp_dir"
 }
-
-source_list_keys()     { case "$STAKING_LEDGERS_SOURCE" in gcs) gcs_list_keys ;; s3) s3_list_keys ;; esac; }
-source_hash_of_key()   { case "$STAKING_LEDGERS_SOURCE" in gcs) gcs_hash_of_key "$1" ;; s3) s3_hash_of_key "$1" ;; esac; }
-source_md5_of_key()    { case "$STAKING_LEDGERS_SOURCE" in gcs) gcs_md5_of_key "$1" ;; s3) s3_md5_of_key "$1" ;; esac; }
-source_epoch_of_key()  { case "$STAKING_LEDGERS_SOURCE" in gcs) gcs_epoch_of_key "$1" ;; s3) s3_epoch_of_key "$1" ;; esac; }
-source_sort_key()      { case "$STAKING_LEDGERS_SOURCE" in gcs) gcs_sort_key_of_key "$1" ;; s3) s3_sort_key_of_key "$1" ;; esac; }
-source_install()       { case "$STAKING_LEDGERS_SOURCE" in gcs) gcs_install "$1" "$2" ;; s3) s3_install "$1" "$2" ;; esac; }
 
 # ------------------------------------------------------------------- selection
 
@@ -412,7 +475,7 @@ select_object_for_hash() {
 
   for key in $keys; do
     [ -n "$key" ] || continue
-    hash=$(source_hash_of_key "$key")
+    hash=$(key_ledger_hash "$key")
     if ! validate_ledger_hash "$hash"; then
       UNPARSEABLE_COUNT=$(( UNPARSEABLE_COUNT + 1 ))
       [ -z "$UNPARSEABLE_SAMPLE" ] && UNPARSEABLE_SAMPLE=$key
@@ -421,7 +484,7 @@ select_object_for_hash() {
     [ "$hash" = "$wanted_hash" ] || continue
 
     matches=$(( matches + 1 ))
-    md5=$(source_md5_of_key "$key")
+    md5=$(key_md5 "$key")
     if [ -n "$md5" ]; then
       if [ -z "$seen_md5" ]; then
         seen_md5=$md5
@@ -434,7 +497,7 @@ select_object_for_hash() {
     # Collected rather than compared inline: POSIX `[` has no defined string
     # ordering operator, so the newest is picked with sort(1) below. The sort
     # key is YYYY-MM-DD_HHMM, where lexicographic order is chronological order.
-    matched_pairs="${matched_pairs}$(source_sort_key "$key") ${key}
+    matched_pairs="${matched_pairs}$(key_sort_key "$key") ${key}
 "
   done
 
@@ -578,7 +641,7 @@ sync_once() {
         rm -f "${destination}.part"
         continue
       fi
-      if ! verify_checksum "$destination" "$(source_md5_of_key "$key")"; then
+      if ! verify_checksum "$destination" "$(key_md5 "$key")"; then
         log_error "checksum mismatch on ${key} - discarding the partial download"
         rm -f "$destination"
         continue
@@ -620,8 +683,8 @@ main() {
   require_tools
 
   case "$STAKING_LEDGERS_SOURCE" in
-    gcs|s3) ;;
-    *) die "STAKING_LEDGERS_SOURCE must be 'gcs' or 's3', got '${STAKING_LEDGERS_SOURCE}'" ;;
+    gcs|s3|http) ;;
+    *) die "STAKING_LEDGERS_SOURCE must be 'gcs', 's3' or 'http', got '${STAKING_LEDGERS_SOURCE}'" ;;
   esac
 
   log "source=${STAKING_LEDGERS_SOURCE} bucket=${STAKING_LEDGERS_BUCKET} prefix='${STAKING_LEDGERS_PREFIX}' dir=${STAKING_LEDGERS_DIRECTORY}"

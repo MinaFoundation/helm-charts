@@ -1,0 +1,9 @@
+apiVersion: v2
+name: staking-ledgers-fetcher
+description: Exports Mina staking ledgers from an in-cluster daemon and publishes them to S3, named by ledger hash, for the decentralized treasury's voting ledger scheduler
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+maintainers:
+  - name: MinaFoundation
+    url: https://github.com/MinaFoundation

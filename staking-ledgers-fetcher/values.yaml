@@ -1,0 +1,120 @@
+# -- Number of replicas. Must stay 1: the ledger volume is ReadWriteOnce and the
+# fetch loop writes into it in place. The template refuses any other value.
+replicaCount: 1
+
+image:
+  # -- Image for the fetch loop. Needs kubectl, python3 and tar - it drives the
+  # Mina daemon through `kubectl exec`, since a staking ledger is available by
+  # no other interface.
+  repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/github-actions-runner
+  # -- Image tag
+  tag: "default-2024.03"
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+
+# -- Image pull secrets
+imagePullSecrets: []
+# -- The release name override
+nameOverride: ""
+# -- The full release name override
+fullnameOverride: ""
+
+# -- Where ledgers are written and served from
+ledgersDirectory: /data
+
+# -- Label selector identifying candidate Mina daemon pods, e.g.
+# `queryableNode=true`. Every match is probed and the first reporting
+# `sync_status: Synced` is used - exporting from an unsynced node yields a
+# ledger for a chain the network is not following.
+minaNodeLabel: ""
+# -- Container name within the daemon pod
+minaContainer: mina
+# -- Namespace holding the Mina daemon. Empty means the release namespace.
+minaNamespace: ""
+
+# -- Also export the next epoch's ledger. next(N) is byte-identical to
+# staking(N+1), so publishing it early gives consumers up to a full epoch of
+# head start on a build whose tracing step alone runs for hours.
+exportNextEpoch: true
+
+# -- How many archives to keep, newest first. Generous on purpose: a treasury
+# lifecycle can need a ledger several epochs old, and one the daemon has moved
+# past cannot be re-exported at any price.
+keepLastN: 4
+
+# -- How often to look for a new epoch, in seconds
+pollIntervalSeconds: 3600
+
+# -- Additional environment variables for the fetch container
+extraEnvVars: []
+
+## Read-only HTTP service over the ledger directory. This is how consumers in
+## the namespace enumerate and download archives; nothing leaves the cluster.
+server:
+  image:
+    # -- Image for the serving container
+    repository: nginxinc/nginx-unprivileged
+    # -- Image tag
+    tag: "1.27-alpine"
+    # -- Image pull policy
+    pullPolicy: IfNotPresent
+  # -- Port the ledger directory is served on. 8080 rather than 80 because the
+  # unprivileged nginx image cannot bind a privileged port.
+  port: 8080
+  # -- Security context for the serving container
+  securityContext:
+    allowPrivilegeEscalation: false
+    runAsNonRoot: true
+    runAsUser: 101
+    capabilities:
+      drop:
+        - ALL
+  # -- Resources for the serving container
+  resources: {}
+
+persistence:
+  # -- Use an existing claim instead of creating one
+  existingClaim: ""
+  # -- Storage class for the ledger volume
+  storageClass: ebs-gp3-encrypted
+  # -- Access mode. ReadWriteOnce is what EBS supports, which is why the fetcher
+  # serves over HTTP rather than sharing the volume with its consumer.
+  accessMode: ReadWriteOnce
+  # -- Volume size. A devnet ledger is ~140MB raw and compresses to roughly a
+  # fifth of that, so this holds a comfortable number of epochs.
+  size: 20Gi
+
+serviceAccount:
+  # -- Whether to create a service account
+  create: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- Name of the service account to use
+  name: ""
+
+rbac:
+  # -- Create the Role and RoleBinding granting pod exec on the Mina daemon
+  create: true
+
+# -- Annotations to add to the pod
+podAnnotations: {}
+# -- Pod security context
+podSecurityContext:
+  fsGroup: 1000
+# -- Security context for the fetch container
+securityContext: {}
+# -- Resources for the fetch container. The ledger is streamed through, but
+# `mina ledger export` output is buffered locally before it is packed.
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    memory: 2Gi
+
+# -- Node selector labels
+nodeSelector: {}
+# -- Tolerations
+tolerations: []
+# -- Affinity rules
+affinity: {}
