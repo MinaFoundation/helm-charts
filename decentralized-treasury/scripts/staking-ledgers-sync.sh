@@ -516,14 +516,26 @@ verify_checksum() {
 
 # --------------------------------------------------------------- produced set
 
-# Unchanged, and deliberately still AWS for every source: the published
-# <lifecycleId>.sqlite object IS the product, so once it lands the input is no
-# longer needed. Keyed on the published object rather than the local .done
-# marker, which is written before the push.
+# Deliberately still AWS for every source. Keyed on the published
+# <lifecycleId>.sqlite.done marker, NOT on the .sqlite body.
+#
+# The body is not proof of a product. s3-sync-push uploads *.sqlite on a fixed
+# interval while trace-digest is still writing it, so a body appears in S3
+# within ~60s of a run starting and says only that a run began. Keying on it
+# let any interrupted run poison its lifecycle permanently: the partial body
+# marked the lifecycle produced, prune_store then dropped the lifecycle pointer
+# and the staking-ledger payload the scheduler needs to retry, and the retry
+# silently found nothing to do - while consumers, which key on the marker, never
+# saw a voting ledger at all. Observed on devnet lifecycle 0, twice.
+#
+# The marker is safe to key on: s3-sync-push uploads payloads first and markers
+# only once they are whole, so a published marker implies a whole published
+# body. This is the same key s3-sync-pull uses, which is what makes the
+# producer and consumer agree on what "produced" means.
 produced_lifecycle_ids() {
   aws s3 ls "${SQLITE_S3_PREFIX}/" 2>/dev/null \
     | awk '{ print $4 }' \
-    | sed -n 's/^\([0-9][0-9]*\)\.sqlite$/\1/p'
+    | sed -n 's/^\([0-9][0-9]*\)\.sqlite\.done$/\1/p'
 }
 
 wanted_lifecycles() {
