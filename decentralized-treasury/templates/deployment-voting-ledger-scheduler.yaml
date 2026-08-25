@@ -77,6 +77,20 @@ spec:
               value: {{ .Values.config.proofsEnabled | quote }}
             - name: VOTING_LEDGER_SCHEDULER_POLL_INTERVAL_SECONDS
               value: {{ .Values.votingLedgerScheduler.pollIntervalSeconds | quote }}
+            {{/*
+            Needed only if checkpointing talks to S3, but harmless to always
+            set: credentials already come from IRSA (see _s3.tpl), and the
+            sidecars in this same pod already pin AWS_REGION to s3.region
+            rather than trust whatever the cluster's own region happens to be.
+            */}}
+            - name: AWS_REGION
+              value: {{ .Values.s3.region | quote }}
+            {{- if gt (.Values.votingLedgerScheduler.checkpoint.intervalIndices | int) 0 }}
+            - name: CHECKPOINT_INTERVAL
+              value: {{ .Values.votingLedgerScheduler.checkpoint.intervalIndices | quote }}
+            - name: CHECKPOINT_S3_URI
+              value: {{ printf "s3://%s/%s" .Values.s3.sqliteBucket .Values.network | quote }}
+            {{- end }}
             {{- with .Values.votingLedgerScheduler.extraEnvVars }}
             {{- toYaml . | nindent 12 }}
             {{- end }}

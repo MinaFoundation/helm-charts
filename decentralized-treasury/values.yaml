@@ -590,6 +590,16 @@ votingLedgerScheduler:
     # never pruned regardless, which is what stops the scheduler from
     # reprocessing historical lifecycles after a restart.
     keepLastN: 0
+  checkpoint:
+    # -- Indices of trace-digest progress between S3 checkpoints. 0 (the
+    # default) disables checkpointing entirely: an interrupted trace-digest
+    # restarts from index 0, as before. A positive value bounds how much work
+    # a preemption can cost - e.g. 500 indices at a lifecycle's measured rate
+    # is on the order of tens of minutes, not the full multi-hour run - which
+    # is what makes running this workload on spot capacity viable. Checkpoints
+    # live under a `.checkpoints/` sub-prefix of the sqlite bucket and are
+    # deleted once a lifecycle's `.done` marker is written.
+    intervalIndices: 0
   # -- How often to look for a new lifecycle to build, in seconds
   pollIntervalSeconds: 30
   # -- Annotations to add to the deployment
