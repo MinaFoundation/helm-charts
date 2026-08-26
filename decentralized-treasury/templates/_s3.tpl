@@ -68,7 +68,16 @@ empty cache, and oneshot=false as a sidecar to keep it fresh.
 Push container for the two producer workloads. Call with:
   (dict "root" $ "name" "s3-push" "source" "/data/sqlite"
         "target" "s3://bucket/network" "payloads" "*.sqlite"
-        "markers" "*.sqlite.done" "mounts" (list "sqlite-data"))
+        "markers" "*.sqlite.done" "mounts" (list "sqlite-data")
+        "intervalSeconds" 60)
+
+intervalSeconds is optional and falls back to sqlite.syncIntervalSeconds.
+Override it when a payload pattern can match a large, frequently-written
+file (e.g. an in-progress lifecycle's *.sqlite): `aws s3 sync` re-uploads the
+whole file on any size/mtime change, not just the delta, so the default
+60s interval - fine for small proof/marker files - would otherwise mean a
+near-continuous full re-upload of a multi-GB database while proving is
+active.
 */}}
 {{- define "decentralized-treasury.s3SyncPush" -}}
 - name: {{ .name }}
@@ -85,7 +94,7 @@ Push container for the two producer workloads. Call with:
     - name: PUSH_MARKER_INCLUDES
       value: {{ .markers | default "" | quote }}
     - name: SYNC_INTERVAL_SECONDS
-      value: {{ .root.Values.sqlite.syncIntervalSeconds | quote }}
+      value: {{ .intervalSeconds | default .root.Values.sqlite.syncIntervalSeconds | quote }}
     - name: AWS_REGION
       value: {{ .root.Values.s3.region | quote }}
     - name: HOME

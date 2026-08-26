@@ -132,9 +132,31 @@ spec:
         # Keeps newly finished lifecycles arriving without a pod restart.
         {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync" "oneshot" false "keepLastN" .Values.proving.scheduler.sqlite.keepLastN) | nindent 8 }}
         # Two publishers, because the two artifact kinds live in separate
-        # buckets. Only .proven markers go back to the sqlite bucket - the
-        # bodies there belong to voting-ledger-scheduler.
-        {{- include "decentralized-treasury.s3SyncPush" (dict "root" $ "name" "s3-push-markers" "source" .Values.sqlite.dataDirectory "target" (printf "s3://%s/%s" .Values.s3.sqliteBucket .Values.network) "markers" "*.sqlite.proven") | nindent 8 }}
+        # buckets.
+        #
+        # The sqlite bucket push also now includes the *.sqlite payload
+        # itself, not just the .proven marker: digest/merge proofs land only
+        # in this pod's local sqlite as they complete (proofStorage.setProof
+        # / setMergeProof), nothing else ever pushes that file, and a pod
+        # recreation's init container re-pulls whatever was last in S3 - so
+        # without this, every rollout silently discarded all progress since
+        # the last push, all the way back to voting-ledger-scheduler's
+        # original post-trace-digest snapshot. Confirmed happening in
+        # practice on devnet: a lifecycle's proof count reset from 2202 to 13
+        # across one otherwise-unrelated deploy.
+        #
+        # Still safe against voting-ledger-scheduler's own writes to the same
+        # file despite "bodies belong to voting-ledger-scheduler" below:
+        # proving-scheduler only ever opens a lifecycle's sqlite once it's
+        # already .done, by which point voting-ledger-scheduler has moved on
+        # to tracing a newer lifecycle's (different) file. No two writers
+        # touch the same object at once.
+        #
+        # intervalSeconds is deliberately much wider than the chart default
+        # (used below for the small proof-file push) - see s3SyncPush's own
+        # comment for why a multi-GB, constantly-changing file can't share
+        # that cadence.
+        {{- include "decentralized-treasury.s3SyncPush" (dict "root" $ "name" "s3-push-markers" "source" .Values.sqlite.dataDirectory "target" (printf "s3://%s/%s" .Values.s3.sqliteBucket .Values.network) "payloads" "*.sqlite" "markers" "*.sqlite.proven" "intervalSeconds" 300) | nindent 8 }}
         {{- include "decentralized-treasury.s3SyncPush" (dict "root" $ "name" "s3-push-proofs" "source" .Values.proving.scheduler.outputDirectory "target" (printf "s3://%s/%s" .Values.s3.proofsBucket .Values.network) "payloads" "*" "volumeName" "proofs") | nindent 8 }}
         {{- if .Values.proving.scheduler.server.enabled }}
         {{/*
