@@ -114,6 +114,47 @@ active.
 {{- end -}}
 
 {{/*
+Plain directory mirror, pull direction. Call with:
+  (dict "root" $ "name" "s3-sync-proofs-init" "source" "s3://bucket/network"
+        "target" "/data/proofs" "volumeName" "proofs" "oneshot" true)
+
+Counterpart to s3SyncPush for a directory where every object is already
+complete once listed (see s3-sync-pull-mirror.sh) - no marker files or
+retention window, unlike the sqlite cache's s3SyncPull.
+*/}}
+{{- define "decentralized-treasury.s3SyncPullMirror" -}}
+- name: {{ .name }}
+  image: "{{ .root.Values.s3.syncImage.repository }}:{{ .root.Values.s3.syncImage.tag }}"
+  imagePullPolicy: {{ .root.Values.s3.syncImage.pullPolicy }}
+  command: ["/bin/sh", "/scripts/s3-sync-pull-mirror.sh"]
+  env:
+    - name: SOURCE_PREFIX
+      value: {{ .source | quote }}
+    - name: TARGET_DIRECTORY
+      value: {{ .target | quote }}
+    - name: SYNC_ONESHOT
+      value: {{ .oneshot | quote }}
+    - name: SYNC_INTERVAL_SECONDS
+      value: {{ .intervalSeconds | default .root.Values.sqlite.syncIntervalSeconds | quote }}
+    - name: AWS_REGION
+      value: {{ .root.Values.s3.region | quote }}
+    - name: HOME
+      value: /tmp
+  {{- with .root.Values.s3.syncImage.securityContext }}
+  securityContext:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .root.Values.s3.syncImage.resources }}
+  resources:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  volumeMounts:
+    {{- include "decentralized-treasury.scriptsVolumeMount" .root | nindent 4 }}
+    - name: {{ .volumeName }}
+      mountPath: {{ .target }}
+{{- end -}}
+
+{{/*
 Staking ledger mirror for voting-ledger-scheduler. Call with:
   (dict "root" $ "name" "staking-ledgers-sync" "oneshot" false)
 

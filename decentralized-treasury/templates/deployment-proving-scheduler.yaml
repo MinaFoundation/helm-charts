@@ -49,6 +49,15 @@ spec:
         # oldest-first, so it needs bodies that a recent-window cache would
         # already have pruned.
         {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync-init" "oneshot" true "keepLastN" .Values.proving.scheduler.sqlite.keepLastN) | nindent 8 }}
+        # Rehydrates already-proven lifecycles' proof files. Without this, a
+        # pod recreated after successfully proving a lifecycle starts with an
+        # empty proofs volume: find_oldest_unproven (proving-scheduler-
+        # entrypoint.sh) skips any lifecycle whose .sqlite.proven marker is
+        # already present - just pulled above - so it never regenerates the
+        # JSON this pod already produced and pushed to S3 last time around.
+        # serve-artifacts would then 404 on every lifecycle proved before this
+        # incarnation, forever, despite S3 holding the durable copy.
+        {{- include "decentralized-treasury.s3SyncPullMirror" (dict "root" $ "name" "s3-sync-proofs-init" "source" (printf "s3://%s/%s" .Values.s3.proofsBucket .Values.network) "target" .Values.proving.scheduler.outputDirectory "volumeName" "proofs" "oneshot" true) | nindent 8 }}
       containers:
         - name: {{ $component }}
           image: {{ include "decentralized-treasury.componentImage" (dict "root" $ "image" .Values.proving.scheduler.image) }}
