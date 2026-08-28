@@ -129,6 +129,19 @@ sync_once() {
 
     remote_size=$(remote_body_size "$id")
 
+    # A .sqlite.done marker is supposed to guarantee a real body or an alias
+    # exists - s3-sync-push only publishes a marker once the body is whole,
+    # and the alias branch above already returned if this id has one. Both
+    # missing means the producer-side invariant broke (observed: stale/seed
+    # markers with neither a body nor an alias behind them). Log and skip
+    # this id rather than run the unconditional `aws s3 cp` below, which
+    # would 404 under `set -eu` and take down the whole sync - one broken id
+    # should not block every other id in the window from syncing.
+    if [ ! -f "$local_path" ] && [ -z "$remote_size" ]; then
+      log "lifecycle ${id} has a .sqlite.done marker but neither a body nor an alias exists in ${S3_PREFIX} - skipping"
+      continue
+    fi
+
     # Refetch only a body that is SMALLER than the remote one. A copy pulled
     # while it was still being written stays wrong forever otherwise: nothing
     # would ever refetch it, and the lifecycle fails on every cycle.
