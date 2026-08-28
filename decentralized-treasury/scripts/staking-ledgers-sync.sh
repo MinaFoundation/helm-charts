@@ -278,19 +278,27 @@ print(found[0])
   echo "$value"
 }
 
-# Only valid for the lifecycle whose proposal period is open right now: outside
-# it the daemon reports a different epoch's ledger.
+# Valid for any lifecycle whose proposal period falls in the CURRENT real Mina
+# epoch: the daemon's stakingEpochData.ledger.hash is fixed for the whole
+# epoch, so every lifecycle sharing it can use the same value, not only the
+# one lifecycle id that happens to be "current" right now.
+#
+# This distinction only matters under lifecycleFanout (lifecyclePeriodDuration
+# < slotsPerEpoch): several lifecycle ids then share one real epoch, and the
+# canonical id of a group (id % groupSize == 0) is usually NOT the literal
+# current_lifecycle_id() - e.g. deployed mid-epoch at lifecycle 2 with
+# groupSize 21, the canonical id for that group is 0, which is neither "in
+# progress" (its own proposal period already elapsed before deploy) nor ever
+# equal to current_lifecycle_id() again. Comparing epochs instead of literal
+# lifecycle ids resolves it anyway, since 0 and 2 both sit inside the same
+# real epoch as far as slotSinceGenesis is concerned. Outside lifecycleFanout
+# (groupSize 1, or lifecyclePeriodDuration == slotsPerEpoch) this reduces to
+# the original one-lifecycle-per-epoch check.
 hash_from_daemon() {
   lifecycle_id=$1
-  current=$(current_lifecycle_id)
-  [ "$lifecycle_id" -eq "$current" ] || return 1
-
-  span=$(( LIFECYCLE_PERIOD_DURATION * PERIODS_PER_LIFECYCLE ))
-  start_slot=$(( TREASURY_DEPLOYED_AT_SLOT + lifecycle_id * span ))
-  proposal_period_end=$(( start_slot + LIFECYCLE_PERIOD_DURATION ))
-  if [ "$CHAIN_SLOT_SINCE_GENESIS" -ge "$proposal_period_end" ]; then
-    return 1
-  fi
+  hint=$(epoch_hint_for_lifecycle "$lifecycle_id")
+  [ -n "$hint" ] || return 1
+  [ "$hint" -eq "$CHAIN_EPOCH" ] || return 1
 
   echo "$CHAIN_STAKING_LEDGER_HASH"
 }
