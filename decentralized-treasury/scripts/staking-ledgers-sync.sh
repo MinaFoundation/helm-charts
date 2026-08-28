@@ -578,6 +578,24 @@ wanted_lifecycles() {
     [ "$floor" -lt 0 ] && floor=0
   fi
 
+  # Under lifecycleFanout, the group tip itself belongs to is served by that
+  # group's canonical id (a multiple of groupSize), which can be arbitrarily
+  # older than tip - the keep-N window above has no idea a canonical outside
+  # it is still exactly what tip needs. Without this, a real multi-hour (or
+  # longer) build already in progress for that canonical silently falls out
+  # of the wanted set the moment tip races past keepLastN lifecycles ahead of
+  # it - which happens fast here, since tip advances every
+  # lifecyclePeriodDuration*4 slots while the canonical's own build time is
+  # tied to the real ledger's account count, not to lifecyclePeriodDuration.
+  # Observed on devnet: a lifecycle-0 build (canonical for tip up to 20)
+  # abandoned mid-trace-digest once tip reached 4 with keepLastN=3, even
+  # though a body and checkpoint for it already existed in S3. Extend the
+  # floor down (never up) to include it explicitly.
+  if [ "$LIFECYCLE_FANOUT_GROUP_SIZE" -gt 1 ]; then
+    canonical_of_tip=$(( tip - (tip % LIFECYCLE_FANOUT_GROUP_SIZE) ))
+    [ "$canonical_of_tip" -lt "$floor" ] && floor=$canonical_of_tip
+  fi
+
   id=$tip
   while [ "$id" -ge "$floor" ]; do
     if [ "$LIFECYCLE_FANOUT_GROUP_SIZE" -le 1 ] || [ $(( id % LIFECYCLE_FANOUT_GROUP_SIZE )) -eq 0 ]; then
