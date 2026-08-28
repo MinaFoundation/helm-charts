@@ -625,6 +625,34 @@ votingLedgerScheduler:
   # `tolerations`. Restate these whenever `nodeSelector` targets a tainted pool.
   tolerations: []
 
+# -- EXPERIMENTAL, off by default. Duplicates one real, fully-proven
+# lifecycle's sqlite+proofs across a group of synthetic sibling lifecycle ids
+# that share the same underlying staking ledger, so the expensive build+prove
+# step runs once per group instead of once per synthetic id. Intended for
+# accelerated lifecycle testing (e.g. many short lifecycles inside one real
+# Mina epoch), never for a production release.
+lifecycleFanout:
+  # -- Deploys the fan-out duplicator and restricts the voting-ledger-scheduler
+  # to canonical ids only. Leave false for every normal release.
+  enabled: false
+  # -- Number of consecutive lifecycle ids per group. Only the first id in
+  # each group (id % groupSize == 0) is ever really built/proven; the rest are
+  # S3-copied from it once it is complete. 1 (the default) means every id is
+  # its own group, i.e. no grouping at all. Must be chosen so group boundaries
+  # land on real Mina epoch boundaries (requires config.treasuryDeployedAtSlot
+  # to be epoch-aligned, e.g. 0) - otherwise a group can straddle two
+  # different real staking-ledger hashes.
+  groupSize: 1
+  # -- How often the duplicator checks for a newly-proven canonical id, in
+  # seconds.
+  pollIntervalSeconds: 60
+  # -- Annotations to add to the deployment
+  deploymentAnnotations: {}
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+  # -- The Resources
+  resources: {}
+
 # -- Proof generation, matching the compose `proving` profile. Off by default.
 proving:
   # -- Whether to deploy any proving workload

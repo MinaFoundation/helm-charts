@@ -1,0 +1,137 @@
+---
+# EXPERIMENTAL / SPIKE BRANCH ONLY. Never merge to main.
+#
+# Fits 21 full treasury lifecycles inside the wall-clock span of one real
+# devnet epoch instead of one lifecycle every ~29.75 days:
+#
+#   config.lifecyclePeriodDuration: 85   (real devnet epoch is 7140 slots)
+#   votingLedgerScheduler.periodsPerLifecycle: 4   (unchanged - a lifecycle is
+#     still proposal/exploration/voting/cooldown, just 85 slots each)
+#   => one lifecycle spans 85*4 = 340 slots, and 7140 / 340 = 21 lifecycles
+#      per real epoch, all sharing the real chain's one staking ledger hash
+#      for that epoch (assert_alignment's mismatch branch WARNS about this on
+#      purpose - see votingLedgerScheduler.stakingLedgers.strictAlignment
+#      below, and never flip that to true here).
+#
+# Only the FIRST lifecycle id in each group of 21 ("canonical") is ever
+# really built and proven - lifecycleFanout below duplicates its sqlite+proofs
+# onto the other 20 so the expensive build+prove step runs once per real
+# epoch, not 21 times over the same underlying staking ledger.
+#
+# COLLISION CAVEAT: network is left at "devnet", the same S3 key prefix the
+# real devnet release uses. This release's lifecycle ids advance ~84x faster
+# than the real release's, so they will repeatedly land on ids the real
+# release also uses, and whichever side writes last silently overwrites the
+# other's sqlite/proof objects. This is a deliberate choice (avoids needing a
+# distinct network for this spike) - the operator is responsible for manually
+# renaming/moving objects in the shared devnet S3 prefixes to avoid clobbering
+# the real devnet release. Coordinate a time window before running this.
+#
+#   helmfile -f decentralized-treasury/examples/helmfile-lifecycle-speedrun.yaml template
+#   helmfile -f decentralized-treasury/examples/helmfile-lifecycle-speedrun.yaml apply
+
+environments:
+  default:
+    values:
+      - network: devnet
+        domain: devnet.minaprotocol.tools
+        namespace: decentralized-treasury-lifecycle-test
+
+---
+releases:
+  - name: decentralized-treasury-lifecycle-test
+    namespace: "{{ .Values.namespace }}"
+    chart: ../
+    values:
+      - network: "{{ .Values.network }}"
+
+      - image:
+          tag: latest
+          pullPolicy: Always
+
+      # Same IRSA role as the real devnet release: it already grants
+      # read/write on <bucket>/devnet/*, and this release stays on that same
+      # network/prefix by choice (see the collision caveat above).
+      - serviceAccount:
+          annotations:
+            eks.amazonaws.com/role-arn: arn:aws:iam::673156464838:role/decentralized-treasury
+
+      - config:
+          archiveNodeUrl: http://devops.hz.minaprotocol.network:8080
+          minaNodeUrl: http://devops.hz.minaprotocol.network:3001/graphql
+          # Placeholder - left pointing at the real devnet contract for now.
+          # A matching short-period (85-slot) contract instance has not been
+          # deployed yet, so on-chain proposal/voting deadlines will NOT line
+          # up with this release's lifecycle ids. This release only exercises
+          # the off-chain scheduler+prover+fanout pipeline cadence until that
+          # contract exists.
+          treasuryOwnerContractAddress: B62qpExe8CAaGkR4HRxyXvkziQpE6Aq3U71MJLHivP8pCsiDk1BbU9Z
+          lifecyclePeriodDuration: 85
+          treasuryDeployedAtSlot: 0
+          proofsEnabled: true
+          corsAllowedOrigins: []
+
+      - postgresql:
+          enabled: true
+          auth:
+            username: treasury
+            database: treasury_api
+            # Plain throwaway value: disposable bundled Postgres, not shared
+            # state, so no need to depend on the shared Secrets Manager entry.
+            password: lifecycle-speedrun-test
+          primary:
+            persistence:
+              size: 5Gi
+
+      # ~21x the lifecycle cadence of the devnet example - widen the windows
+      # so more in-flight lifecycles stay visible instead of aging out
+      # immediately.
+      - api:
+          sqlite:
+            keepLastN: 100
+
+      - votingLedgerScheduler:
+          stakingLedgersKeepLastN: 50
+          stakingLedgers:
+            source: gcs
+            bucket: mina-staking-ledgers-devnet
+            prefix: "staking-"
+            # REQUIRED: 85 != devnet's real slotsPerEpoch (7140), so
+            # assert_alignment's mismatch branch always fires
+            # (staking-ledgers-sync.sh:171-177 and onward). Left false
+            # deliberately so it WARNS instead of dying - that mismatch is the
+            # whole point of this experiment, not a misconfiguration. Never
+            # set this true here.
+            strictAlignment: false
+          # Tightened from the 300s default purely for faster feedback while
+          # watching this run live - even the default already fits inside an
+          # 85-slot (~7650s at devnet's 90s slot time) period with room to
+          # spare.
+          stakingLedgersSyncIntervalSeconds: 60
+          pollIntervalSeconds: 10
+
+      # EXPERIMENTAL. groupSize=21 matches 7140/85/4 above - keep the two in
+      # sync by hand; Helm can't read the live chain's slotsPerEpoch at
+      # template time to derive this automatically. See lifecycleFanout in
+      # values.yaml for what this does and why it's needed.
+      - lifecycleFanout:
+          enabled: true
+          groupSize: 21
+          pollIntervalSeconds: 60
+
+      - proving:
+          enabled: true
+          scheduler:
+            pollIntervalSeconds: 10
+          worker:
+            replicaCount: 2
+
+      - web:
+          publicBaseUrl: "http://localhost:3000"
+          publicEnv:
+            NEXT_PUBLIC_NETWORK_ID: DEVNET
+            NEXT_PUBLIC_SLOT_DURATION_MS: "90000"
+
+      # No ingress: ingress.enabled defaults to false. Inspect via
+      # `kubectl port-forward` instead of provisioning ALB/DNS/ACM for a
+      # throwaway release.

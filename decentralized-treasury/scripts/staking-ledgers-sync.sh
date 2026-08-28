@@ -48,6 +48,12 @@ STAKING_LEDGERS_PREFIX="${STAKING_LEDGERS_PREFIX:-}"
 LIFECYCLE_PERIOD_DURATION="${LIFECYCLE_PERIOD_DURATION:?Set LIFECYCLE_PERIOD_DURATION}"
 TREASURY_DEPLOYED_AT_SLOT="${TREASURY_DEPLOYED_AT_SLOT:-0}"
 PERIODS_PER_LIFECYCLE="${PERIODS_PER_LIFECYCLE:-4}"
+# EXPERIMENTAL. 1 (default) processes every id, i.e. current behavior. >1
+# restricts the sliding window to ids where `id % N == 0` ("canonical" ids),
+# so a lifecycleFanout duplicator can mirror each canonical id's sqlite/proofs
+# across the rest of its group instead of this sync building every id for
+# real. Never set outside an explicit accelerated-testing release.
+LIFECYCLE_FANOUT_GROUP_SIZE="${LIFECYCLE_FANOUT_GROUP_SIZE:-1}"
 
 NETWORK="${NETWORK:?Set NETWORK}"
 SQLITE_S3_PREFIX="s3://${SQLITE_S3_BUCKET:?Set SQLITE_S3_BUCKET}/${NETWORK}"
@@ -566,7 +572,9 @@ wanted_lifecycles() {
 
   id=$tip
   while [ "$id" -ge "$floor" ]; do
-    echo "$produced" | grep -qx "$id" || echo "$id"
+    if [ "$LIFECYCLE_FANOUT_GROUP_SIZE" -le 1 ] || [ $(( id % LIFECYCLE_FANOUT_GROUP_SIZE )) -eq 0 ]; then
+      echo "$produced" | grep -qx "$id" || echo "$id"
+    fi
     id=$(( id - 1 ))
   done
 }
@@ -701,6 +709,9 @@ main() {
 
   log "source=${STAKING_LEDGERS_SOURCE} bucket=${STAKING_LEDGERS_BUCKET} prefix='${STAKING_LEDGERS_PREFIX}' dir=${STAKING_LEDGERS_DIRECTORY}"
   log "network=${NETWORK} lifecyclePeriodDuration=${LIFECYCLE_PERIOD_DURATION} periodsPerLifecycle=${PERIODS_PER_LIFECYCLE} treasuryDeployedAtSlot=${TREASURY_DEPLOYED_AT_SLOT}"
+  if [ "$LIFECYCLE_FANOUT_GROUP_SIZE" -gt 1 ]; then
+    log_warn "lifecycleFanoutGroupSize=${LIFECYCLE_FANOUT_GROUP_SIZE}: only building ids where id % ${LIFECYCLE_FANOUT_GROUP_SIZE} == 0 for real - EXPERIMENTAL, never expected outside an accelerated-testing release"
+  fi
   if [ -n "$LIFECYCLE_IDS" ]; then
     log "lifecycleIds=[${LIFECYCLE_IDS}] (explicit list overrides the keep-last-N window)"
   else

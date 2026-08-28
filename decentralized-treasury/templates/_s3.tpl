@@ -203,6 +203,12 @@ produced-lifecycle check is always AWS, so this container needs IRSA either way.
       value: {{ .root.Values.config.treasuryDeployedAtSlot | quote }}
     - name: PERIODS_PER_LIFECYCLE
       value: {{ .root.Values.votingLedgerScheduler.periodsPerLifecycle | quote }}
+    {{/*
+    EXPERIMENTAL, defaults to 1 (no grouping, current behavior unchanged).
+    See lifecycleFanout in values.yaml.
+    */}}
+    - name: LIFECYCLE_FANOUT_GROUP_SIZE
+      value: {{ .root.Values.lifecycleFanout.groupSize | quote }}
     - name: NETWORK
       value: {{ required "network is required" .root.Values.network | quote }}
     - name: AWS_REGION
