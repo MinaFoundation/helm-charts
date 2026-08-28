@@ -162,9 +162,30 @@ main() {
   log "source=${S3_PREFIX} dir=${SQLITE_DATA_DIRECTORY} keepLastN=${SQLITE_KEEP_LAST_N}"
 
   if [ "$SYNC_ONESHOT" = "true" ]; then
-    sync_once
-    log "initial sync complete"
-    return 0
+    # Retried in-process rather than left to Kubernetes' container-level
+    # restart backoff (10s/20s/40s/.../300s): the observed failures here are
+    # transient (e.g. a freshly scheduled node's IRSA token or DNS not fully
+    # settled yet), not configuration errors, and clear within a handful of
+    # seconds - it should not cost the pod an Init:Error/CrashLoopBackOff
+    # cycle, or the minutes of growing backoff that follow, to ride one out.
+    # `sync_once` runs in a subshell so `set -eu` only ends that attempt, not
+    # this script, whatever fails inside it.
+    attempt=1
+    max_attempts="${SYNC_ONESHOT_MAX_ATTEMPTS:-6}"
+    retry_delay_seconds="${SYNC_ONESHOT_RETRY_DELAY_SECONDS:-5}"
+    while true; do
+      if ( sync_once ); then
+        log "initial sync complete"
+        return 0
+      fi
+      if [ "$attempt" -ge "$max_attempts" ]; then
+        log "initial sync failed after ${attempt} attempts, giving up" >&2
+        return 1
+      fi
+      log "initial sync attempt ${attempt}/${max_attempts} failed, retrying in ${retry_delay_seconds}s" >&2
+      attempt=$(( attempt + 1 ))
+      sleep "$retry_delay_seconds"
+    done
   fi
 
   while true; do
