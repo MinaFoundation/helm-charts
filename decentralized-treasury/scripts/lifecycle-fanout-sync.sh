@@ -1,7 +1,7 @@
 #!/bin/sh
-# EXPERIMENTAL. Duplicates one real, fully-proven lifecycle's sqlite+proofs
-# across the rest of its group, so the real build+prove pipeline only ever
-# does the work once per group instead of once per synthetic sibling id. See
+# EXPERIMENTAL. Fans out one real, fully-proven lifecycle's proofs across the
+# rest of its group, so the real build+prove pipeline only ever does the work
+# once per group instead of once per synthetic sibling id. See
 # lifecycleFanout in values.yaml - this container is only deployed when
 # lifecycleFanout.enabled is true, which is never the case for a normal
 # release.
@@ -12,17 +12,26 @@
 # ever builds a real lifecycle for the canonical id of each group - this
 # script is what makes the other ids in the group exist at all.
 #
-# ORDERING MATTERS. A sibling's .sqlite body and both proof JSONs are copied
+# A sibling never gets its own <id>.sqlite body in S3 - only a small
+# <id>.sqlite.alias object naming its canonical. s3-sync-pull.sh, run by every
+# consumer of the sqlite cache, resolves that alias into a local symlink at
+# <id>.sqlite pointing at the canonical's own locally-cached body, so N
+# siblings cost one body on disk, not N (a real per-sibling S3 body would cost
+# N copies in the bucket and, since every consumer pod keeps its own local
+# copy - see the "sidecar gives every pod a real local file" design note - N
+# copies again on every single pod that reads it).
+#
+# ORDERING MATTERS. A sibling's proof JSONs and .sqlite.alias are written
 # first, then its .sqlite.proven marker, then its .sqlite.done marker LAST.
 # That guarantees a sibling is never visible as "done" - what
 # produced_lifecycle_ids() in staking-ledgers-sync.sh, and proving-scheduler's
-# own backlog walk, key on - while still unproven, which would otherwise
-# tempt proving-scheduler into attempting real proving on it: exactly the
-# redundant compute this script exists to avoid. This deliberately reverses
-# the ordering the real producers use (there, .done legitimately precedes
-# .proven because two different workloads write them at different times;
-# here one writer produces both, so it can and must sequence them the other
-# way around).
+# own backlog walk, key on - while still unproven or unaliased, which would
+# otherwise tempt proving-scheduler into attempting real proving on it:
+# exactly the redundant compute this script exists to avoid. This
+# deliberately reverses the ordering the real producers use (there, .done
+# legitimately precedes .proven because two different workloads write them at
+# different times; here one writer produces everything, so it can and must
+# sequence it the other way around).
 set -eu
 
 LIFECYCLE_FANOUT_GROUP_SIZE="${LIFECYCLE_FANOUT_GROUP_SIZE:?Set LIFECYCLE_FANOUT_GROUP_SIZE}"
@@ -55,19 +64,20 @@ proofs_published() {
     && aws s3 ls "${PROOFS_S3_PREFIX}/${id}-merge.json" >/dev/null 2>&1
 }
 
-# Server-side copies (no download/reupload) of canonical id $1's artifacts
-# onto sibling id $2.
+# Fans out canonical id $1 onto sibling id $2: real (server-side, no
+# download/reupload) copies for the small proof JSONs, but only a pointer
+# object for the (potentially large) sqlite body - see the file header.
 duplicate_lifecycle() {
   canonical=$1
   sibling=$2
 
-  aws s3 cp "${SQLITE_S3_PREFIX}/${canonical}.sqlite" "${SQLITE_S3_PREFIX}/${sibling}.sqlite" --only-show-errors
   aws s3 cp "${PROOFS_S3_PREFIX}/${canonical}-exhausted.json" "${PROOFS_S3_PREFIX}/${sibling}-exhausted.json" --only-show-errors
   aws s3 cp "${PROOFS_S3_PREFIX}/${canonical}-merge.json" "${PROOFS_S3_PREFIX}/${sibling}-merge.json" --only-show-errors
+  printf '%s' "$canonical" | aws s3 cp - "${SQLITE_S3_PREFIX}/${sibling}.sqlite.alias" --only-show-errors
   aws s3 cp "${SQLITE_S3_PREFIX}/${canonical}.sqlite.proven" "${SQLITE_S3_PREFIX}/${sibling}.sqlite.proven" --only-show-errors
   aws s3 cp "${SQLITE_S3_PREFIX}/${canonical}.sqlite.done" "${SQLITE_S3_PREFIX}/${sibling}.sqlite.done" --only-show-errors
 
-  log "duplicated lifecycle ${canonical} onto ${sibling}"
+  log "aliased lifecycle ${sibling} onto ${canonical}"
 }
 
 sync_once() {

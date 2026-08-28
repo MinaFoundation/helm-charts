@@ -32,7 +32,12 @@ push_phase() {
 
   [ -n "$includes" ] || return 0
 
-  set -- "$SOURCE_DIRECTORY/" "$S3_TARGET_PREFIX/" --exclude '*' --only-show-errors
+  # --no-follow-symlinks: an aliased lifecycle (see lifecycleFanout in
+  # values.yaml) is a local symlink to another id's real body. Following it
+  # here would re-upload that body under the alias's own key, silently
+  # undoing the point of aliasing. Excluding symlinks is a no-op for every
+  # normal (non-experimental) release, which never creates one.
+  set -- "$SOURCE_DIRECTORY/" "$S3_TARGET_PREFIX/" --exclude '*' --no-follow-symlinks --only-show-errors
   for pattern in $includes; do
     set -- "$@" --include "$pattern"
   done

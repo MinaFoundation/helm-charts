@@ -625,20 +625,23 @@ votingLedgerScheduler:
   # `tolerations`. Restate these whenever `nodeSelector` targets a tainted pool.
   tolerations: []
 
-# -- EXPERIMENTAL, off by default. Duplicates one real, fully-proven
-# lifecycle's sqlite+proofs across a group of synthetic sibling lifecycle ids
-# that share the same underlying staking ledger, so the expensive build+prove
-# step runs once per group instead of once per synthetic id. Intended for
-# accelerated lifecycle testing (e.g. many short lifecycles inside one real
-# Mina epoch), never for a production release.
+# -- EXPERIMENTAL, off by default. Fans out one real, fully-proven lifecycle's
+# proofs across a group of synthetic sibling lifecycle ids that share the same
+# underlying staking ledger, so the expensive build+prove step runs once per
+# group instead of once per synthetic id. A sibling's (potentially large)
+# sqlite body is never duplicated - only a small pointer object naming its
+# canonical, which every consumer's s3-sync-pull sidecar resolves into a local
+# symlink at fetch time, so N siblings cost one body on disk, not N. Intended
+# for accelerated lifecycle testing (e.g. many short lifecycles inside one
+# real Mina epoch), never for a production release.
 lifecycleFanout:
-  # -- Deploys the fan-out duplicator and restricts the voting-ledger-scheduler
+  # -- Deploys the fan-out sidecar and restricts the voting-ledger-scheduler
   # to canonical ids only. Leave false for every normal release.
   enabled: false
   # -- Number of consecutive lifecycle ids per group. Only the first id in
   # each group (id % groupSize == 0) is ever really built/proven; the rest are
-  # S3-copied from it once it is complete. 1 (the default) means every id is
-  # its own group, i.e. no grouping at all. Must be chosen so group boundaries
+  # aliased to it once it is complete. 1 (the default) means every id is its
+  # own group, i.e. no grouping at all. Must be chosen so group boundaries
   # land on real Mina epoch boundaries (requires config.treasuryDeployedAtSlot
   # to be epoch-aligned, e.g. 0) - otherwise a group can straddle two
   # different real staking-ledger hashes.

@@ -11,6 +11,12 @@
 #   * Only .sqlite bodies are subject to SQLITE_KEEP_LAST_N, which retains the
 #     N highest lifecycle ids. Set it to 0 to keep every body.
 #
+# EXPERIMENTAL. An id may carry a small <id>.sqlite.alias object instead of a
+# real <id>.sqlite body - see lifecycleFanout in values.yaml. Such an id never
+# gets its own body downloaded: instead this fetches (if needed) the aliased
+# id's real body and points a local symlink at it, so N aliased ids on disk
+# cost one body, not N. Never present outside an accelerated-testing release.
+#
 # Runs one pass and exits when SYNC_ONESHOT=true (init container), otherwise
 # loops forever (sidecar).
 
@@ -46,6 +52,11 @@ remote_body_size() {
   aws s3 ls "${S3_PREFIX}/$1.sqlite" 2>/dev/null | awk '{ print $3 }' | tail -n1
 }
 
+# The id $1's body is aliased to, or empty if $1 has a real body of its own.
+alias_target() {
+  aws s3 cp "${S3_PREFIX}/$1.sqlite.alias" - 2>/dev/null
+}
+
 retained_lifecycle_ids() {
   if [ "$SQLITE_KEEP_LAST_N" -gt 0 ]; then
     remote_lifecycle_ids | tail -n "$SQLITE_KEEP_LAST_N"
@@ -57,17 +68,24 @@ retained_lifecycle_ids() {
 # Drops local bodies outside the retention window. Markers are left untouched.
 # Removing a file the API already has open is safe: the open handle keeps
 # working, and only a fresh lookup for that lifecycle will report it missing.
+#
+# $2 (referenced) is the set of canonical ids an in-window aliased id still
+# points at, even where that canonical id's own number falls outside the
+# window - otherwise a canonical kept alive only by an alias would be fetched
+# to satisfy the alias and then immediately pruned again on every single
+# cycle, forever.
 prune_bodies() {
   retained=$1
+  referenced=$2
   [ "$SQLITE_KEEP_LAST_N" -gt 0 ] || return 0
 
   for path in "$SQLITE_DATA_DIRECTORY"/*.sqlite; do
     [ -e "$path" ] || continue
     id=$(basename "$path" .sqlite)
-    if ! echo "$retained" | grep -qx "$id"; then
-      log "pruning lifecycle ${id} (outside keep-last-${SQLITE_KEEP_LAST_N})"
-      rm -f "$path" "$path-journal" "$path-wal" "$path-shm"
-    fi
+    echo "$retained" | grep -qx "$id" && continue
+    echo "$referenced" | grep -qx "$id" && continue
+    log "pruning lifecycle ${id} (outside keep-last-${SQLITE_KEEP_LAST_N})"
+    rm -f "$path" "$path-journal" "$path-wal" "$path-shm"
   done
 }
 
@@ -82,9 +100,33 @@ sync_once() {
     --only-show-errors
 
   retained=$(retained_lifecycle_ids)
+  referenced=""
 
   for id in $retained; do
     local_path="${SQLITE_DATA_DIRECTORY}/${id}.sqlite"
+
+    alias=$(alias_target "$id")
+    if [ -n "$alias" ]; then
+      referenced="${referenced}${alias}
+"
+      canonical_path="${SQLITE_DATA_DIRECTORY}/${alias}.sqlite"
+      if [ ! -e "$canonical_path" ]; then
+        canonical_size=$(remote_body_size "$alias")
+        if [ -z "$canonical_size" ]; then
+          log "lifecycle ${id} aliases ${alias}, whose body is not in S3 yet - retrying next cycle"
+          continue
+        fi
+        log "fetching lifecycle ${alias} (canonical for aliased lifecycle ${id})"
+        aws s3 cp "${S3_PREFIX}/${alias}.sqlite" "$canonical_path" --only-show-errors
+      fi
+      if [ "$(readlink "$local_path" 2>/dev/null || true)" != "${alias}.sqlite" ]; then
+        rm -f "$local_path"
+        ln -s "${alias}.sqlite" "$local_path"
+        log "linked lifecycle ${id} -> ${alias}"
+      fi
+      continue
+    fi
+
     remote_size=$(remote_body_size "$id")
 
     # Refetch only a body that is SMALLER than the remote one. A copy pulled
@@ -113,7 +155,7 @@ sync_once() {
     aws s3 cp "${S3_PREFIX}/${id}.sqlite" "$local_path" --only-show-errors
   done
 
-  prune_bodies "$retained"
+  prune_bodies "$retained" "$referenced"
 }
 
 main() {
