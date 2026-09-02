@@ -681,6 +681,16 @@ proving:
           - ALL
     # -- The Resources
     resources: {}
+    # -- Persist the BullMQ proving queue across pod restarts/evictions with a
+    # PVC and AOF, instead of the default in-memory-only redis (which matches
+    # local docker-compose but loses all in-flight digest/merge progress on
+    # eviction - there is no other checkpoint for that work).
+    persistence:
+      # -- Mount a PVC at /data and enable AOF (appendfsync everysec) so the
+      # queue survives a pod restart instead of coming back empty.
+      enabled: false
+      storageClass: ""
+      size: 1Gi
   worker:
     # -- Whether to deploy proving workers
     enabled: true

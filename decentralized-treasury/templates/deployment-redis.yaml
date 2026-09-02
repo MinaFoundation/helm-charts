@@ -9,9 +9,14 @@ metadata:
     {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
 spec:
   replicas: 1
-  # The BullMQ queue lives entirely in memory here, matching compose, which
-  # gives redis no volume. A restart drops queued proving jobs; the scheduler
-  # re-queues them on its next pass because the .proven marker is still absent.
+  # By default the BullMQ queue lives entirely in memory here, matching
+  # compose, which gives redis no volume: a restart drops queued proving jobs
+  # and the scheduler re-queues them on its next pass because the .proven
+  # marker is still absent. That is fine for the digest phase, which persists
+  # per-index proofs and skips them on resume, but the merge phase has no
+  # equivalent checkpoint - an eviction mid-merge loses everything it did,
+  # which can be many hours of proving compute. persistence.enabled trades
+  # that away for a PVC + AOF so the queue itself survives a restart instead.
   strategy:
     type: Recreate
   selector:
@@ -30,6 +35,18 @@ spec:
         - name: {{ $component }}
           image: "{{ .Values.proving.redis.image.repository }}:{{ .Values.proving.redis.image.tag }}"
           imagePullPolicy: {{ .Values.proving.redis.image.pullPolicy }}
+          {{- if .Values.proving.redis.persistence.enabled }}
+          # AOF (fsync every second) rather than relying on the default RDB
+          # save schedule alone: RDB only snapshots periodically, so a crash
+          # between snapshots would still lose recent queue mutations even
+          # with the PVC below.
+          args:
+            - redis-server
+            - --appendonly
+            - "yes"
+            - --dir
+            - /data
+          {{- end }}
           ports:
             - name: redis
               containerPort: 6379
@@ -52,6 +69,17 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- if .Values.proving.redis.persistence.enabled }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          {{- end }}
+      {{- if .Values.proving.redis.persistence.enabled }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "decentralized-treasury.componentName" $ctx }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -60,6 +88,24 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+{{- if .Values.proving.redis.persistence.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "decentralized-treasury.componentName" $ctx }}
+  labels:
+    {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- with .Values.proving.redis.persistence.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.proving.redis.persistence.size }}
+{{- end }}
 ---
 apiVersion: v1
 kind: Service
