@@ -650,6 +650,16 @@ proving:
           - ALL
     # -- The Resources
     resources: {}
+    # -- Persist the BullMQ proving queue across pod restarts/evictions with a
+    # PVC and AOF, instead of the default in-memory-only redis (which matches
+    # local docker-compose but loses all in-flight digest/merge progress on
+    # eviction - there is no other checkpoint for that work).
+    persistence:
+      # -- Mount a PVC at /data and enable AOF (appendfsync everysec) so the
+      # queue survives a pod restart instead of coming back empty.
+      enabled: false
+      storageClass: ""
+      size: 1Gi
   worker:
     # -- Whether to deploy proving workers
     enabled: true
@@ -743,6 +753,30 @@ proving:
       # -- Keep all bodies: this scheduler works oldest-first, so a recent-window
       # cache would prune exactly the lifecycles it still has to prove.
       keepLastN: 0
+    ## Durable home for the lifecycle SQLite cache this pod proves into.
+    ##
+    ## The default emptyDir re-hydrates from S3 on start, which is fine for the
+    ## readers but not for this workload: merge proofs are written back into
+    ## the lifecycle database, and S3 only receives them on the next push. A
+    ## node rotation or eviction mid-merge therefore rolls the pod back to the
+    ## last completed upload of a multi-GB file, discarding every merge since -
+    ## hours of proving compute, and the same reason proving.redis.persistence
+    ## exists for the queue. Observed on devnet 2026-09-03: an EKS node
+    ## rotation lost ~2,000 completed merges this way.
+    ##
+    ## It also keeps that database off the node's ephemeral storage, where it
+    ## counts against the kubelet's eviction threshold and, with no
+    ## ephemeral-storage request declared, makes this pod a first-tier
+    ## eviction candidate on a node it is itself filling.
+    persistence:
+      # -- Mount a PVC at sqlite.dataDirectory instead of an emptyDir, so merge
+      # progress survives a pod restart, eviction or node rotation.
+      enabled: false
+      storageClass: ""
+      # -- Must hold every lifecycle body the scheduler still has to prove
+      # (keepLastN: 0 keeps them all) plus the merge proofs written back into
+      # them. Devnet bodies run ~8GB each, one per epoch.
+      size: 100Gi
     # -- Where generated proofs are written before being published
     outputDirectory: /data/proofs
     # -- Size limit for the proofs emptyDir

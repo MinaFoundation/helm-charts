@@ -211,7 +211,20 @@ spec:
         {{- end }}
       volumes:
         {{- include "decentralized-treasury.scriptsVolume" . | nindent 8 }}
+        {{- if .Values.proving.scheduler.persistence.enabled }}
+        # A claim of this workload's own rather than sqlite.existingClaim,
+        # which is chart-wide: api, processor and voting-ledger-scheduler share
+        # that helper and are scheduled independently, so a single RWO claim
+        # across all four cannot attach, and RWX would put a multi-GB SQLite
+        # database with heavy small writes on NFS. Only this pod needs the
+        # durability - it is replicaCount 1 with a Recreate strategy, which is
+        # exactly what ReadWriteOnce wants.
+        - name: sqlite-data
+          persistentVolumeClaim:
+            claimName: {{ include "decentralized-treasury.componentName" $ctx }}-sqlite
+        {{- else }}
         {{- include "decentralized-treasury.sqliteVolume" . | nindent 8 }}
+        {{- end }}
         {{- if .Values.proving.scheduler.server.enabled }}
         - name: artifacts-nginx-config
           configMap:
@@ -235,4 +248,22 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+{{- if .Values.proving.scheduler.persistence.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "decentralized-treasury.componentName" $ctx }}-sqlite
+  labels:
+    {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- with .Values.proving.scheduler.persistence.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.proving.scheduler.persistence.size }}
+{{- end }}
 {{- end }}
