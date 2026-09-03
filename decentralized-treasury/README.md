@@ -1,6 +1,6 @@
 # decentralized-treasury
 
-![Version: 0.2.4](https://img.shields.io/badge/Version-0.2.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
+![Version: 0.2.5](https://img.shields.io/badge/Version-0.2.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
 
 A Helm chart for deploying the Mina Decentralized Treasury stack (API, indexer, processor, schedulers, web and proving services)
 
@@ -204,11 +204,13 @@ helmfile status
 | processorApi.service.annotations | object | `{}` | Annotations to add to the service |
 | processorApi.service.port | int | `4002` | The service port |
 | processorApi.service.type | string | `"ClusterIP"` | The service type |
-| proving | object | `{"enabled":false,"queueName":"staking-ledger-to-voting-ledger","redis":{"enabled":true,"externalHost":"","image":{"pullPolicy":"IfNotPresent","repository":"redis","tag":"7-alpine"},"port":6379,"resources":{},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}},"scheduler":{"deploymentAnnotations":{},"enabled":true,"extraEnvVars":[],"image":{"pullPolicy":"","repository":"minafoundation/dt-proving-scheduler","tag":""},"outputDirectory":"/data/proofs","outputSizeLimit":"","podAnnotations":{},"pollIntervalSeconds":30,"replicaCount":1,"resources":{},"server":{"enabled":true,"image":{"pullPolicy":"IfNotPresent","repository":"nginxinc/nginx-unprivileged","tag":"1.27-alpine"},"port":8080,"resources":{},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"runAsNonRoot":true,"runAsUser":101}},"sqlite":{"keepLastN":0}},"worker":{"affinity":{},"autoscale":{"enabled":false,"maxReplicas":3,"minReplicas":0,"pollIntervalSeconds":15,"resources":{},"scaleDownAfterSeconds":180},"cacheSizeLimit":"","deploymentAnnotations":{},"enabled":true,"extraEnvVars":[],"image":{"pullPolicy":"","repository":"minafoundation/dt-proving-worker","tag":""},"nodeSelector":{},"podAnnotations":{},"proofsEnabled":true,"replicaCount":3,"resources":{},"tolerations":[]}}` | Proof generation, matching the compose `proving` profile. Off by default. |
+| proving | object | `{"enabled":false,"queueName":"staking-ledger-to-voting-ledger","redis":{"enabled":true,"externalHost":"","image":{"pullPolicy":"IfNotPresent","repository":"redis","tag":"7-alpine"},"persistence":{"enabled":false,"size":"1Gi","storageClass":""},"port":6379,"resources":{},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}},"scheduler":{"deploymentAnnotations":{},"enabled":true,"extraEnvVars":[],"image":{"pullPolicy":"","repository":"minafoundation/dt-proving-scheduler","tag":""},"outputDirectory":"/data/proofs","outputSizeLimit":"","persistence":{"enabled":false,"size":"100Gi","storageClass":""},"podAnnotations":{},"pollIntervalSeconds":30,"replicaCount":1,"resources":{},"server":{"enabled":true,"image":{"pullPolicy":"IfNotPresent","repository":"nginxinc/nginx-unprivileged","tag":"1.27-alpine"},"port":8080,"resources":{},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"runAsNonRoot":true,"runAsUser":101}},"sqlite":{"keepLastN":0}},"worker":{"affinity":{},"autoscale":{"enabled":false,"maxReplicas":3,"minReplicas":0,"pollIntervalSeconds":15,"resources":{},"scaleDownAfterSeconds":180},"cacheSizeLimit":"","deploymentAnnotations":{},"enabled":true,"extraEnvVars":[],"image":{"pullPolicy":"","repository":"minafoundation/dt-proving-worker","tag":""},"nodeSelector":{},"podAnnotations":{},"proofsEnabled":true,"replicaCount":3,"resources":{},"tolerations":[]}}` | Proof generation, matching the compose `proving` profile. Off by default. |
 | proving.enabled | bool | `false` | Whether to deploy any proving workload |
 | proving.queueName | string | `"staking-ledger-to-voting-ledger"` | BullMQ queue shared by the scheduler and the workers |
 | proving.redis.enabled | bool | `true` | Deploy redis as part of this chart |
 | proving.redis.externalHost | string | `""` | Use an existing redis instead. Set to a hostname to skip the bundled one. |
+| proving.redis.persistence | object | `{"enabled":false,"size":"1Gi","storageClass":""}` | Persist the BullMQ proving queue across pod restarts/evictions with a PVC and AOF, instead of the default in-memory-only redis (which matches local docker-compose but loses all in-flight digest/merge progress on eviction - there is no other checkpoint for that work). |
+| proving.redis.persistence.enabled | bool | `false` | Mount a PVC at /data and enable AOF (appendfsync everysec) so the queue survives a pod restart instead of coming back empty. |
 | proving.redis.port | int | `6379` | Redis port |
 | proving.redis.resources | object | `{}` | The Resources |
 | proving.redis.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}` | The Security Context |
@@ -220,6 +222,8 @@ helmfile status
 | proving.scheduler.image.tag | string | `""` | Overrides the chart-wide tag |
 | proving.scheduler.outputDirectory | string | `"/data/proofs"` | Where generated proofs are written before being published |
 | proving.scheduler.outputSizeLimit | string | `""` | Size limit for the proofs emptyDir |
+| proving.scheduler.persistence.enabled | bool | `false` | Mount a PVC at sqlite.dataDirectory instead of an emptyDir, so merge progress survives a pod restart, eviction or node rotation. |
+| proving.scheduler.persistence.size | string | `"100Gi"` | Must hold every lifecycle body the scheduler still has to prove (keepLastN: 0 keeps them all) plus the merge proofs written back into them. Devnet bodies run ~8GB each, one per epoch. |
 | proving.scheduler.podAnnotations | object | `{}` | Annotations to add to the pods |
 | proving.scheduler.pollIntervalSeconds | int | `30` | How often to look for a lifecycle to prove, in seconds |
 | proving.scheduler.replicaCount | int | `1` | Replica count. Must stay 1 — it walks the backlog oldest-first from local markers. The template refuses to render any other value. |
