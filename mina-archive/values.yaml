@@ -7,11 +7,11 @@ databaseName: archive
 
 image:
   # -- Docker image repository
-  repository: gcr.io/o1labs-192920/mina-archive
+  repository: minaprotocol/mina-archive
   # -- Image pull policy
   pullPolicy: IfNotPresent
   # -- Docker image tag
-  tag: 2.0.0berkeley-rc1-1551e2f-focal
+  tag: 4.0.0-6850301-bookworm-mainnet
 
 serviceAccount:
   # -- Service account annotations
