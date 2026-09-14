@@ -6,11 +6,11 @@ replicaCount: 1
 
 image:
   # -- The image repository
-  repository: gcr.io/o1labs-192920/mina-rosetta
+  repository: minaprotocol/mina-rosetta
   # -- The image pull policy
   pullPolicy: IfNotPresent
   # -- The image tag
-  tag: "2.0.0rampup8-81d994d-focal"
+  tag: "4.0.0-6850301-bookworm-mainnet"
 
 # -- The secrets used to pull the image
 imagePullSecrets: []
