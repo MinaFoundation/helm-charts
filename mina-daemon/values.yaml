@@ -2,7 +2,7 @@ deployment:
   # -- Testnet
   testnet: "berkeley"
   # -- Image to use for the deployment
-  image: minaprotocol/mina-daemon:1.3.2beta2-release-2.0.0-05c2f73-bulseye-berkeley
+  image: minaprotocol/mina-daemon:4.0.0-6850301-bookworm-mainnet
   # -- Genesis ledger URL
   genesisLedgerURL:
   # -- Peer list URL
