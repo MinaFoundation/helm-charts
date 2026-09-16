@@ -19,6 +19,16 @@ metadata:
     {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
 data:
   default.conf: |
+    # nginx sizes its server-name hash in buckets of one CPU cache line - 64
+    # bytes here - and refuses to start if a server_name plus its overhead does
+    # not fit: "could not build server_names_hash, you should increase
+    # server_names_hash_bucket_size". A hostname of about 50 characters is
+    # enough to hit it, which is unremarkable for a name like
+    # treasury-<network>-backoffice.example.org. Raised unconditionally because
+    # the cost is a few bytes and the failure mode is the whole proxy, and with
+    # it every route, refusing to boot.
+    server_names_hash_bucket_size 128;
+
     # Keep the client's scheme when something in front of us terminated TLS,
     # so the app does not build http:// URLs behind an HTTPS load balancer.
     map $http_x_forwarded_proto $forwarded_proto {
