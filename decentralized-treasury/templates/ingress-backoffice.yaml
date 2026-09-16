@@ -23,6 +23,15 @@ no per-hostname routing of its own.
 {{- if and .Values.backoffice.pathPrefix (ne .Values.ingress.mode "proxy") }}
 {{- $path = .Values.backoffice.pathPrefix | trimSuffix "/" }}
 {{- end }}
+{{/*
+In `proxy` mode a hostname is the proxy's too: ingress.yaml forwards it there
+and the proxy's own server block serves the console and applies auth_basic. A
+second Ingress claiming the same host would be a duplicate route with
+annotations nothing needs.
+*/}}
+{{- if include "decentralized-treasury.backofficeViaProxy" . }}
+{{- $host = "" }}
+{{- end }}
 {{- if or $host $path }}
 {{- $annotations := include "decentralized-treasury.backofficeIngressAnnotations" . | fromYaml }}
 apiVersion: networking.k8s.io/v1

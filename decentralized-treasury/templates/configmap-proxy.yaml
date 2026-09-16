@@ -94,4 +94,66 @@ data:
         }
         {{- end }}
     }
+    {{- if include "decentralized-treasury.backofficeViaProxy" . }}
+
+    # The break-glass console, on its own hostname.
+    #
+    # A dedicated server block rather than a path on the catch-all above: nginx
+    # selects the block by server_name, so the console is served from its own
+    # root and needs no Next.js basePath baked into its image. Routing it
+    # through the proxy is also what makes basic auth possible behind an ALB,
+    # which implements no authentication annotations of its own.
+    server {
+        listen {{ .Values.proxy.port }};
+        server_name {{ .Values.ingress.hosts.backoffice | quote }};
+
+        client_max_body_size {{ .Values.proxy.clientMaxBodySize }};
+
+        gzip on;
+        gzip_proxied any;
+        gzip_types application/json application/javascript text/css text/plain;
+
+        # Unauthenticated on purpose: this is what the load balancer probes, and
+        # a 401 here would pull the whole target group out of service.
+        location = /healthz {
+            access_log off;
+            add_header Content-Type text/plain;
+            return 200 "ok\n";
+        }
+        {{- with .Values.proxy.minaNodeUpstream }}
+
+        # The same daemon the main hostname fronts. Serving it here is the whole
+        # point of routing the console through the proxy: publicBaseUrl derives
+        # NEXT_PUBLIC_MINA_NODE_URL as <host>/mina/graphql, so the browser's
+        # node calls stay same-origin and the daemon needs no CORS. Pointed at a
+        # cross-origin node instead, every call fails its preflight.
+        #
+        # Deliberately outside auth_basic. This is the same public GraphQL proxy
+        # already served on the main hostname, so credentials here would add no
+        # protection while making the console send them with every node poll.
+        location = /mina {
+            return 308 /mina/;
+        }
+
+        location ~ ^/mina/(?<mina_path>.*)$ {
+            resolver {{ $.Values.proxy.resolver }} valid=30s ipv6=off;
+            set $mina_upstream {{ . | trimSuffix "/" | quote }};
+            proxy_pass $mina_upstream/$mina_path$is_args$args;
+            {{- include "decentralized-treasury.proxyHeaders" $ | nindent 12 }}
+        }
+        {{- end }}
+
+        # The console itself. auth_basic is enforced here, by nginx, rather than
+        # by an ingress annotation - which is the difference between an
+        # authenticated console and one that merely looks configured.
+        location / {
+            {{- if eq .Values.backoffice.auth.mode "basic" }}
+            auth_basic {{ .Values.backoffice.auth.basic.realm | quote }};
+            auth_basic_user_file {{ include "decentralized-treasury.backofficeAuthFilePath" . }};
+            {{- end }}
+            proxy_pass http://{{ include "decentralized-treasury.componentName" (dict "root" $ "component" "backoffice") }}:{{ .Values.backoffice.service.port }};
+            {{- include "decentralized-treasury.proxyHeaders" $ | nindent 12 }}
+        }
+    }
+    {{- end }}
 {{- end }}

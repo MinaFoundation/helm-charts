@@ -28,10 +28,15 @@ Replaces the Caddy reverse-proxy services from compose, in one of three modes.
 The Caddyfile also proxied /mina/* to a Mina node outside this stack. In proxy
 mode that is proxy.minaNodeUpstream; otherwise add it via ingress.extraPaths.
 
-The break-glass console is never rendered here. It needs authentication, and
-ingress annotations apply to a whole Ingress object rather than to one rule - so
-auth put on this object would also gate the public web app. It gets its own
-object in ingress-backoffice.yaml, for the same reason the API paths get theirs.
+The break-glass console normally gets its own object, in
+ingress-backoffice.yaml: it needs authentication, and ingress annotations apply
+to a whole Ingress object rather than to one rule, so auth put here would also
+gate the public web app - the same reason the API paths get their own.
+
+The exception is `proxy` mode with ingress.hosts.backoffice, where its hostname
+is added below and forwarded to the in-cluster proxy. That carries no
+annotations at all: nginx applies auth_basic behind the load balancer, so there
+is nothing to leak onto web and no second object to own.
 */}}
 {{- $rootName := $webName }}
 {{- $rootLabels := $webLabels }}
@@ -89,6 +94,28 @@ spec:
           {{- with .Values.ingress.extraPaths }}
           {{- toYaml . | nindent 10 }}
           {{- end }}
+    {{- if include "decentralized-treasury.backofficeViaProxy" . }}
+    {{/*
+    The break-glass console's hostname, forwarded wholesale to the in-cluster
+    proxy. The proxy has a server block for this name that serves the console at
+    `/` and the daemon at `/mina/`, and applies auth_basic itself.
+
+    It belongs on this object rather than one of its own precisely because
+    nothing here is annotation-driven: there is no auth annotation to leak onto
+    the public web app, which is what ingress-backoffice.yaml exists to avoid in
+    every other mode.
+    */}}
+    - host: {{ .Values.ingress.hosts.backoffice | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "decentralized-treasury.componentName" (dict "root" $ "component" "proxy") }}
+                port:
+                  number: {{ .Values.proxy.service.port }}
+    {{- end }}
     {{- if eq .Values.ingress.mode "host" }}
     {{- range $service := $services }}
     {{- $serviceHost := index $.Values.ingress.hosts $service.key }}

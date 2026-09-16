@@ -1,0 +1,30 @@
+{{/*
+Service for the artefact sidecar on proving-scheduler.
+
+The proxy routes /sqlite and /proofs here, and nginx resolves every upstream at
+startup and refuses to boot on a name that does not resolve - so without this
+Service those two routes took the whole ingress down with them, not just
+themselves. Deployments carrying the chart before 0.4.0 had to supply it through
+extraObjects.
+
+Rendered on the same condition as those routes, so the Service exists exactly
+when something points at it.
+*/}}
+{{- if and .Values.proving.enabled .Values.proving.scheduler.enabled .Values.proving.scheduler.server.enabled }}
+{{- $ctx := dict "root" $ "component" "proving-scheduler" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "decentralized-treasury.componentName" $ctx }}
+  labels:
+    {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: {{ .Values.proving.scheduler.server.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "decentralized-treasury.componentSelectorLabels" $ctx | nindent 4 }}
+{{- end }}

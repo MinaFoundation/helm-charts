@@ -78,6 +78,14 @@ spec:
               value: {{ .Values.proving.redis.port | quote }}
             - name: PROVING_SCHEDULER_POLL_INTERVAL_SECONDS
               value: {{ .Values.proving.scheduler.pollIntervalSeconds | quote }}
+            {{/*
+            The entrypoint hard-requires this and exits 1 otherwise, so leaving
+            it unset made the container crash-loop while the other five in the
+            pod stayed healthy - a 5/6 pod whose only symptom was one line on
+            stderr. Derived from config the same way proving-worker does it.
+            */}}
+            - name: PROOFS_ENABLED
+              value: {{ .Values.config.proofsEnabled | quote }}
             {{- with .Values.proving.scheduler.extraEnvVars }}
             {{- toYaml . | nindent 12 }}
             {{- end }}

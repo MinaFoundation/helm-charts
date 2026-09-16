@@ -914,6 +914,14 @@ web:
 # is a deliberate second step: either set ingress.hosts.backoffice, which works
 # in every ingress mode, or leave it unexposed and use `kubectl port-forward`,
 # which is the safer default for a console that can pause the treasury.
+#
+# A port-forward is enough to load the page but not to use it. The console
+# talks to the Mina node from the browser, and its POSTs are
+# content-type: application/json, so they are preflighted - a node on another
+# origin has to answer CORS or every call fails, and the app reports it as
+# "Treasury owner account was not found". Setting ingress.hosts.backoffice in
+# `proxy` mode is what solves that: the proxy serves /mina on the console's own
+# origin, so nothing is cross-origin and the daemon needs no CORS at all.
 backoffice:
   # -- Whether to deploy the break-glass console. Off by default: it requires
   # config.multisigParticipantsPublicKeys, which has no sensible default, and an
@@ -1039,26 +1047,45 @@ backoffice:
   # this is set deliberately.
   auth:
     # -- One of:
-    #   basic    - the chart renders an htpasswd Secret and the nginx
-    #              basic-auth annotations. nginx ingress only; ALB does not
-    #              implement them.
+    #   basic    - the chart renders an htpasswd Secret. What enforces it
+    #              depends on how the console is routed:
+    #
+    #              * ingress.mode `proxy` with ingress.hosts.backoffice -
+    #                the in-cluster nginx serves that hostname and applies
+    #                auth_basic itself. This works behind an ALB, because
+    #                the load balancer only forwards the host and enforces
+    #                nothing. The recommended shape.
+    #              * any other mode - the chart sets the nginx ingress
+    #                basic-auth annotations instead, which needs an nginx
+    #                ingress controller. Refused with className `alb`,
+    #                which does not implement them and would publish the
+    #                console unauthenticated.
     #   external - you supply the annotations in backoffice.ingress.annotations
-    #              (oauth2-proxy, ALB OIDC, an auth proxy of your own).
-    #   none     - published with no authentication, deliberately.
+    #              (oauth2-proxy, ALB OIDC, an auth proxy of your own). Needs
+    #              the console to own an Ingress object, so it is refused in
+    #              `proxy` mode, where the proxy owns the hostname instead.
+    #   none     - published with no authentication, deliberately. Loading the
+    #              page reveals nothing that is not already on chain, and every
+    #              break-glass action still needs signer keys - but it is a
+    #              public page with a pause button on it, so treat it as a
+    #              temporary state.
     #
     # Empty is not valid once the console is routed: the chart fails rather than
     # pick one for you. Ignored entirely while it is unexposed, which is the
     # default - `kubectl port-forward` is already gated by cluster RBAC.
     mode: ""
     basic:
-      # -- Realm shown in the browser's credential prompt
+      # -- Realm shown in the browser's credential prompt, and the
+      # `auth_basic` value when the in-cluster proxy is what enforces it
       realm: Treasury break-glass
       # -- Users as {name: password}, hashed into a Secret with bcrypt. The
       # plaintext still lives wherever these values do, so prefer
       # existingSecret with a secret-manager reference for anything lasting.
       users: {}
       # -- An htpasswd Secret you manage instead, with the content under the
-      # `auth` key. Mutually exclusive with users.
+      # `auth` key. Mutually exclusive with users. Read by whichever component
+      # enforces the auth: the proxy pod mounts it as a file, an nginx ingress
+      # controller reads it by name.
       existingSecret: ""
 
 # -- In-cluster reverse proxy, the compose stack's Caddy service translated to
