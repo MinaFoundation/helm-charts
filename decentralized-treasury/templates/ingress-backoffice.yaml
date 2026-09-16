@@ -1,0 +1,88 @@
+{{/*
+The console's own Ingress.
+
+Separate from the web/API objects because ingress annotations apply to a whole
+object, not to a single rule: the authentication annotations below must gate the
+console and nothing else. The chart already splits the API paths off for the
+same reason - their rewrite must not reach web.
+
+Nothing here rewrites. The console is reached either on its own hostname, where
+it serves from its own root, or - with an image built for it - under
+backoffice.pathPrefix, which arrives intact.
+*/}}
+{{- if and .Values.ingress.enabled .Values.backoffice.enabled }}
+{{- $ctx := dict "root" $ "component" "backoffice" }}
+{{- $name := include "decentralized-treasury.componentName" $ctx }}
+{{- $host := .Values.ingress.hosts.backoffice }}
+{{/*
+In `proxy` mode the in-cluster nginx owns the path route, so the controller must
+not also claim it. A hostname is always the controller's, because the proxy has
+no per-hostname routing of its own.
+*/}}
+{{- $path := "" }}
+{{- if and .Values.backoffice.pathPrefix (ne .Values.ingress.mode "proxy") }}
+{{- $path = .Values.backoffice.pathPrefix | trimSuffix "/" }}
+{{- end }}
+{{- if or $host $path }}
+{{- $annotations := include "decentralized-treasury.backofficeIngressAnnotations" . | fromYaml }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
+  {{- with $annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- with (default .Values.ingress.tls .Values.backoffice.ingress.tls) }}
+  tls:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- if $host }}
+    - host: {{ $host | quote }}
+      http:
+        paths:
+          {{- if .Values.proxy.enabled }}
+          {{/*
+          The console's own origin has to serve /mina/graphql too, because that
+          is what backoffice.publicBaseUrl derives and what the browser calls.
+          Routed to the in-cluster proxy, which already fronts the daemon, so
+          the call stays same-origin and needs no CORS on the node. It sits
+          behind the same authentication as the console, being the same origin.
+          */}}
+          - path: /mina
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "decentralized-treasury.componentName" (dict "root" $ "component" "proxy") }}
+                port:
+                  number: {{ .Values.proxy.service.port }}
+          {{- end }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $name }}
+                port:
+                  number: {{ .Values.backoffice.service.port }}
+    {{- end }}
+    {{- if $path }}
+    - host: {{ required "ingress.host is required when ingress.enabled" .Values.ingress.host | quote }}
+      http:
+        paths:
+          - path: {{ $path }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $name }}
+                port:
+                  number: {{ .Values.backoffice.service.port }}
+    {{- end }}
+{{- end }}
+{{- end }}

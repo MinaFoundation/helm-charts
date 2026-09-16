@@ -213,6 +213,21 @@ config:
   # address from another network yields a service that indexes nothing at all
   # rather than erroring, so set it deliberately per network.
   treasuryOwnerContractAddress: B62qpExe8CAaGkR4HRxyXvkziQpE6Aq3U71MJLHivP8pCsiDk1BbU9Z
+  # -- The five break-glass multisig participants, in the SAME order as the
+  # pause-controller deployment. Public keys only - the signers hold their own
+  # private keys, on Ledger devices, and nothing here ever needs them.
+  #
+  # The contract is fixed at 3-of-5 in the circuit, so this is exactly five
+  # entries: the set cannot grow without changing the verification key. Order is
+  # load-bearing, because the on-chain commitment is an ordered hash of the five
+  # and signature i is checked against participant i.
+  #
+  # Rotating signers is an on-chain operation (`pause-controller
+  # rotate-multisig-keys`, authorised by 3 of the *current* five), not a
+  # redeploy. Change this list to match after a rotation, never before.
+  #
+  # Required by backoffice.enabled, and unused by every other component.
+  multisigParticipantsPublicKeys: []
   # -- Mina daemon GraphQL endpoint, read server-side by the staking-ledgers
   # sync. It supplies slotSinceGenesis, slotsPerEpoch and the authoritative
   # stakingEpochData.ledger.hash, which is what makes ledger selection survive a
@@ -829,7 +844,7 @@ web:
   # -- Replica count
   replicaCount: 1
   image:
-    # -- The image repository. NOTE: not published yet.
+    # -- The image repository
     repository: minafoundation/dt-web
     # -- Overrides the chart-wide tag
     tag: ""
@@ -848,12 +863,9 @@ web:
   # same-origin API URLs, mirroring the Caddyfile's /api, /indexer and
   # /processor prefixes. Usually the same host as ingress.host.
   publicBaseUrl: ""
-  # -- Browser-facing configuration.
-  #
-  # These are inlined into the client bundle at BUILD time, so the image must be
-  # built with the values for its target network. What is set here only reaches
-  # server-side rendering and cannot correct a mismatched build. Entries set
-  # here win over the values derived from publicBaseUrl.
+  # -- Browser-facing configuration, read at container start rather than baked
+  # into the image, so one dt-web tag serves any network. Entries set here win
+  # over the values derived from publicBaseUrl.
   publicEnv:
     # devnet runs 90s slots (7140 slots = 7d10h30m per epoch). mainnet is
     # "180000" - override there along with NEXT_PUBLIC_NETWORK_ID.
@@ -890,6 +902,164 @@ web:
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 3
+
+# -- Break-glass operator console (apps/backoffice). A separate image from web,
+# and necessarily a separate hostname rather than a path: the app has no Next.js
+# basePath, so its HTML references /_next/* at the root and it cannot be served
+# under a prefix such as /backoffice by any amount of ingress rewriting. Putting
+# it on a path would mean setting basePath at BUILD time, which bakes that
+# prefix into the image.
+#
+# Enabling this creates a Deployment and a ClusterIP Service only. Reaching it
+# is a deliberate second step: either set ingress.hosts.backoffice, which works
+# in every ingress mode, or leave it unexposed and use `kubectl port-forward`,
+# which is the safer default for a console that can pause the treasury.
+backoffice:
+  # -- Whether to deploy the break-glass console. Off by default: it requires
+  # config.multisigParticipantsPublicKeys, which has no sensible default, and an
+  # upgrade should not silently add a workload that cannot work.
+  enabled: false
+  # -- Replica count. Stateless - every operation is driven from the browser.
+  replicaCount: 1
+  image:
+    # -- The image repository
+    repository: minafoundation/dt-backoffice
+    # -- Overrides the chart-wide tag
+    tag: ""
+    # -- Overrides the chart-wide pull policy
+    pullPolicy: ""
+  # -- Port the container listens on
+  port: 3200
+  service:
+    # -- The service type
+    type: ClusterIP
+    # -- The service port
+    port: 3200
+    # -- Annotations to add to the service
+    annotations: {}
+  # -- Public origin the browser reaches the console on, used to derive
+  # NEXT_PUBLIC_MINA_NODE_URL as `<publicBaseUrl>/mina/graphql`.
+  #
+  # Setting this requires something to serve /mina on that same origin. With
+  # proxy.enabled the chart arranges it: the ingress.hosts.backoffice hostname
+  # gets a /mina rule of its own, pointed at the in-cluster proxy, so the call
+  # stays same-origin and the daemon needs no CORS. Without the proxy the
+  # derived URL would hit the console's own Next server, so the chart refuses to
+  # render - set NEXT_PUBLIC_MINA_NODE_URL in publicEnv instead and point it
+  # straight at a node.
+  #
+  # Whatever fronts this must serve HTTPS. The app sets
+  # Cross-Origin-Embedder-Policy: require-corp, and its proving worker needs a
+  # secure context - over plain HTTP the browser refuses and signing fails.
+  publicBaseUrl: ""
+  # -- Serve the console under a path on the main hostname, the way /sqlite and
+  # /proofs are served, instead of on its own subdomain. Empty (the default)
+  # means path routing is off.
+  #
+  # This ONLY works with a dt-backoffice image built with a matching Next.js
+  # basePath, because Next resolves basePath at build time and writes it into
+  # the asset URLs in its HTML. The two must agree exactly: a stock image
+  # (basePath unset) behind this route 404s the page, and a `/backoffice` image
+  # reached at the root 404s its assets. Nothing in the routing layer can
+  # reconcile a mismatch - that is why this is off by default.
+  #
+  # Routing is deliberately non-stripping, so the prefix survives the hop and
+  # the app receives the path it was built for. In ingress mode `proxy` the
+  # in-cluster nginx serves it; in `path` and `host` mode the chart adds a
+  # non-rewriting path rule to the web Ingress.
+  pathPrefix: ""
+  # -- Browser-facing configuration, read at container start. Entries here win
+  # over the values derived from publicBaseUrl and config.
+  #
+  # Unlike web, no treasury/indexer/processor API URLs are derived: the console
+  # builds and submits transactions against the Mina node directly, and those
+  # URLs would only ever surface in its settings dialog.
+  publicEnv:
+    NEXT_PUBLIC_NETWORK_ID: DEVNET
+    # Fill from `treasury-owner compile`. Proving refuses to start without all
+    # five, naming the first one it finds missing.
+    NEXT_PUBLIC_VOTE_REDUCER_VERIFICATION_KEY_JSON: ""
+    NEXT_PUBLIC_STAKING_LEDGER_TO_VOTING_LEDGER_VERIFICATION_KEY_JSON: ""
+    NEXT_PUBLIC_TREASURY_PROPOSAL_VERIFICATION_KEY_JSON: ""
+    NEXT_PUBLIC_EMPTY_VOTING_LEDGER_ROOT: ""
+    NEXT_PUBLIC_EMPTY_NULLIFIER_ROOT: ""
+  # -- Annotations to add to the deployment
+  deploymentAnnotations: {}
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+  # -- Additional environment variables
+  extraEnvVars: []
+  # -- The Resources
+  resources: {}
+  # -- Liveness probe
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 20
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+  # -- Readiness probe
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  # -- The console's own Ingress object, separate from the web and API ones
+  # because annotations apply per object: authentication put on the shared
+  # object would gate the public web app too.
+  ingress:
+    # -- Annotations for the console's Ingress. This is where an `external`
+    # authentication layer is configured - the chart adds nothing of its own
+    # beyond the basic-auth trio, and entries here win over that.
+    #
+    # oauth2-proxy behind an nginx ingress:
+    #   nginx.ingress.kubernetes.io/auth-url: https://oauth.example.org/oauth2/auth
+    #   nginx.ingress.kubernetes.io/auth-signin: https://oauth.example.org/oauth2/start?rd=$escaped_request_uri
+    #
+    # ALB with OIDC, which the controller enforces at the load balancer:
+    #   alb.ingress.kubernetes.io/auth-type: oidc
+    #   alb.ingress.kubernetes.io/auth-idp-oidc: '{"issuer":"...","authorizationEndpoint":"...","tokenEndpoint":"...","userInfoEndpoint":"...","secretName":"backoffice-oidc"}'
+    #   alb.ingress.kubernetes.io/auth-on-unauthenticated-request: authenticate
+    #   alb.ingress.kubernetes.io/group.name: decentralized-treasury
+    annotations: {}
+    # -- TLS for the console's hostname. Empty falls back to ingress.tls, which
+    # is usually right only if that certificate already covers the hostname.
+    tls: []
+  # -- Authentication in front of the console. The app has no login of its own:
+  # it authenticates the five *signers* by their Ledger devices, not whoever
+  # opens the page, and an unauthenticated visitor can still reach the pause and
+  # emergency-withdrawal flows. So whatever fronts it is the only thing between
+  # the internet and those buttons, and the chart refuses to publish it until
+  # this is set deliberately.
+  auth:
+    # -- One of:
+    #   basic    - the chart renders an htpasswd Secret and the nginx
+    #              basic-auth annotations. nginx ingress only; ALB does not
+    #              implement them.
+    #   external - you supply the annotations in backoffice.ingress.annotations
+    #              (oauth2-proxy, ALB OIDC, an auth proxy of your own).
+    #   none     - published with no authentication, deliberately.
+    #
+    # Empty is not valid once the console is routed: the chart fails rather than
+    # pick one for you. Ignored entirely while it is unexposed, which is the
+    # default - `kubectl port-forward` is already gated by cluster RBAC.
+    mode: ""
+    basic:
+      # -- Realm shown in the browser's credential prompt
+      realm: Treasury break-glass
+      # -- Users as {name: password}, hashed into a Secret with bcrypt. The
+      # plaintext still lives wherever these values do, so prefer
+      # existingSecret with a secret-manager reference for anything lasting.
+      users: {}
+      # -- An htpasswd Secret you manage instead, with the content under the
+      # `auth` key. Mutually exclusive with users.
+      existingSecret: ""
 
 # -- In-cluster reverse proxy, the compose stack's Caddy service translated to
 # nginx. Required by ingress.mode `proxy` and ignored by the other modes: it is
@@ -984,19 +1154,31 @@ ingress:
   #           the AWS Load Balancer Controller has no rewrite-target equivalent,
   #           so path mode cannot strip the prefix and the APIs would 404.
   #   proxy - one hostname routed to the in-cluster proxy, which does the
-  #           stripping itself. Also for ALB, and the only one of the two that
-  #           works with a web image built against same-origin paths, since
-  #           those URLs are baked into the client bundle at build time.
-  #           Requires proxy.enabled.
+  #           stripping itself. Also for ALB, and the one to use when the
+  #           browser should stay on a single origin. Requires proxy.enabled.
   mode: path
   # -- Hostname the web app is served on. Required when enabled.
   host: ""
-  # -- Per-service hostnames, used only when mode is `host`. Any left empty is
-  # simply not exposed.
+  # -- Per-service hostnames. api, indexer and processor apply only when mode is
+  # `host`; backoffice applies in every mode. Any left empty is simply not
+  # exposed.
   hosts:
     api: ""
     indexer: ""
     processor: ""
+    # Break-glass console. Unlike the three above, this one applies in EVERY
+    # mode, including `path`: it is rendered as another host on the web
+    # Ingress, which carries no rewrite annotation. This is the way to expose
+    # the console without touching the application - it stays the same generic
+    # image, serving from its own root.
+    #
+    # With proxy.enabled the hostname also gets a /mina rule, so the console
+    # can reach the daemon same-origin.
+    #
+    # Empty leaves it off the ingress entirely, which is the default - reach it
+    # with `kubectl port-forward` instead. Setting it publishes a console that
+    # can pause the treasury, so put an authentication layer in front of it.
+    backoffice: ""
   # -- Optional prefix in front of /api, /indexer and /processor
   apiPathPrefix: ""
   # -- Annotations for the web Ingress

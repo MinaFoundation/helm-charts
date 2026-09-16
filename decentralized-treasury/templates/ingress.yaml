@@ -22,12 +22,16 @@ Replaces the Caddy reverse-proxy services from compose, in one of three modes.
   proxy (ALB, one hostname)
     One host, routed to the in-cluster proxy, which strips the prefixes itself.
     The controller only ever sees `/`, so this keeps the browser on a single
-    origin without needing a controller that can rewrite. Use it when the web
-    image was built against same-origin paths, which is what makes host mode
-    unavailable: those URLs are baked into the client bundle at build time.
+    origin without needing a controller that can rewrite. Use it when every
+    service should share one hostname.
 
 The Caddyfile also proxied /mina/* to a Mina node outside this stack. In proxy
 mode that is proxy.minaNodeUpstream; otherwise add it via ingress.extraPaths.
+
+The break-glass console is never rendered here. It needs authentication, and
+ingress annotations apply to a whole Ingress object rather than to one rule - so
+auth put on this object would also gate the public web app. It gets its own
+object in ingress-backoffice.yaml, for the same reason the API paths get theirs.
 */}}
 {{- $rootName := $webName }}
 {{- $rootLabels := $webLabels }}
@@ -49,6 +53,9 @@ mode that is proxy.minaNodeUpstream; otherwise add it via ingress.extraPaths.
 {{- end }}
 {{- if .Values.processorApi.enabled }}
 {{- $services = append $services (dict "key" "processor" "component" "processor-api" "port" .Values.processorApi.service.port) }}
+{{- end }}
+{{- if and (or .Values.ingress.hosts.backoffice .Values.backoffice.pathPrefix) (not .Values.backoffice.enabled) }}
+{{- fail "the backoffice is routed (ingress.hosts.backoffice or backoffice.pathPrefix) but backoffice.enabled is false: there would be nothing behind it" }}
 {{- end }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress

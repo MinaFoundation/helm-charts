@@ -37,6 +37,17 @@ onto the same root.
 {{- $services = append $services (dict "strip" false "key" "sqlite" "host" $artifacts "port" .Values.proving.scheduler.server.port) -}}
 {{- $services = append $services (dict "strip" false "key" "proofs" "host" $artifacts "port" .Values.proving.scheduler.server.port) -}}
 {{- end -}}
+{{/*
+The break-glass console, when it is served under a path rather than its own
+hostname. Not stripped, exactly like /sqlite and /proofs: the console's image is
+built with a Next.js basePath equal to this prefix, so it expects to receive it
+and serves its own assets under <prefix>/_next/*. Stripping would hand it `/`
+and its asset URLs would then collide with the web app's at the root.
+*/}}
+{{- if and .Values.backoffice.enabled .Values.backoffice.pathPrefix -}}
+{{- $prefix := .Values.backoffice.pathPrefix | trimPrefix "/" | trimSuffix "/" -}}
+{{- $services = append $services (dict "strip" false "key" $prefix "host" (include "decentralized-treasury.componentName" (dict "root" . "component" "backoffice")) "port" .Values.backoffice.service.port) -}}
+{{- end -}}
 {{- range .Values.proxy.extraServices -}}
 {{- $services = append $services (dict "strip" (ne .strip false) "key" .key "host" .host "port" .port) -}}
 {{- end -}}
