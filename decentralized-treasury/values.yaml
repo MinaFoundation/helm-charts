@@ -640,48 +640,45 @@ votingLedgerScheduler:
   # `tolerations`. Restate these whenever `nodeSelector` targets a tainted pool.
   tolerations: []
 
-# -- EXPERIMENTAL, off by default. Fans out one real, fully-proven lifecycle's
-# proofs across a group of synthetic sibling lifecycle ids that share the same
-# underlying staking ledger, so the expensive build+prove step runs once per
-# group instead of once per synthetic id. Each sibling still gets its own real
-# sqlite body, relabelled from the canonical's: the rows inside a body are
-# namespaced with the lifecycle id that produced them, so a shared body reads
-# as an empty ledger and every proposal in that lifecycle fails the staking
-# ledger root check. Budget one download, one rewrite and one upload of a body
-# (minutes, and bucket space) per sibling. Intended for accelerated lifecycle
+# -- EXPERIMENTAL, off by default. Groups lifecycle ids that share one Mina
+# epoch's staking ledger, so the expensive build+prove step runs once per group
+# instead of once per id. Only the canonical id of each group (id % groupSize
+# == 0) is built, proven and published; the others are served by each consumer
+# relabelling a local copy of that canonical's body.
+#
+# Nothing is published for a non-canonical id - no body, no marker, no pointer
+# object. A body cannot simply be shared under another id's name: its rows are
+# namespaced with the lifecycle id that produced them
+# ("staking-ledger-42-accounts:7"), so a reader opening it as a different id
+# finds none of its own keys and serves an empty ledger, and every proposal in
+# that lifecycle fails the staking ledger root check. An earlier revision
+# published <id>.sqlite.alias pointers that consumers symlinked, and it failed
+# exactly that way, silently.
+#
+# The cost is one copy of a body per materialised id on each consumer's volume,
+# bounded by the sibling window below. Intended for accelerated lifecycle
 # testing (e.g. many short lifecycles inside one real Mina epoch), never for a
 # production release.
 lifecycleFanout:
-  # -- Deploys the fan-out sidecar and restricts the voting-ledger-scheduler
-  # to canonical ids only. Leave false for every normal release.
+  # -- Groups lifecycle ids: restricts the voting-ledger-scheduler to canonical
+  # ids and lets api and processor materialise the others locally. Leave false
+  # for every normal release.
   enabled: false
-  # -- Number of consecutive lifecycle ids per group. Only the first id in
-  # each group (id % groupSize == 0) is ever really built/proven; the rest are
-  # relabelled from it once it is complete. 1 (the default) means every id is
-  # its own group, i.e. no grouping at all. Must be chosen so group boundaries
-  # land on real Mina epoch boundaries (requires config.treasuryDeployedAtSlot
-  # to be epoch-aligned, e.g. 0) - otherwise a group can straddle two
-  # different real staking-ledger hashes.
+  # -- Number of consecutive lifecycle ids per group. 1 (the default) means
+  # every id is its own group, i.e. no grouping at all. Must be chosen so group
+  # boundaries land on real Mina epoch boundaries (requires
+  # config.treasuryDeployedAtSlot to be epoch-aligned, e.g. 0) - otherwise a
+  # group can straddle two different real staking-ledger hashes and the
+  # relabelled bodies carry the wrong root.
   groupSize: 1
-  # -- Lowest sibling id to produce. Siblings are produced in ascending order
-  # and each one costs minutes, so a fan-out that starts mid-group otherwise
-  # spends hours on lifecycles that have already ended. Set it to the lowest id
-  # still worth having.
-  minLifecycleId: 0
-  # -- Scratch space for the relabelling, as an emptyDir size limit. It holds
-  # the canonical's body - kept for the whole group, rather than re-downloaded
-  # per sibling - plus the sibling being written, so allow comfortably more
-  # than twice the largest lifecycle database.
-  workVolumeSize: 40Gi
-  # -- How often the duplicator checks for a newly-proven canonical id, in
-  # seconds.
-  pollIntervalSeconds: 60
-  # -- Annotations to add to the deployment
-  deploymentAnnotations: {}
-  # -- Annotations to add to the pods
-  podAnnotations: {}
-  # -- The Resources
-  resources: {}
+  # -- How many lifecycles behind the one the chain is in to keep materialised.
+  # 0 keeps only the current one; raise it to keep serving witnesses for a
+  # lifecycle whose voting or tally period has just passed.
+  siblingWindowBehind: 0
+  # -- How many lifecycles ahead of the one the chain is in to materialise, so
+  # the next one is ready before it opens. Each id in the window costs one copy
+  # of a body on every consumer's volume.
+  siblingWindowAhead: 1
 
 # -- Proof generation, matching the compose `proving` profile. Off by default.
 proving:

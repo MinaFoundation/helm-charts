@@ -16,12 +16,13 @@
 # Only the FIRST lifecycle id in each group of 21 ("canonical") is ever really
 # built and proven - lifecycleFanout below fans its proofs out onto the other
 # 20 so the expensive build+prove step runs once per real epoch, not 21 times
-# over the same underlying staking ledger. A sibling still gets its own real
-# sqlite body, relabelled from the canonical's, because a body's rows are
-# namespaced with the lifecycle id that produced them and a shared body reads
-# as an empty ledger (see lifecycleFanout in values.yaml and
-# lifecycle-fanout-sync.sh). Budget minutes and one body of bucket space per
-# sibling; only the proving is saved.
+# over the same underlying staking ledger. Nothing is published for a sibling
+# id: each consumer relabels a local copy of the canonical's body instead,
+# because a body's rows are namespaced with the lifecycle id that produced them
+# and a shared body reads as an empty ledger (see lifecycleFanout in
+# values.yaml and the GROUPED LIFECYCLES block in s3-sync-pull.sh). Budget one
+# copy of a body per materialised id on each consumer's volume, bounded by
+# siblingWindowBehind/Ahead.
 #
 # COLLISION CAVEAT (READ THIS): network is left at "devnet", the same S3 key
 # prefix the real devnet release uses. This release's lifecycle ids advance

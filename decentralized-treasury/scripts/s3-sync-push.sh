@@ -39,8 +39,30 @@ push_phase() {
   # such links on sight now; this stays as a second line of defence, and is a
   # no-op for every release that never had one.
   set -- "$SOURCE_DIRECTORY/" "$S3_TARGET_PREFIX/" --exclude '*' --no-follow-symlinks --only-show-errors
+  # set -f while splitting: these patterns are for `aws s3 sync` to interpret,
+  # and an unquoted expansion would let the shell resolve "*.sqlite" against
+  # the working directory first, quietly turning a pattern into whatever
+  # filenames happen to sit there.
+  set -f
   for pattern in $includes; do
+    set +f
     set -- "$@" --include "$pattern"
+    set -f
+  done
+  set +f
+
+  # A materialised sibling is a relabelled copy of another lifecycle's body,
+  # made locally by s3-sync-pull.sh for this pod to read (see GROUPED
+  # LIFECYCLES there). Publishing one would hand every other consumer a body
+  # for an id the producers never built, and its marker would promise work that
+  # was never done - so each is excluded by name, after the includes, along
+  # with the pointer files themselves.
+  set -- "$@" --exclude '*.sqlite.sibling'
+  for pointer in "$SOURCE_DIRECTORY"/*.sqlite.sibling; do
+    [ -e "$pointer" ] || continue
+    body=$(basename "$pointer" .sibling)
+    log "not publishing ${body}: materialised locally from canonical $(cat "$pointer")"
+    set -- "$@" --exclude "$body" --exclude "${body}.done" --exclude "${body}.proven"
   done
 
   log "pushing ${phase} (${includes})"

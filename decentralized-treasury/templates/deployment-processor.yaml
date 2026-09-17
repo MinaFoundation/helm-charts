@@ -49,7 +49,7 @@ spec:
       initContainers:
         {{- include "decentralized-treasury.waitForMigrations" (dict "root" $ "image" .Values.processor.image) | nindent 8 }}
         {{- if .Values.processor.sqlite.enabled }}
-        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync-init" "oneshot" true "keepLastN" .Values.processor.sqlite.keepLastN) | nindent 8 }}
+        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync-init" "oneshot" true "keepLastN" .Values.processor.sqlite.keepLastN "materialiseSiblings" true) | nindent 8 }}
         {{- end }}
       containers:
         # Consumes events from indexer-api over HTTP and reads lifecycle
@@ -91,7 +91,7 @@ spec:
             {{- include "decentralized-treasury.scriptsVolumeMount" . | nindent 12 }}
             {{- include "decentralized-treasury.sqliteVolumeMount" . | nindent 12 }}
         {{- if .Values.processor.sqlite.enabled }}
-        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync" "oneshot" false "keepLastN" .Values.processor.sqlite.keepLastN) | nindent 8 }}
+        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync" "oneshot" false "keepLastN" .Values.processor.sqlite.keepLastN "materialiseSiblings" true) | nindent 8 }}
         {{- end }}
       volumes:
         {{- include "decentralized-treasury.scriptsVolume" . | nindent 8 }}

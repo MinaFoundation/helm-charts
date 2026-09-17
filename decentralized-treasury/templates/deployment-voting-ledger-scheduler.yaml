@@ -56,7 +56,7 @@ spec:
         # the scheduler decides what is already processed purely from local
         # marker presence, so starting with an empty directory would make it
         # rebuild every historical lifecycle from scratch.
-        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync-init" "oneshot" true "keepLastN" .Values.votingLedgerScheduler.sqlite.keepLastN) | nindent 8 }}
+        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync-init" "oneshot" true "keepLastN" .Values.votingLedgerScheduler.sqlite.keepLastN "materialiseSiblings" false) | nindent 8 }}
         {{- include "decentralized-treasury.stakingLedgersSync" (dict "root" $ "name" "staking-ledgers-init" "oneshot" true) | nindent 8 }}
       containers:
         - name: {{ $component }}

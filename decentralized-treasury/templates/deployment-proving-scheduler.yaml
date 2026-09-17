@@ -48,7 +48,7 @@ spec:
         # keepLastN is deliberately 0: this scheduler walks the backlog
         # oldest-first, so it needs bodies that a recent-window cache would
         # already have pruned.
-        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync-init" "oneshot" true "keepLastN" .Values.proving.scheduler.sqlite.keepLastN) | nindent 8 }}
+        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync-init" "oneshot" true "keepLastN" .Values.proving.scheduler.sqlite.keepLastN "materialiseSiblings" false) | nindent 8 }}
         # Rehydrates already-proven lifecycles' proof files. Without this, a
         # pod recreated after successfully proving a lifecycle starts with an
         # empty proofs volume: find_oldest_unproven (proving-scheduler-
@@ -147,7 +147,7 @@ spec:
             {{- include "decentralized-treasury.scriptsVolumeMount" . | nindent 12 }}
         {{- end }}
         # Keeps newly finished lifecycles arriving without a pod restart.
-        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync" "oneshot" false "keepLastN" .Values.proving.scheduler.sqlite.keepLastN) | nindent 8 }}
+        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync" "oneshot" false "keepLastN" .Values.proving.scheduler.sqlite.keepLastN "materialiseSiblings" false) | nindent 8 }}
         # Two publishers, because the two artifact kinds live in separate
         # buckets.
         #

@@ -32,10 +32,17 @@ secrets are needed in the chart.
 
 {{/*
 Pull-only cache sync. Call with:
-  (dict "root" $ "name" "s3-sync" "oneshot" false "keepLastN" 0)
+  (dict "root" $ "name" "s3-sync" "oneshot" false "keepLastN" 0
+        "materialiseSiblings" true)
 
 Use oneshot=true as an init container so a pod never starts serving from an
 empty cache, and oneshot=false as a sidecar to keep it fresh.
+
+materialiseSiblings belongs on consumers only (api, processor) and under a
+grouped release: those pods have to serve lifecycle ids the producers never
+built, and they relabel a local copy of the group's canonical to do it. Never
+set it on a pod that also pushes - the producers only ever work on canonical
+ids, and a relabelled sibling on a pushing pod's volume would be published.
 */}}
 {{- define "decentralized-treasury.s3SyncPull" -}}
 - name: {{ .name }}
@@ -48,6 +55,29 @@ empty cache, and oneshot=false as a sidecar to keep it fresh.
       value: {{ .oneshot | quote }}
     - name: SYNC_INTERVAL_SECONDS
       value: {{ .root.Values.sqlite.syncIntervalSeconds | quote }}
+    {{- if and .materialiseSiblings .root.Values.lifecycleFanout.enabled (gt (int .root.Values.lifecycleFanout.groupSize) 1) }}
+    - name: MATERIALISE_SIBLINGS
+      value: "true"
+    - name: LIFECYCLE_ANCHOR_GROUP_SIZE
+      value: {{ .root.Values.lifecycleFanout.groupSize | quote }}
+    - name: SIBLING_WINDOW_BEHIND
+      value: {{ .root.Values.lifecycleFanout.siblingWindowBehind | quote }}
+    - name: SIBLING_WINDOW_AHEAD
+      value: {{ .root.Values.lifecycleFanout.siblingWindowAhead | quote }}
+    {{/*
+    The window is relative to the lifecycle the chain is in, so this sidecar
+    needs the same clock the scheduler uses. The daemon supplies
+    slotSinceGenesis; the rest is arithmetic on the scale the contract gates on.
+    */}}
+    - name: LIFECYCLE_PERIOD_DURATION
+      value: {{ required "config.lifecyclePeriodDuration is required" .root.Values.config.lifecyclePeriodDuration | quote }}
+    - name: TREASURY_DEPLOYED_AT_SLOT
+      value: {{ .root.Values.config.treasuryDeployedAtSlot | quote }}
+    - name: PERIODS_PER_LIFECYCLE
+      value: {{ .root.Values.votingLedgerScheduler.periodsPerLifecycle | quote }}
+    - name: MINA_NODE_URL
+      value: {{ required "config.minaNodeUrl is required" .root.Values.config.minaNodeUrl | quote }}
+    {{- end }}
     # The aws-cli image has no non-root home directory of its own.
     - name: HOME
       value: /tmp
