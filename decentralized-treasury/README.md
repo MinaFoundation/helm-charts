@@ -1,6 +1,6 @@
 # decentralized-treasury
 
-![Version: 0.4.2-speedrun](https://img.shields.io/badge/Version-0.4.2--speedrun-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
+![Version: 0.4.3-speedrun](https://img.shields.io/badge/Version-0.4.3--speedrun-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
 
 A Helm chart for deploying the Mina Decentralized Treasury stack (API, indexer, processor, schedulers, web, back office and proving services)
 
@@ -191,7 +191,7 @@ helmfile status
 | lifecycleFanout.podAnnotations | object | `{}` | Annotations to add to the pods |
 | lifecycleFanout.pollIntervalSeconds | int | `60` | How often the duplicator checks for a newly-proven canonical id, in seconds. |
 | lifecycleFanout.resources | object | `{}` | The Resources |
-| lifecycleFanout.workVolumeSize | string | `"40Gi"` | Scratch space for the body being relabelled, as an emptyDir size limit. It holds one body at a time, so allow comfortably more than the largest lifecycle database. |
+| lifecycleFanout.workVolumeSize | string | `"40Gi"` | Scratch space for the relabelling, as an emptyDir size limit. It holds the canonical's body - kept for the whole group, rather than re-downloaded per sibling - plus the sibling being written, so allow comfortably more than twice the largest lifecycle database. |
 | migrationWait | object | `{"enabled":true,"pollIntervalSeconds":5,"resources":{},"timeoutSeconds":600}` | Init container that blocks a workload until the schema is migrated. Added to every workload that reads the database, so they can all be applied alongside the migration Job and still converge in the right order. |
 | migrationWait.enabled | bool | `true` | Whether dependent workloads wait for migrations before starting |
 | migrationWait.pollIntervalSeconds | int | `5` | How often to re-check whether migrations have been applied |

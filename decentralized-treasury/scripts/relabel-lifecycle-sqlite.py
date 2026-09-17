@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Relabels one lifecycle's sqlite body so it answers for another lifecycle id.
+"""Writes a new lifecycle body from an existing one, under another lifecycle id.
 
-    relabel-lifecycle-sqlite.py <db> <source-id> <target-id>
+    relabel-lifecycle-sqlite.py <source-db> <output-db> <source-id> <target-id>
 
 Every row inside a body is namespaced with the lifecycle id that produced it
 ("staking-ledger-42-accounts:7", "voting-ledger-42-merkle-tree:3-12",
@@ -9,10 +9,14 @@ Every row inside a body is namespaced with the lifecycle id that produced it
 between lifecycle ids by file name alone: a service started for lifecycle 59
 against 42's body finds none of its own keys, serves an empty ledger, and
 every proposal in that lifecycle then fails the staking ledger root check.
-This rewrites the namespaces instead, leaving the part of each key after the
-":" untouched.
+This writes the same rows out under the target id's namespaces, leaving the
+part of each key after the ":" untouched.
 
-Run it on a copy, never on the canonical body - it rewrites in place.
+It builds a fresh file rather than rewriting a copy in place. An in-place
+UPDATE moves every primary key entry within one b-tree - measured at over 45
+minutes for the ~15.6M rows of one voting ledger's merkle tree, against under
+two minutes here - because inserting namespace by namespace, in ascending
+order of the new name, appends to the b-tree instead of churning it.
 """
 
 import os
@@ -20,19 +24,12 @@ import sqlite3
 import sys
 import time
 
-SUFFIX = ".sqlite"
-
-
-def namespaces(connection, source_id):
-    rows = connection.execute(
-        "select substr(key,1,instr(key,':')-1) ns, count(*) c "
-        "from keyv group by ns order by c"
-    ).fetchall()
-    return [
-        (ns, count)
-        for ns, count in rows
-        if f"-{source_id}-" in ns or ns.endswith(f"-{source_id}")
-    ]
+# Same DDL as the producer writes, so a relabelled body reads back exactly as
+# a natively built one does.
+KEYV_DDL = "CREATE TABLE keyv(key VARCHAR(255) PRIMARY KEY, value TEXT )"
+CHECKPOINT_META_DDL = (
+    "CREATE TABLE checkpoint_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)"
+)
 
 
 def relabel(ns, source_id, target_id):
@@ -41,69 +38,91 @@ def relabel(ns, source_id, target_id):
     return ns.replace(f"-{source_id}-", f"-{target_id}-")
 
 
-def main(db_path, source_id, target_id):
-    connection = sqlite3.connect(db_path)
-    # This runs on a throwaway copy, so a crash costs a re-download rather
-    # than data: skip the rollback journal and the fsyncs to keep the rewrite
-    # to minutes rather than hours.
+def namespaces(connection, source_id, target_id):
+    rows = connection.execute(
+        "select substr(key,1,instr(key,':')-1) ns, count(*) c "
+        "from src.keyv group by ns"
+    ).fetchall()
+    pending = [
+        (ns, count, relabel(ns, source_id, target_id))
+        for ns, count in rows
+        if f"-{source_id}-" in ns or ns.endswith(f"-{source_id}")
+    ]
+    # Ascending by the name being written, so the inserts below only ever
+    # append to the output's primary key index.
+    return sorted(pending, key=lambda row: row[2])
+
+
+def main(source_db, output_db, source_id, target_id):
+    connection = sqlite3.connect(output_db)
+    # The output is disposable until it is verified and published, so trade
+    # durability for speed.
     connection.execute("pragma journal_mode=off")
     connection.execute("pragma synchronous=off")
-    connection.execute("pragma temp_store=memory")
     connection.execute("pragma cache_size=-262144")
+    connection.execute(f"attach database '{source_db}' as src")
+    connection.execute(KEYV_DDL)
+    connection.execute(CHECKPOINT_META_DDL)
+    connection.execute(
+        "insert into checkpoint_meta select key, value from src.checkpoint_meta"
+    )
 
-    pending = namespaces(connection, source_id)
+    pending = namespaces(connection, source_id, target_id)
     if not pending:
-        sys.exit(f"no namespace in {db_path} carries lifecycle id {source_id}")
+        sys.exit(f"no namespace in {source_db} carries lifecycle id {source_id}")
 
-    print(f"[relabel] {db_path}: lifecycle {source_id} -> {target_id}", flush=True)
-    for ns, count in pending:
-        target = relabel(ns, source_id, target_id)
+    print(
+        f"[relabel] {output_db} from {source_db}: {source_id} -> {target_id}",
+        flush=True,
+    )
+    for ns, count, target in pending:
         started_at = time.monotonic()
-        # A range scan over the primary key, so each statement touches only
-        # its own namespace instead of scanning the whole table.
         cursor = connection.execute(
-            "update keyv set key = ? || substr(key, ?) where key >= ? and key < ?",
+            "insert into keyv(key, value) "
+            "select ? || substr(key, ?), value from src.keyv "
+            "where key >= ? and key < ?",
             (target, len(ns) + 1, f"{ns}:", f"{ns};"),
         )
         elapsed = time.monotonic() - started_at
         print(
-            f"[relabel]   {ns} -> {target}: "
-            f"{cursor.rowcount}/{count} rows in {elapsed:.1f}s",
+            f"[relabel]   {target}: {cursor.rowcount}/{count} rows "
+            f"in {elapsed:.1f}s",
             flush=True,
         )
     connection.commit()
 
+    expected = connection.execute("select count(*) from src.keyv").fetchone()[0]
+    actual = connection.execute("select count(*) from keyv").fetchone()[0]
     leftover = connection.execute(
         "select count(*) from keyv where substr(key,1,instr(key,':')-1) like ?",
         (f"%{source_id}%",),
-    ).fetchone()[0]
-    accounts = connection.execute(
-        "select count(*) from keyv where key like ?",
-        (f"staking-ledger-{target_id}-accounts:%",),
     ).fetchone()[0]
     first_account = connection.execute(
         "select 1 from keyv where key = ?",
         (f"staking-ledger-{target_id}-accounts:0",),
     ).fetchone()
+    connection.execute("detach database src")
     connection.close()
 
     print(
-        f"[relabel] namespaces still naming {source_id}: {leftover}, "
-        f"staking-ledger-{target_id}-accounts rows: {accounts}, "
-        f"index 0 present: {'yes' if first_account else 'no'}",
+        f"[relabel] rows {actual}/{expected}, namespaces still naming "
+        f"{source_id}: {leftover}, index 0 present: "
+        f"{'yes' if first_account else 'no'}",
         flush=True,
     )
-    if leftover or not accounts or not first_account:
+    if actual != expected or leftover or not first_account:
         sys.exit("[relabel] incomplete - do not publish this body")
     print("[relabel] done", flush=True)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 5:
         sys.exit(__doc__)
-    db, source, target = sys.argv[1], sys.argv[2], sys.argv[3]
-    if not os.path.isfile(db):
-        sys.exit(f"{db} does not exist")
+    source_db, output_db, source, target = sys.argv[1:5]
+    if not os.path.isfile(source_db):
+        sys.exit(f"{source_db} does not exist")
+    if os.path.exists(output_db):
+        sys.exit(f"{output_db} already exists - remove it first")
     if not source.isdigit() or not target.isdigit():
         sys.exit("source and target lifecycle ids must be decimal integers")
-    main(db, source, target)
+    main(source_db, output_db, source, target)

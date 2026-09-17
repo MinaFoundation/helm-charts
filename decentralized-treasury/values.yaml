@@ -668,9 +668,10 @@ lifecycleFanout:
   # spends hours on lifecycles that have already ended. Set it to the lowest id
   # still worth having.
   minLifecycleId: 0
-  # -- Scratch space for the body being relabelled, as an emptyDir size limit.
-  # It holds one body at a time, so allow comfortably more than the largest
-  # lifecycle database.
+  # -- Scratch space for the relabelling, as an emptyDir size limit. It holds
+  # the canonical's body - kept for the whole group, rather than re-downloaded
+  # per sibling - plus the sibling being written, so allow comfortably more
+  # than twice the largest lifecycle database.
   workVolumeSize: 40Gi
   # -- How often the duplicator checks for a newly-proven canonical id, in
   # seconds.

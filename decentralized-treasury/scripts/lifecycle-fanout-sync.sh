@@ -74,19 +74,35 @@ proofs_published() {
     && aws s3 ls "${PROOFS_S3_PREFIX}/${id}-merge.json" >/dev/null 2>&1
 }
 
+# Downloads canonical id $1's body into the work directory, unless it is
+# already there. Kept for the whole group: fetching it per sibling would mean
+# groupSize-1 downloads of the same multi-GB object.
+ensure_canonical_body() {
+  canonical=$1
+  path="${FANOUT_WORK_DIRECTORY}/${canonical}.sqlite"
+
+  mkdir -p "$FANOUT_WORK_DIRECTORY"
+  [ -f "$path" ] && return 0
+
+  log "fetching lifecycle ${canonical}'s body to relabel from"
+  # Downloaded under .part and renamed, so an interrupted fetch is never
+  # mistaken for a complete body on the next cycle.
+  aws s3 cp "${SQLITE_S3_PREFIX}/${canonical}.sqlite" "${path}.part" --only-show-errors
+  mv "${path}.part" "$path"
+}
+
 # Fans out canonical id $1 onto sibling id $2: real (server-side, no
 # download/reupload) copies for the small proof JSONs, and a relabelled copy
 # of the sqlite body - see the file header for why the body cannot be shared.
 duplicate_lifecycle() {
   canonical=$1
   sibling=$2
+  source_body="${FANOUT_WORK_DIRECTORY}/${canonical}.sqlite"
   body="${FANOUT_WORK_DIRECTORY}/${sibling}.sqlite.part"
 
-  mkdir -p "$FANOUT_WORK_DIRECTORY"
   rm -f "$body"
-  log "relabelling lifecycle ${canonical}'s body as ${sibling} (this takes minutes)"
-  aws s3 cp "${SQLITE_S3_PREFIX}/${canonical}.sqlite" "$body" --only-show-errors
-  python3 /scripts/relabel-lifecycle-sqlite.py "$body" "$canonical" "$sibling"
+  log "relabelling lifecycle ${canonical}'s body as ${sibling}"
+  python3 /scripts/relabel-lifecycle-sqlite.py "$source_body" "$body" "$canonical" "$sibling"
   aws s3 cp "$body" "${SQLITE_S3_PREFIX}/${sibling}.sqlite" --only-show-errors
   rm -f "$body"
 
@@ -113,14 +129,26 @@ sync_once() {
 
     group_end=$(( canonical + LIFECYCLE_FANOUT_GROUP_SIZE - 1 ))
     sibling=$(( canonical + 1 ))
+    fanned=false
     while [ "$sibling" -le "$group_end" ]; do
-      if [ "$sibling" -lt "$LIFECYCLE_FANOUT_MIN_ID" ]; then
+      if [ "$sibling" -lt "$LIFECYCLE_FANOUT_MIN_ID" ] \
+        || echo "$done_set" | grep -qx "$sibling"; then
         sibling=$(( sibling + 1 ))
         continue
       fi
-      echo "$done_set" | grep -qx "$sibling" || duplicate_lifecycle "$canonical" "$sibling"
+      ensure_canonical_body "$canonical"
+      duplicate_lifecycle "$canonical" "$sibling"
+      fanned=true
       sibling=$(( sibling + 1 ))
     done
+
+    # The group is complete, so its source body is only taking up disk now.
+    # A cycle that failed part-way through leaves it behind on purpose - the
+    # next cycle reuses it rather than downloading it again.
+    if [ "$fanned" = "true" ]; then
+      rm -f "${FANOUT_WORK_DIRECTORY}/${canonical}.sqlite"
+      log "group ${canonical}..${group_end} complete"
+    fi
   done
 }
 
