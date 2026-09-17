@@ -643,24 +643,35 @@ votingLedgerScheduler:
 # -- EXPERIMENTAL, off by default. Fans out one real, fully-proven lifecycle's
 # proofs across a group of synthetic sibling lifecycle ids that share the same
 # underlying staking ledger, so the expensive build+prove step runs once per
-# group instead of once per synthetic id. A sibling's (potentially large)
-# sqlite body is never duplicated - only a small pointer object naming its
-# canonical, which every consumer's s3-sync-pull sidecar resolves into a local
-# symlink at fetch time, so N siblings cost one body on disk, not N. Intended
-# for accelerated lifecycle testing (e.g. many short lifecycles inside one
-# real Mina epoch), never for a production release.
+# group instead of once per synthetic id. Each sibling still gets its own real
+# sqlite body, relabelled from the canonical's: the rows inside a body are
+# namespaced with the lifecycle id that produced them, so a shared body reads
+# as an empty ledger and every proposal in that lifecycle fails the staking
+# ledger root check. Budget one download, one rewrite and one upload of a body
+# (minutes, and bucket space) per sibling. Intended for accelerated lifecycle
+# testing (e.g. many short lifecycles inside one real Mina epoch), never for a
+# production release.
 lifecycleFanout:
   # -- Deploys the fan-out sidecar and restricts the voting-ledger-scheduler
   # to canonical ids only. Leave false for every normal release.
   enabled: false
   # -- Number of consecutive lifecycle ids per group. Only the first id in
   # each group (id % groupSize == 0) is ever really built/proven; the rest are
-  # aliased to it once it is complete. 1 (the default) means every id is its
-  # own group, i.e. no grouping at all. Must be chosen so group boundaries
+  # relabelled from it once it is complete. 1 (the default) means every id is
+  # its own group, i.e. no grouping at all. Must be chosen so group boundaries
   # land on real Mina epoch boundaries (requires config.treasuryDeployedAtSlot
   # to be epoch-aligned, e.g. 0) - otherwise a group can straddle two
   # different real staking-ledger hashes.
   groupSize: 1
+  # -- Lowest sibling id to produce. Siblings are produced in ascending order
+  # and each one costs minutes, so a fan-out that starts mid-group otherwise
+  # spends hours on lifecycles that have already ended. Set it to the lowest id
+  # still worth having.
+  minLifecycleId: 0
+  # -- Scratch space for the body being relabelled, as an emptyDir size limit.
+  # It holds one body at a time, so allow comfortably more than the largest
+  # lifecycle database.
+  workVolumeSize: 40Gi
   # -- How often the duplicator checks for a newly-proven canonical id, in
   # seconds.
   pollIntervalSeconds: 60

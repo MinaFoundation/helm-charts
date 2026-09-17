@@ -64,6 +64,10 @@ spec:
               value: {{ .Values.s3.region | quote }}
             - name: LIFECYCLE_FANOUT_GROUP_SIZE
               value: {{ .Values.lifecycleFanout.groupSize | quote }}
+            - name: LIFECYCLE_FANOUT_MIN_ID
+              value: {{ .Values.lifecycleFanout.minLifecycleId | quote }}
+            - name: FANOUT_WORK_DIRECTORY
+              value: /work
             - name: SYNC_INTERVAL_SECONDS
               value: {{ .Values.lifecycleFanout.pollIntervalSeconds | quote }}
             - name: SYNC_ONESHOT
@@ -81,8 +85,14 @@ spec:
           {{- end }}
           volumeMounts:
             {{- include "decentralized-treasury.scriptsVolumeMount" . | nindent 12 }}
+            - name: work
+              mountPath: /work
       volumes:
         {{- include "decentralized-treasury.scriptsVolume" . | nindent 8 }}
+        # One body at a time is downloaded here, relabelled and uploaded again.
+        - name: work
+          emptyDir:
+            sizeLimit: {{ .Values.lifecycleFanout.workVolumeSize | quote }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

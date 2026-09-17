@@ -16,30 +16,26 @@
 # Only the FIRST lifecycle id in each group of 21 ("canonical") is ever really
 # built and proven - lifecycleFanout below fans its proofs out onto the other
 # 20 so the expensive build+prove step runs once per real epoch, not 21 times
-# over the same underlying staking ledger. A sibling's sqlite body is never
-# duplicated in S3 - only a small <id>.sqlite.alias pointer object, which
-# every consumer's s3-sync-pull sidecar resolves into a local symlink at fetch
-# time (see lifecycleFanout in values.yaml and lifecycle-fanout-sync.sh).
+# over the same underlying staking ledger. A sibling still gets its own real
+# sqlite body, relabelled from the canonical's, because a body's rows are
+# namespaced with the lifecycle id that produced them and a shared body reads
+# as an empty ledger (see lifecycleFanout in values.yaml and
+# lifecycle-fanout-sync.sh). Budget minutes and one body of bucket space per
+# sibling; only the proving is saved.
 #
 # COLLISION CAVEAT (READ THIS): network is left at "devnet", the same S3 key
 # prefix the real devnet release uses. This release's lifecycle ids advance
 # ~84x faster than the real release's, so they will repeatedly land on ids the
-# real release also uses. Two distinct failure modes follow from that, and the
-# alias mechanism above makes the second one sharper than plain overwrite:
-#   1. A real <id>.sqlite body this release writes silently overwrites the
-#      real release's body at that id, or vice versa - whichever write lands
-#      last wins.
-#   2. s3-sync-pull.sh (shared by EVERY release on this network, including the
-#      real devnet one - the alias check is unconditional, not gated by
-#      lifecycleFanout.enabled) treats an <id>.sqlite.alias object as
-#      authoritative over any real <id>.sqlite body that id might also have.
-#      If one of this release's sibling ids collides with an id the real
-#      devnet release is using, the real release's OWN pods (api, indexer,
-#      processor, its own voting-ledger-scheduler) will symlink to and serve
-#      THIS release's unrelated canonical data for that id - silently, with no
-#      error, even where the real release already has a perfectly good real
-#      body of its own sitting right there. This is worse than a plain
-#      overwrite: it doesn't matter which side writes first.
+# real release also uses:
+#   1. A relabelled <id>.sqlite body this release writes silently overwrites
+#      the real release's body at that id, or vice versa - whichever write
+#      lands last wins. The marker ordering means the loser's consumers see a
+#      complete, valid, and entirely unrelated ledger for that id.
+#   2. Any <id>.sqlite.alias object left in the prefix by an older revision of
+#      this release is now ignored (and any local symlink deleted) by
+#      s3-sync-pull.sh, so it can no longer make a real release serve this
+#      one's data. Delete the leftovers anyway - the markers beside them
+#      promise a body that does not exist.
 # This is a deliberate choice (avoids needing a distinct network for this
 # spike) - the operator is responsible for manually renaming/moving objects
 # (bodies, markers, aliases, and proofs) in the shared devnet S3 prefixes to

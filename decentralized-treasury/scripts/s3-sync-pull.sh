@@ -11,11 +11,12 @@
 #   * Only .sqlite bodies are subject to SQLITE_KEEP_LAST_N, which retains the
 #     N highest lifecycle ids. Set it to 0 to keep every body.
 #
-# EXPERIMENTAL. An id may carry a small <id>.sqlite.alias object instead of a
-# real <id>.sqlite body - see lifecycleFanout in values.yaml. Such an id never
-# gets its own body downloaded: instead this fetches (if needed) the aliased
-# id's real body and points a local symlink at it, so N aliased ids on disk
-# cost one body, not N. Never present outside an accelerated-testing release.
+# Every id gets its own real body, including the synthetic siblings an
+# accelerated-testing release fans out (see lifecycleFanout in values.yaml).
+# Bodies cannot be shared between ids: their rows are namespaced with the
+# lifecycle id that produced them, so a borrowed body reads as an empty ledger.
+# <id>.sqlite.alias objects and local symlinks are leftovers from an earlier
+# scheme that did share them, and are cleaned up here.
 #
 # Runs one pass and exits when SYNC_ONESHOT=true (init container), otherwise
 # loops forever (sidecar).
@@ -68,22 +69,14 @@ retained_lifecycle_ids() {
 # Drops local bodies outside the retention window. Markers are left untouched.
 # Removing a file the API already has open is safe: the open handle keeps
 # working, and only a fresh lookup for that lifecycle will report it missing.
-#
-# $2 (referenced) is the set of canonical ids an in-window aliased id still
-# points at, even where that canonical id's own number falls outside the
-# window - otherwise a canonical kept alive only by an alias would be fetched
-# to satisfy the alias and then immediately pruned again on every single
-# cycle, forever.
 prune_bodies() {
   retained=$1
-  referenced=$2
   [ "$SQLITE_KEEP_LAST_N" -gt 0 ] || return 0
 
   for path in "$SQLITE_DATA_DIRECTORY"/*.sqlite; do
     [ -e "$path" ] || continue
     id=$(basename "$path" .sqlite)
     echo "$retained" | grep -qx "$id" && continue
-    echo "$referenced" | grep -qx "$id" && continue
     log "pruning lifecycle ${id} (outside keep-last-${SQLITE_KEEP_LAST_N})"
     rm -f "$path" "$path-journal" "$path-wal" "$path-shm"
   done
@@ -100,45 +93,41 @@ sync_once() {
     --only-show-errors
 
   retained=$(retained_lifecycle_ids)
-  referenced=""
 
   for id in $retained; do
     local_path="${SQLITE_DATA_DIRECTORY}/${id}.sqlite"
 
-    alias=$(alias_target "$id")
-    if [ -n "$alias" ]; then
-      referenced="${referenced}${alias}
-"
-      canonical_path="${SQLITE_DATA_DIRECTORY}/${alias}.sqlite"
-      if [ ! -e "$canonical_path" ]; then
-        canonical_size=$(remote_body_size "$alias")
-        if [ -z "$canonical_size" ]; then
-          log "lifecycle ${id} aliases ${alias}, whose body is not in S3 yet - retrying next cycle"
-          continue
-        fi
-        log "fetching lifecycle ${alias} (canonical for aliased lifecycle ${id})"
-        aws s3 cp "${S3_PREFIX}/${alias}.sqlite" "$canonical_path" --only-show-errors
-      fi
-      if [ "$(readlink "$local_path" 2>/dev/null || true)" != "${alias}.sqlite" ]; then
-        rm -f "$local_path"
-        ln -s "${alias}.sqlite" "$local_path"
-        log "linked lifecycle ${id} -> ${alias}"
-      fi
-      continue
+    # A body has to be this lifecycle's own file. Earlier revisions of
+    # lifecycle-fanout-sync.sh published an <id>.sqlite.alias object naming
+    # another lifecycle, and this script resolved it into a local symlink onto
+    # that lifecycle's body. That is silently wrong: every row inside a body is
+    # namespaced with the lifecycle id that produced it
+    # ("staking-ledger-42-accounts:7"), so a consumer reading a borrowed body
+    # finds none of its own keys and serves an empty ledger, and proposals in
+    # that lifecycle fail the staking ledger root check. The fanout now
+    # publishes a relabelled body per sibling instead; clear anything left over
+    # from the alias scheme so the real body below replaces it.
+    if [ -L "$local_path" ]; then
+      log "lifecycle ${id} is a symlink onto $(readlink "$local_path") - dropping it, a borrowed body serves an empty ledger"
+      rm -f "$local_path"
+    fi
+    if [ -n "$(alias_target "$id")" ]; then
+      log "lifecycle ${id} still has a .sqlite.alias object in ${S3_PREFIX} - ignoring it, this lifecycle needs its own relabelled body"
     fi
 
     remote_size=$(remote_body_size "$id")
 
-    # A .sqlite.done marker is supposed to guarantee a real body or an alias
-    # exists - s3-sync-push only publishes a marker once the body is whole,
-    # and the alias branch above already returned if this id has one. Both
-    # missing means the producer-side invariant broke (observed: stale/seed
-    # markers with neither a body nor an alias behind them). Log and skip
-    # this id rather than run the unconditional `aws s3 cp` below, which
-    # would 404 under `set -eu` and take down the whole sync - one broken id
-    # should not block every other id in the window from syncing.
+    # A .sqlite.done marker is supposed to guarantee a real body exists -
+    # s3-sync-push only publishes a marker once the body is whole, and
+    # lifecycle-fanout-sync publishes a sibling's marker only after its
+    # relabelled body. Both missing means the producer-side invariant broke
+    # (observed: stale/seed markers, and the marker an older fanout wrote next
+    # to an alias object rather than a body). Log and skip this id rather than
+    # run the unconditional `aws s3 cp` below, which would 404 under `set -eu`
+    # and take down the whole sync - one broken id should not block every other
+    # id in the window from syncing.
     if [ ! -f "$local_path" ] && [ -z "$remote_size" ]; then
-      log "lifecycle ${id} has a .sqlite.done marker but neither a body nor an alias exists in ${S3_PREFIX} - skipping"
+      log "lifecycle ${id} has a .sqlite.done marker but no body in ${S3_PREFIX} - skipping"
       continue
     fi
 
@@ -168,7 +157,7 @@ sync_once() {
     aws s3 cp "${S3_PREFIX}/${id}.sqlite" "$local_path" --only-show-errors
   done
 
-  prune_bodies "$retained" "$referenced"
+  prune_bodies "$retained"
 }
 
 main() {

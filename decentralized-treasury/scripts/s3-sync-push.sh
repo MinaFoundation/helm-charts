@@ -32,11 +32,12 @@ push_phase() {
 
   [ -n "$includes" ] || return 0
 
-  # --no-follow-symlinks: an aliased lifecycle (see lifecycleFanout in
-  # values.yaml) is a local symlink to another id's real body. Following it
-  # here would re-upload that body under the alias's own key, silently
-  # undoing the point of aliasing. Excluding symlinks is a no-op for every
-  # normal (non-experimental) release, which never creates one.
+  # --no-follow-symlinks: a lifecycle body left as a local symlink onto
+  # another id's body by the retired alias scheme (see lifecycleFanout in
+  # values.yaml) must never be re-uploaded under its own key - the rows inside
+  # it are namespaced with the other lifecycle's id. s3-sync-pull.sh deletes
+  # such links on sight now; this stays as a second line of defence, and is a
+  # no-op for every release that never had one.
   set -- "$SOURCE_DIRECTORY/" "$S3_TARGET_PREFIX/" --exclude '*' --no-follow-symlinks --only-show-errors
   for pattern in $includes; do
     set -- "$@" --include "$pattern"
