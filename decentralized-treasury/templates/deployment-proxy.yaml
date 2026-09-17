@@ -1,6 +1,12 @@
 {{- if .Values.proxy.enabled }}
 {{- $component := "proxy" }}
 {{- $ctx := dict "root" $ "component" $component }}
+{{/*
+Whether this pod is the thing enforcing the console's basic auth, in which case
+it needs the htpasswd file mounted. See the backoffice server block in
+configmap-proxy.yaml.
+*/}}
+{{- $backofficeBasicAuth := and (include "decentralized-treasury.backofficeViaProxy" .) (eq .Values.backoffice.auth.mode "basic") }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -22,6 +28,11 @@ spec:
         # Rolls the pods when the routing config changes; nginx does not watch
         # the mounted ConfigMap.
         checksum/config: {{ include (print $.Template.BasePath "/configmap-proxy.yaml") . | sha256sum }}
+        {{- if $backofficeBasicAuth }}
+        # nginx reads the htpasswd file once per worker start, so a credential
+        # change has to roll the pods the same way a config change does.
+        checksum/backoffice-auth: {{ include (print $.Template.BasePath "/secret-backoffice-auth.yaml") . | sha256sum }}
+        {{- end }}
         {{- with .Values.proxy.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -73,10 +84,26 @@ spec:
             - name: config
               mountPath: /etc/nginx/conf.d
               readOnly: true
+            {{- if $backofficeBasicAuth }}
+            # The htpasswd file auth_basic_user_file points at. Its own mount
+            # rather than a key projected into conf.d, so a credential change
+            # cannot be mistaken for a routing change.
+            - name: backoffice-auth
+              mountPath: {{ include "decentralized-treasury.backofficeAuthFilePath" . | dir }}
+              readOnly: true
+            {{- end }}
       volumes:
         - name: config
           configMap:
             name: {{ include "decentralized-treasury.componentName" $ctx }}
+        {{- if $backofficeBasicAuth }}
+        - name: backoffice-auth
+          secret:
+            secretName: {{ include "decentralized-treasury.backofficeAuthSecretName" . }}
+            items:
+              - key: auth
+                path: {{ include "decentralized-treasury.backofficeAuthFilePath" . | base }}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

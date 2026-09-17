@@ -41,10 +41,12 @@ spec:
         # Built from the `web` stage of the Dockerfile, which is a different
         # image from every other service here.
         #
-        # IMPORTANT: NEXT_PUBLIC_* values are inlined into the client bundle at
-        # BUILD time. Setting them here only affects server-side rendering, so
-        # the image must be built with the values for the network it is
-        # deployed to - these runtime values cannot correct a mismatched build.
+        # NEXT_PUBLIC_* values are read at container START, not baked in: the
+        # image is built with none of them set, and the app writes the
+        # container's environment into an inline <script> ahead of its bundles
+        # for the client to read. One image therefore serves any network, and
+        # the values below are authoritative. See devops/PUBLISHING.md in the
+        # application repo.
         - name: {{ $component }}
           image: {{ include "decentralized-treasury.componentImage" (dict "root" $ "image" .Values.web.image) }}
           imagePullPolicy: {{ include "decentralized-treasury.componentPullPolicy" (dict "root" $ "image" .Values.web.image) }}

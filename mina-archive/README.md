@@ -1,6 +1,6 @@
 # mina-archive
 
-![Version: 4.0.0](https://img.shields.io/badge/Version-4.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.1.0](https://img.shields.io/badge/AppVersion-2.1.0-informational?style=flat-square)
+![Version: 4.1.0](https://img.shields.io/badge/Version-4.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.0.0](https://img.shields.io/badge/AppVersion-4.0.0-informational?style=flat-square)
 
 A Helm chart for Mina Protocol's berkeley archive node
 
@@ -71,8 +71,8 @@ helmfile status
 | externalDatabase.port | int | `5432` | Port of external database connection |
 | externalDatabase.username | string | `"username"` | Username of external database connection |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
-| image.repository | string | `"gcr.io/o1labs-192920/mina-archive"` | Docker image repository |
-| image.tag | string | `"2.0.0berkeley-rc1-1551e2f-focal"` | Docker image tag |
+| image.repository | string | `"minaprotocol/mina-archive"` | Docker image repository |
+| image.tag | string | `"4.0.0-6850301-bookworm-mainnet"` | Docker image tag |
 | missingBlocksGuardian.autoImportBlockUrl | string | `""` | URL to auto import a block when running the missing blocks guardian |
 | missingBlocksGuardian.enabled | bool | `true` | Enabled missing blocks guardian |
 | missingBlocksGuardian.podAnnotations | object | `{}` | Annotations to the missing blocks guardian |

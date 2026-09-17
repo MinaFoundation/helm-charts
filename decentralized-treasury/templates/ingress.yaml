@@ -22,12 +22,21 @@ Replaces the Caddy reverse-proxy services from compose, in one of three modes.
   proxy (ALB, one hostname)
     One host, routed to the in-cluster proxy, which strips the prefixes itself.
     The controller only ever sees `/`, so this keeps the browser on a single
-    origin without needing a controller that can rewrite. Use it when the web
-    image was built against same-origin paths, which is what makes host mode
-    unavailable: those URLs are baked into the client bundle at build time.
+    origin without needing a controller that can rewrite. Use it when every
+    service should share one hostname.
 
 The Caddyfile also proxied /mina/* to a Mina node outside this stack. In proxy
 mode that is proxy.minaNodeUpstream; otherwise add it via ingress.extraPaths.
+
+The break-glass console normally gets its own object, in
+ingress-backoffice.yaml: it needs authentication, and ingress annotations apply
+to a whole Ingress object rather than to one rule, so auth put here would also
+gate the public web app - the same reason the API paths get their own.
+
+The exception is `proxy` mode with ingress.hosts.backoffice, where its hostname
+is added below and forwarded to the in-cluster proxy. That carries no
+annotations at all: nginx applies auth_basic behind the load balancer, so there
+is nothing to leak onto web and no second object to own.
 */}}
 {{- $rootName := $webName }}
 {{- $rootLabels := $webLabels }}
@@ -49,6 +58,9 @@ mode that is proxy.minaNodeUpstream; otherwise add it via ingress.extraPaths.
 {{- end }}
 {{- if .Values.processorApi.enabled }}
 {{- $services = append $services (dict "key" "processor" "component" "processor-api" "port" .Values.processorApi.service.port) }}
+{{- end }}
+{{- if and (or .Values.ingress.hosts.backoffice .Values.backoffice.pathPrefix) (not .Values.backoffice.enabled) }}
+{{- fail "the backoffice is routed (ingress.hosts.backoffice or backoffice.pathPrefix) but backoffice.enabled is false: there would be nothing behind it" }}
 {{- end }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -82,6 +94,28 @@ spec:
           {{- with .Values.ingress.extraPaths }}
           {{- toYaml . | nindent 10 }}
           {{- end }}
+    {{- if include "decentralized-treasury.backofficeViaProxy" . }}
+    {{/*
+    The break-glass console's hostname, forwarded wholesale to the in-cluster
+    proxy. The proxy has a server block for this name that serves the console at
+    `/` and the daemon at `/mina/`, and applies auth_basic itself.
+
+    It belongs on this object rather than one of its own precisely because
+    nothing here is annotation-driven: there is no auth annotation to leak onto
+    the public web app, which is what ingress-backoffice.yaml exists to avoid in
+    every other mode.
+    */}}
+    - host: {{ .Values.ingress.hosts.backoffice | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "decentralized-treasury.componentName" (dict "root" $ "component" "proxy") }}
+                port:
+                  number: {{ .Values.proxy.service.port }}
+    {{- end }}
     {{- if eq .Values.ingress.mode "host" }}
     {{- range $service := $services }}
     {{- $serviceHost := index $.Values.ingress.hosts $service.key }}

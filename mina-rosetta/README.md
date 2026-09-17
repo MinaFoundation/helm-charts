@@ -1,6 +1,6 @@
 # mina-rosetta
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.0.0](https://img.shields.io/badge/AppVersion-4.0.0-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -44,8 +44,8 @@ helmfile status
 | affinity | object | `{}` | Affinity rules |
 | fullnameOverride | string | `""` | The full release name override |
 | image.pullPolicy | string | `"IfNotPresent"` | The image pull policy |
-| image.repository | string | `"gcr.io/o1labs-192920/mina-rosetta"` | The image repository |
-| image.tag | string | `"2.0.0rampup8-81d994d-focal"` | The image tag |
+| image.repository | string | `"minaprotocol/mina-rosetta"` | The image repository |
+| image.tag | string | `"4.0.0-6850301-bookworm-mainnet"` | The image tag |
 | imagePullSecrets | list | `[]` | The secrets used to pull the image |
 | ingress.annotations | object | `{}` | Ingress Annotations |
 | ingress.className | string | `""` | Ingress Class Name |

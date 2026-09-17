@@ -61,6 +61,17 @@ releases:
           proofsEnabled: false
           corsAllowedOrigins:
             - "https://{{ .Values.domain }}"
+          # Required by backoffice.enabled. Exactly five, in the SAME order as
+          # the pause-controller deployment - the on-chain commitment is an
+          # ordered hash of them and signature i is checked against
+          # participant i. Replace with the release's real signers; after a
+          # `pause-controller rotate-multisig-keys` update this to match.
+          multisigParticipantsPublicKeys:
+            - B62qREPLACE_WITH_PARTICIPANT_1
+            - B62qREPLACE_WITH_PARTICIPANT_2
+            - B62qREPLACE_WITH_PARTICIPANT_3
+            - B62qREPLACE_WITH_PARTICIPANT_4
+            - B62qREPLACE_WITH_PARTICIPANT_5
 
       - postgresql:
           enabled: true
@@ -92,7 +103,8 @@ releases:
             bucket: mina-staking-ledgers-devnet
             prefix: "staking-"
 
-      # Off until the dt-proving-* images exist.
+      # Left off in this example: proving needs Redis, the S3 caches and a
+      # worker pool. The dt-proving-* images themselves are published.
       - proving:
           enabled: false
 
@@ -101,6 +113,57 @@ releases:
           publicEnv:
             NEXT_PUBLIC_NETWORK_ID: DEVNET
             NEXT_PUBLIC_SLOT_DURATION_MS: "90000"
+
+      # Break-glass console. Enabling it creates a Deployment and a ClusterIP
+      # Service and nothing else - it is deliberately NOT on the ingress below,
+      # because anyone who can reach it can pause the treasury. Reach it with:
+      #
+      #   kubectl -n {{ .Values.namespace }} port-forward svc/decentralized-treasury-backoffice 3200:3200
+      #
+      # then open http://127.0.0.1:3200.
+      #
+      # To publish it, give it its own hostname with ingress.hosts.backoffice
+      # and choose an authentication layer with backoffice.auth.mode - the
+      # chart will not render a routed console without one. A hostname keeps
+      # the application generic (the same dt-backoffice image, serving from its
+      # own root) and works in every ingress mode. Serve HTTPS: the proving
+      # worker needs a secure context.
+      #
+      # On this ALB, OIDC at the load balancer, enforced before a request ever
+      # reaches the pod:
+      #
+      #   backoffice:
+      #     auth:
+      #       mode: external
+      #     ingress:
+      #       annotations:
+      #         alb.ingress.kubernetes.io/auth-type: oidc
+      #         alb.ingress.kubernetes.io/auth-on-unauthenticated-request: authenticate
+      #         alb.ingress.kubernetes.io/auth-idp-oidc: '{"issuer":"...","authorizationEndpoint":"...","tokenEndpoint":"...","userInfoEndpoint":"...","secretName":"backoffice-oidc"}'
+      #         alb.ingress.kubernetes.io/group.name: decentralized-treasury
+      #         alb.ingress.kubernetes.io/certificate-arn: valid_arn
+      #         alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+      #         alb.ingress.kubernetes.io/scheme: internet-facing
+      #         alb.ingress.kubernetes.io/target-type: ip
+      #         external-dns.alpha.kubernetes.io/hostname: "backoffice.{{ .Values.domain }}"
+      #
+      # Behind an nginx ingress, `mode: basic` instead makes the chart render an
+      # htpasswd Secret and the auth annotations itself, and `mode: external`
+      # takes nginx auth-url/auth-signin annotations for oauth2-proxy. ALB does
+      # not implement the basic-auth annotations, and the chart says so rather
+      # than publishing the console unguarded.
+      #
+      # backoffice.pathPrefix can instead mount it on a path like /backoffice,
+      # routed without stripping the way /sqlite and /proofs are, but that only
+      # works with an image built with a matching Next.js basePath, which ties
+      # the image to one deployment. Prefer the hostname.
+      - backoffice:
+          enabled: true
+          publicEnv:
+            NEXT_PUBLIC_NETWORK_ID: DEVNET
+            # Point the browser straight at the node: with the console off the
+            # ingress there is no publicBaseUrl to derive this from.
+            NEXT_PUBLIC_MINA_NODE_URL: http://devops.hz.minaprotocol.network:3001/graphql
 
       - ingress:
           enabled: true
@@ -120,18 +183,36 @@ releases:
             alb.ingress.kubernetes.io/ssl-redirect: "443"
             alb.ingress.kubernetes.io/target-type: ip
             external-dns.alpha.kubernetes.io/hostname: "{{ .Values.domain }},api.{{ .Values.domain }},indexer.{{ .Values.domain }},processor.{{ .Values.domain }}"
+          # To publish the break-glass console, add its hostname here:
+          #
+          #   hosts:
+          #     backoffice: "backoffice.{{ .Values.domain }}"
+          #
+          # It gets its own Ingress object, so its authentication annotations
+          # and DNS entry live under backoffice.ingress rather than here - see
+          # the backoffice block above. Keeping it off this object is what stops
+          # that auth from also gating the public web app.
+          #
+          # With proxy.enabled that hostname also gets a /mina rule, which lets
+          # backoffice.publicBaseUrl derive a same-origin node URL. Without the
+          # proxy, set NEXT_PUBLIC_MINA_NODE_URL explicitly, as above.
 
       # On an nginx ingress, swap the block above for path mode - one hostname,
-      # with the prefixes stripped exactly as the compose Caddyfile did:
+      # with the prefixes stripped exactly as the compose Caddyfile did. The
+      # backoffice hostname is optional and, unlike the API prefixes, is
+      # rendered on the web Ingress with no rewrite:
       #
       # - ingress:
       #     enabled: true
       #     className: nginx
       #     mode: path
       #     host: "{{ .Values.domain }}"
+      #     hosts:
+      #       backoffice: "backoffice.{{ .Values.domain }}"
       #     apiAnnotations:
       #       nginx.ingress.kubernetes.io/rewrite-target: /$2
       #     tls:
       #       - secretName: decentralized-treasury-tls
       #         hosts:
       #           - "{{ .Values.domain }}"
+      #           - "backoffice.{{ .Values.domain }}"
