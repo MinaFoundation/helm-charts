@@ -164,6 +164,29 @@ done
 if grep -q -- "--exclude 42.sqlite" "$ROOT/push.log"; then echo "  FAIL canonical 42 wrongly excluded"; fail=1; else echo "  ok   canonical 42 still publishable"; fi
 
 echo
+echo "=== producer mode: markers only, no bodies ==="
+PDATA="$ROOT/producer"; mkdir -p "$PDATA"
+cat > "$BIN/aws" <<STUB
+#!/usr/bin/env bash
+set -euo pipefail
+BUCKET="$BUCKET"
+strip() { printf '%s' "\$1" | sed 's#^s3://[^/]*/[^/]*/*##'; }
+case "\$2" in
+  ls) key=\$(strip "\$3"); for f in "\$BUCKET"/*; do [ -e "\$f" ] || continue; name=\$(basename "\$f"); case "\$name" in \${key}*) printf '2026-09-17 00:00:00 %s %s\n' "\$(wc -c < "\$f" | tr -d ' ')" "\$name";; esac; done ;;
+  cp) key=\$(strip "\$3"); [ -f "\$BUCKET/\$key" ] || { echo "fatal error: 404" >&2; exit 1; }; if [ "\$4" = "-" ]; then cat "\$BUCKET/\$key"; else cp "\$BUCKET/\$key" "\$4"; fi ;;
+  sync) dest=\$(printf '%s' "\$4" | sed 's#/\$##'); for f in "\$BUCKET"/*.sqlite.done "\$BUCKET"/*.sqlite.proven; do [ -e "\$f" ] || continue; cp "\$f" "\$dest/"; done ;;
+esac
+STUB
+chmod +x "$BIN/aws"
+SQLITE_DATA_DIRECTORY="$PDATA" SQLITE_PULL_BODIES=false MATERIALISE_SIBLINGS=false SYNC_ONESHOT=true \
+  sh "$CHART/scripts/s3-sync-pull.sh" > "$ROOT/producer.log" 2>&1
+grep -q "markers only" "$ROOT/producer.log" && echo "  ok   took the markers-only path" || { echo "  FAIL no markers-only log line"; fail=1; }
+bodies=$(find "$PDATA" -maxdepth 1 -name '*.sqlite' | wc -l | tr -d ' ')
+[ "$bodies" = "0" ] && echo "  ok   fetched 0 bodies" || { echo "  FAIL fetched $bodies bodies"; fail=1; }
+markers=$(find "$PDATA" -maxdepth 1 -name '*.sqlite.done' | wc -l | tr -d ' ')
+[ "$markers" -gt 0 ] && echo "  ok   fetched $markers markers" || { echo "  FAIL fetched no markers"; fail=1; }
+
+echo
 [ "$fail" = 0 ] && echo "ALL CHECKS PASSED" || echo "SOME CHECKS FAILED"
 rm -rf "$ROOT"
 exit "$fail"

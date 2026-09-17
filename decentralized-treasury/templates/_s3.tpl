@@ -38,6 +38,10 @@ Pull-only cache sync. Call with:
 Use oneshot=true as an init container so a pod never starts serving from an
 empty cache, and oneshot=false as a sidecar to keep it fresh.
 
+pullBodies defaults to true when omitted. Pass false on a producer: it needs
+the markers to know what is already built, but writes its own body and reads
+no other lifecycle's, so fetching them is pure startup cost.
+
 materialiseSiblings belongs on consumers only (api, processor) and under a
 grouped release: those pods have to serve lifecycle ids the producers never
 built, and they relabel a local copy of the group's canonical to do it. Never
@@ -55,6 +59,10 @@ ids, and a relabelled sibling on a pushing pod's volume would be published.
       value: {{ .oneshot | quote }}
     - name: SYNC_INTERVAL_SECONDS
       value: {{ .root.Values.sqlite.syncIntervalSeconds | quote }}
+    {{- if hasKey . "pullBodies" }}
+    - name: SQLITE_PULL_BODIES
+      value: {{ .pullBodies | quote }}
+    {{- end }}
     {{- if and .materialiseSiblings .root.Values.lifecycleFanout.enabled (gt (int .root.Values.lifecycleFanout.groupSize) 1) }}
     - name: MATERIALISE_SIBLINGS
       value: "true"

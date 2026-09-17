@@ -365,6 +365,21 @@ api:
   podAnnotations: {}
   # -- Additional environment variables
   extraEnvVars: []
+  # -- Persist the lifecycle cache on a claim of this workload's own instead of
+  # an emptyDir. Worth it wherever rebuilding the cache is expensive: on an
+  # emptyDir every restart re-downloads the bodies in the window and, for a
+  # grouped release, relabels the siblings again - measured at 10 minutes
+  # before the pod served a request. A ReadWriteOnce claim pins the pod to one
+  # AZ, which is the trade.
+  persistence:
+    # -- Keep the lifecycle cache across restarts
+    enabled: false
+    # -- Storage class for the cache volume
+    storageClass: ""
+    # -- Size of the cache volume. Needs room for every body in the window:
+    # the group's canonical plus one per materialised sibling.
+    size: 40Gi
+
   # -- Affinity for this workload alone. Empty follows the chart-wide
   # `affinity`. Worth setting when this workload and another both keep a
   # local copy of the lifecycle cache: several GB per lifecycle each, on the
@@ -518,6 +533,21 @@ processor:
   podAnnotations: {}
   # -- Additional environment variables
   extraEnvVars: []
+  # -- Persist the lifecycle cache on a claim of this workload's own instead of
+  # an emptyDir. Worth it wherever rebuilding the cache is expensive: on an
+  # emptyDir every restart re-downloads the bodies in the window and, for a
+  # grouped release, relabels the siblings again - measured at 10 minutes
+  # before the pod served a request. A ReadWriteOnce claim pins the pod to one
+  # AZ, which is the trade.
+  persistence:
+    # -- Keep the lifecycle cache across restarts
+    enabled: false
+    # -- Storage class for the cache volume
+    storageClass: ""
+    # -- Size of the cache volume. Needs room for every body in the window:
+    # the group's canonical plus one per materialised sibling.
+    size: 40Gi
+
   # -- Affinity for this workload alone. Empty follows the chart-wide
   # `affinity`. Worth setting when this workload and another both keep a
   # local copy of the lifecycle cache: several GB per lifecycle each, on the

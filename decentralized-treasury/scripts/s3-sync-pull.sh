@@ -2,8 +2,10 @@
 # Hydrates the local SQLite lifecycle cache from S3 for read-only consumers.
 #
 # The lifecycle databases are produced by voting-ledger-scheduler and are
-# immutable once their .done marker exists, so consumers only ever pull. Two
-# rules come straight from how the application uses these files:
+# immutable once their .done marker exists, so consumers only ever pull. The
+# producer runs this too, with SQLITE_PULL_BODIES=false: it wants the markers
+# and none of the bodies. Three rules come straight from how the application
+# uses these files:
 #
 #   * Markers (.sqlite.done / .sqlite.proven) are never pruned. Both schedulers
 #     decide what work remains purely from marker presence, and each marker is
@@ -26,6 +28,16 @@ set -eu
 
 SQLITE_DATA_DIRECTORY="${SQLITE_DATA_DIRECTORY:-/data/sqlite}"
 SQLITE_KEEP_LAST_N="${SQLITE_KEEP_LAST_N:-0}"
+# Whether to fetch bodies at all, or only the markers.
+#
+# A producer needs the markers - they are how it knows which lifecycles are
+# already built - but not the bodies: it writes the one it is building itself,
+# resumes from its own checkpoint under the .checkpoints/ prefix, and decides
+# what is already produced by listing S3, never the local directory. Fetching
+# every other lifecycle's body costs it minutes of startup and tens of GB of
+# disk for data it never opens: measured at 37.6GB and 5.3 minutes on a
+# voting-ledger-scheduler that read none of it.
+SQLITE_PULL_BODIES="${SQLITE_PULL_BODIES:-true}"
 SYNC_INTERVAL_SECONDS="${SYNC_INTERVAL_SECONDS:-60}"
 SYNC_ONESHOT="${SYNC_ONESHOT:-false}"
 S3_PREFIX="s3://${SQLITE_S3_BUCKET:?Set SQLITE_S3_BUCKET}/${NETWORK:?Set NETWORK}"
@@ -271,6 +283,11 @@ sync_once() {
     --include '*.sqlite.done' \
     --include '*.sqlite.proven' \
     --only-show-errors
+
+  if [ "$SQLITE_PULL_BODIES" != "true" ]; then
+    log "markers only: this workload produces bodies rather than reading them"
+    return 0
+  fi
 
   retained=$(retained_lifecycle_ids)
 
