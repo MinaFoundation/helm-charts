@@ -1,6 +1,6 @@
 # decentralized-treasury
 
-![Version: 0.5.0-speedrun](https://img.shields.io/badge/Version-0.5.0--speedrun-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
+![Version: 0.5.1-speedrun](https://img.shields.io/badge/Version-0.5.1--speedrun-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
 
 A Helm chart for deploying the Mina Decentralized Treasury stack (API, indexer, processor, schedulers, web, back office and proving services)
 
@@ -50,7 +50,8 @@ helmfile status
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` | Affinity for pod assignment |
-| api | object | `{"deploymentAnnotations":{},"enabled":true,"extraEnvVars":[],"image":{"pullPolicy":"","repository":"minafoundation/dt-api","tag":""},"livenessProbe":{"failureThreshold":3,"httpGet":{"path":"/healthz","port":"http"},"initialDelaySeconds":15,"periodSeconds":20,"timeoutSeconds":5},"podAnnotations":{},"port":4000,"readinessProbe":{"failureThreshold":3,"httpGet":{"path":"/healthz","port":"http"},"initialDelaySeconds":5,"periodSeconds":10,"timeoutSeconds":5},"replicaCount":1,"resources":{},"service":{"annotations":{},"port":4000,"type":"ClusterIP"},"sqlite":{"enabled":true,"keepLastN":0}}` | Public treasury HTTP API (apps/api start:api). Reads proposal state from Postgres and lifecycle witnesses from the SQLite cache. |
+| api | object | `{"affinity":{},"deploymentAnnotations":{},"enabled":true,"extraEnvVars":[],"image":{"pullPolicy":"","repository":"minafoundation/dt-api","tag":""},"livenessProbe":{"failureThreshold":3,"httpGet":{"path":"/healthz","port":"http"},"initialDelaySeconds":15,"periodSeconds":20,"timeoutSeconds":5},"podAnnotations":{},"port":4000,"readinessProbe":{"failureThreshold":3,"httpGet":{"path":"/healthz","port":"http"},"initialDelaySeconds":5,"periodSeconds":10,"timeoutSeconds":5},"replicaCount":1,"resources":{},"service":{"annotations":{},"port":4000,"type":"ClusterIP"},"sqlite":{"enabled":true,"keepLastN":0}}` | Public treasury HTTP API (apps/api start:api). Reads proposal state from Postgres and lifecycle witnesses from the SQLite cache. |
+| api.affinity | object | `{}` | Affinity for this workload alone. Empty follows the chart-wide `affinity`. Worth setting when this workload and another both keep a local copy of the lifecycle cache: several GB per lifecycle each, on the node's ephemeral disk if `sqlite.existingClaim` is unset. |
 | api.deploymentAnnotations | object | `{}` | Annotations to add to the deployment |
 | api.enabled | bool | `true` | Whether to deploy the API |
 | api.extraEnvVars | list | `[]` | Additional environment variables |
@@ -207,7 +208,8 @@ helmfile status
 | postgresql.primary.persistence.size | string | `"8Gi"` | Size of the postgresql server volume |
 | postgresql.primary.persistence.storageClass | string | `""` | Storage class for the postgresql server volume |
 | postgresql.primary.service.ports.postgresql | int | `5432` | Port the database server listens on |
-| processor | object | `{"batchSize":"","deploymentAnnotations":{},"enabled":true,"extraEnvVars":[],"image":{"pullPolicy":"","repository":"minafoundation/dt-processor","tag":""},"podAnnotations":{},"pollIntervalMs":"","replicaCount":1,"resources":{},"sqlite":{"enabled":true,"keepLastN":0}}` | Event processor worker (apps/api start:processor). Consumes events from indexer-api and writes proposal state to Postgres. |
+| processor | object | `{"affinity":{},"batchSize":"","deploymentAnnotations":{},"enabled":true,"extraEnvVars":[],"image":{"pullPolicy":"","repository":"minafoundation/dt-processor","tag":""},"podAnnotations":{},"pollIntervalMs":"","replicaCount":1,"resources":{},"sqlite":{"enabled":true,"keepLastN":0}}` | Event processor worker (apps/api start:processor). Consumes events from indexer-api and writes proposal state to Postgres. |
+| processor.affinity | object | `{}` | Affinity for this workload alone. Empty follows the chart-wide `affinity`. Worth setting when this workload and another both keep a local copy of the lifecycle cache: several GB per lifecycle each, on the node's ephemeral disk if `sqlite.existingClaim` is unset. |
 | processor.batchSize | string | `""` | Events fetched per batch. Empty keeps the application default (200). |
 | processor.deploymentAnnotations | object | `{}` | Annotations to add to the deployment |
 | processor.enabled | bool | `true` | Whether to deploy the processor |

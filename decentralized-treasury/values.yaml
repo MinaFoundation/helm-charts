@@ -365,6 +365,12 @@ api:
   podAnnotations: {}
   # -- Additional environment variables
   extraEnvVars: []
+  # -- Affinity for this workload alone. Empty follows the chart-wide
+  # `affinity`. Worth setting when this workload and another both keep a
+  # local copy of the lifecycle cache: several GB per lifecycle each, on the
+  # node's ephemeral disk if `sqlite.existingClaim` is unset.
+  affinity: {}
+
   # -- The Resources
   resources: {}
   # -- Liveness probe. /healthz returns a static OK and checks neither the
@@ -512,6 +518,12 @@ processor:
   podAnnotations: {}
   # -- Additional environment variables
   extraEnvVars: []
+  # -- Affinity for this workload alone. Empty follows the chart-wide
+  # `affinity`. Worth setting when this workload and another both keep a
+  # local copy of the lifecycle cache: several GB per lifecycle each, on the
+  # node's ephemeral disk if `sqlite.existingClaim` is unset.
+  affinity: {}
+
   # -- The Resources
   resources: {}
 
