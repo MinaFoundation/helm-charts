@@ -48,9 +48,18 @@ remote_lifecycle_ids() {
     | sort -n
 }
 
-# Size of a remote body, or empty if it cannot be read.
+# Size of a remote body, or empty if there is none.
+#
+# Matched on the exact key. `aws s3 ls` takes a prefix, so an id's own
+# .sqlite.done, .sqlite.proven and .sqlite.alias objects are listed here too:
+# reading any line's size reported a 173-byte marker as the body size, which
+# made the "marker but no body" check below pass and sent the sync after a
+# body that does not exist. One such id then aborted the whole cycle under
+# `set -eu`, and the ids after it were never fetched.
 remote_body_size() {
-  aws s3 ls "${S3_PREFIX}/$1.sqlite" 2>/dev/null | awk '{ print $3 }' | tail -n1
+  aws s3 ls "${S3_PREFIX}/$1.sqlite" 2>/dev/null \
+    | awk -v name="$1.sqlite" '$4 == name { print $3 }' \
+    | tail -n1
 }
 
 # The id $1's body is aliased to, or empty if $1 has a real body of its own.
@@ -58,9 +67,23 @@ alias_target() {
   aws s3 cp "${S3_PREFIX}/$1.sqlite.alias" - 2>/dev/null
 }
 
+# Ids that have a body as well as a marker, so a window of N is N usable
+# lifecycles. An id can carry a .done marker and no body at all - the retired
+# alias scheme wrote a marker beside a pointer object - and ids like that would
+# otherwise fill the whole window and leave the consumer with nothing: the
+# observed case was keepLastN=2 retaining two such ids and never fetching the
+# lifecycle that was actually in use.
+lifecycle_ids_with_body() {
+  for id in $(remote_lifecycle_ids); do
+    if [ -n "$(remote_body_size "$id")" ]; then
+      echo "$id"
+    fi
+  done
+}
+
 retained_lifecycle_ids() {
   if [ "$SQLITE_KEEP_LAST_N" -gt 0 ]; then
-    remote_lifecycle_ids | tail -n "$SQLITE_KEEP_LAST_N"
+    lifecycle_ids_with_body | tail -n "$SQLITE_KEEP_LAST_N"
   else
     remote_lifecycle_ids
   fi
