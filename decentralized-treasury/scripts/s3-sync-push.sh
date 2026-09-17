@@ -33,9 +33,17 @@ push_phase() {
   [ -n "$includes" ] || return 0
 
   set -- "$SOURCE_DIRECTORY/" "$S3_TARGET_PREFIX/" --exclude '*' --only-show-errors
+  # set -f while splitting: these patterns are for `aws s3 sync` to interpret,
+  # and an unquoted expansion would let the shell resolve "*.sqlite" against
+  # the working directory first, quietly turning a pattern into whatever
+  # filenames happen to sit there.
+  set -f
   for pattern in $includes; do
+    set +f
     set -- "$@" --include "$pattern"
+    set -f
   done
+  set +f
 
   log "pushing ${phase} (${includes})"
   aws s3 sync "$@"

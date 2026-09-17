@@ -36,6 +36,10 @@ Pull-only cache sync. Call with:
 
 Use oneshot=true as an init container so a pod never starts serving from an
 empty cache, and oneshot=false as a sidecar to keep it fresh.
+
+pullBodies defaults to true when omitted. Pass false on a producer: it needs
+the markers to know what is already built, but writes its own body and reads
+no other lifecycle's, so fetching them is pure startup cost.
 */}}
 {{- define "decentralized-treasury.s3SyncPull" -}}
 - name: {{ .name }}
@@ -46,6 +50,10 @@ empty cache, and oneshot=false as a sidecar to keep it fresh.
     {{- include "decentralized-treasury.s3SyncEnv" . | nindent 4 }}
     - name: SYNC_ONESHOT
       value: {{ .oneshot | quote }}
+    {{- if hasKey . "pullBodies" }}
+    - name: SQLITE_PULL_BODIES
+      value: {{ .pullBodies | quote }}
+    {{- end }}
     - name: SYNC_INTERVAL_SECONDS
       value: {{ .root.Values.sqlite.syncIntervalSeconds | quote }}
     # The aws-cli image has no non-root home directory of its own.
