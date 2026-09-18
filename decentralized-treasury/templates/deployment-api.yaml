@@ -99,7 +99,23 @@ spec:
         {{- end }}
       volumes:
         {{- include "decentralized-treasury.scriptsVolume" . | nindent 8 }}
+        {{- if .Values.api.persistence.enabled }}
+        # This workload's own claim, not sqlite.existingClaim, which is
+        # chart-wide: the workloads sharing that helper are scheduled
+        # independently, so one RWO claim across them cannot attach and RWX
+        # would put a multi-GB SQLite database with heavy small writes on NFS.
+        #
+        # Worth enabling wherever rebuilding the cache is expensive. On an
+        # emptyDir every restart re-downloads every body in the retention
+        # window before the pod serves a request. A claim makes that a no-op:
+        # the sync finds the files already there and exits.
+        - name: sqlite-data
+          persistentVolumeClaim:
+            claimName: {{ include "decentralized-treasury.componentName" $ctx }}-sqlite
+        {{- end }}
+        {{- if not .Values.api.persistence.enabled }}
         {{- include "decentralized-treasury.sqliteVolume" . | nindent 8 }}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -112,4 +128,22 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+{{- if .Values.api.persistence.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "decentralized-treasury.componentName" $ctx }}-sqlite
+  labels:
+    {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- with .Values.api.persistence.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.api.persistence.size }}
+{{- end }}
 {{- end }}

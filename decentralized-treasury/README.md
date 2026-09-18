@@ -1,6 +1,6 @@
 # decentralized-treasury
 
-![Version: 0.4.1](https://img.shields.io/badge/Version-0.4.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
+![Version: 0.5.0](https://img.shields.io/badge/Version-0.5.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
 
 A Helm chart for deploying the Mina Decentralized Treasury stack (API, indexer, processor, schedulers, web, back office and proving services)
 
@@ -50,7 +50,7 @@ helmfile status
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` | Affinity for pod assignment |
-| api | object | `{"deploymentAnnotations":{},"enabled":true,"extraEnvVars":[],"image":{"pullPolicy":"","repository":"minafoundation/dt-api","tag":""},"livenessProbe":{"failureThreshold":3,"httpGet":{"path":"/healthz","port":"http"},"initialDelaySeconds":15,"periodSeconds":20,"timeoutSeconds":5},"podAnnotations":{},"port":4000,"readinessProbe":{"failureThreshold":3,"httpGet":{"path":"/healthz","port":"http"},"initialDelaySeconds":5,"periodSeconds":10,"timeoutSeconds":5},"replicaCount":1,"resources":{},"service":{"annotations":{},"port":4000,"type":"ClusterIP"},"sqlite":{"enabled":true,"keepLastN":0}}` | Public treasury HTTP API (apps/api start:api). Reads proposal state from Postgres and lifecycle witnesses from the SQLite cache. |
+| api | object | `{"deploymentAnnotations":{},"enabled":true,"extraEnvVars":[],"image":{"pullPolicy":"","repository":"minafoundation/dt-api","tag":""},"livenessProbe":{"failureThreshold":3,"httpGet":{"path":"/healthz","port":"http"},"initialDelaySeconds":15,"periodSeconds":20,"timeoutSeconds":5},"persistence":{"enabled":false,"size":"40Gi","storageClass":""},"podAnnotations":{},"port":4000,"readinessProbe":{"failureThreshold":3,"httpGet":{"path":"/healthz","port":"http"},"initialDelaySeconds":5,"periodSeconds":10,"timeoutSeconds":5},"replicaCount":1,"resources":{},"service":{"annotations":{},"port":4000,"type":"ClusterIP"},"sqlite":{"enabled":true,"keepLastN":0}}` | Public treasury HTTP API (apps/api start:api). Reads proposal state from Postgres and lifecycle witnesses from the SQLite cache. |
 | api.deploymentAnnotations | object | `{}` | Annotations to add to the deployment |
 | api.enabled | bool | `true` | Whether to deploy the API |
 | api.extraEnvVars | list | `[]` | Additional environment variables |
@@ -58,6 +58,10 @@ helmfile status
 | api.image.repository | string | `"minafoundation/dt-api"` | The image repository |
 | api.image.tag | string | `""` | Overrides the chart-wide tag |
 | api.livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/healthz","port":"http"},"initialDelaySeconds":15,"periodSeconds":20,"timeoutSeconds":5}` | Liveness probe. /healthz returns a static OK and checks neither the database nor the SQLite cache. |
+| api.persistence | object | `{"enabled":false,"size":"40Gi","storageClass":""}` | Persist the lifecycle cache on a claim of this workload's own instead of an emptyDir. Worth it wherever rebuilding the cache is expensive: on an emptyDir every restart re-downloads every body in the retention window before the pod serves a request. A ReadWriteOnce claim pins the pod to one AZ, which is the trade. |
+| api.persistence.enabled | bool | `false` | Keep the lifecycle cache across restarts |
+| api.persistence.size | string | `"40Gi"` | Size of the cache volume. Needs room for every body the retention window keeps. |
+| api.persistence.storageClass | string | `""` | Storage class for the cache volume |
 | api.podAnnotations | object | `{}` | Annotations to add to the pods |
 | api.port | int | `4000` | Port the container listens on |
 | api.readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/healthz","port":"http"},"initialDelaySeconds":5,"periodSeconds":10,"timeoutSeconds":5}` | Readiness probe |
@@ -202,7 +206,7 @@ helmfile status
 | postgresql.primary.persistence.size | string | `"8Gi"` | Size of the postgresql server volume |
 | postgresql.primary.persistence.storageClass | string | `""` | Storage class for the postgresql server volume |
 | postgresql.primary.service.ports.postgresql | int | `5432` | Port the database server listens on |
-| processor | object | `{"batchSize":"","deploymentAnnotations":{},"enabled":true,"extraEnvVars":[],"image":{"pullPolicy":"","repository":"minafoundation/dt-processor","tag":""},"podAnnotations":{},"pollIntervalMs":"","replicaCount":1,"resources":{},"sqlite":{"enabled":true,"keepLastN":0}}` | Event processor worker (apps/api start:processor). Consumes events from indexer-api and writes proposal state to Postgres. |
+| processor | object | `{"batchSize":"","deploymentAnnotations":{},"enabled":true,"extraEnvVars":[],"image":{"pullPolicy":"","repository":"minafoundation/dt-processor","tag":""},"persistence":{"enabled":false,"size":"40Gi","storageClass":""},"podAnnotations":{},"pollIntervalMs":"","replicaCount":1,"resources":{},"sqlite":{"enabled":true,"keepLastN":0}}` | Event processor worker (apps/api start:processor). Consumes events from indexer-api and writes proposal state to Postgres. |
 | processor.batchSize | string | `""` | Events fetched per batch. Empty keeps the application default (200). |
 | processor.deploymentAnnotations | object | `{}` | Annotations to add to the deployment |
 | processor.enabled | bool | `true` | Whether to deploy the processor |
@@ -210,6 +214,10 @@ helmfile status
 | processor.image.pullPolicy | string | `""` | Overrides the chart-wide pull policy |
 | processor.image.repository | string | `"minafoundation/dt-processor"` | The image repository |
 | processor.image.tag | string | `""` | Overrides the chart-wide tag |
+| processor.persistence | object | `{"enabled":false,"size":"40Gi","storageClass":""}` | Persist the lifecycle cache on a claim of this workload's own instead of an emptyDir. Worth it wherever rebuilding the cache is expensive: on an emptyDir every restart re-downloads every body in the retention window before the pod serves a request. A ReadWriteOnce claim pins the pod to one AZ, which is the trade. |
+| processor.persistence.enabled | bool | `false` | Keep the lifecycle cache across restarts |
+| processor.persistence.size | string | `"40Gi"` | Size of the cache volume. Needs room for every body the retention window keeps. |
+| processor.persistence.storageClass | string | `""` | Storage class for the cache volume |
 | processor.podAnnotations | object | `{}` | Annotations to add to the pods |
 | processor.pollIntervalMs | string | `""` | How often to poll for new events, in milliseconds. Empty keeps the application default (2000). |
 | processor.replicaCount | int | `1` | Replica count. Must stay 1 — the stored offset takes no lock and the vote handlers apply deltas, so a second replica would double-count votes. The template refuses to render any other value. |
