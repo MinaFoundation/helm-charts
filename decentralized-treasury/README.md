@@ -60,8 +60,12 @@ helmfile status
 | api.image.tag | string | `""` | Overrides the chart-wide tag |
 | api.livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/healthz","port":"http"},"initialDelaySeconds":15,"periodSeconds":20,"timeoutSeconds":5}` | Liveness probe. /healthz returns a static OK and checks neither the database nor the SQLite cache. |
 | api.persistence | object | `{"enabled":false,"size":"40Gi","storageClass":""}` | Persist the lifecycle cache on a claim of this workload's own instead of an emptyDir. Worth it wherever rebuilding the cache is expensive: on an emptyDir every restart re-downloads the bodies in the window and, for a grouped release, relabels the siblings again - measured at 10 minutes before the pod served a request. A ReadWriteOnce claim pins the pod to one AZ, which is the trade. |
+| api.persistence | object | `{"enabled":false,"size":"40Gi","storageClass":""}` | Persist the lifecycle cache on a claim of this workload's own instead of an emptyDir. Worth it wherever rebuilding the cache is expensive: on an emptyDir every restart re-downloads every body in the retention window before the pod serves a request. A ReadWriteOnce claim pins the pod to one AZ, which is the trade. |
+| api.persistence.enabled | bool | `false` | Keep the lifecycle cache across restarts |
 | api.persistence.enabled | bool | `false` | Keep the lifecycle cache across restarts |
 | api.persistence.size | string | `"40Gi"` | Size of the cache volume. Needs room for every body in the window: the group's canonical plus one per materialised sibling. |
+| api.persistence.size | string | `"40Gi"` | Size of the cache volume. Needs room for every body the retention window keeps. |
+| api.persistence.storageClass | string | `""` | Storage class for the cache volume |
 | api.persistence.storageClass | string | `""` | Storage class for the cache volume |
 | api.podAnnotations | object | `{}` | Annotations to add to the pods |
 | api.port | int | `4000` | Port the container listens on |
@@ -222,8 +226,12 @@ helmfile status
 | processor.image.repository | string | `"minafoundation/dt-processor"` | The image repository |
 | processor.image.tag | string | `""` | Overrides the chart-wide tag |
 | processor.persistence | object | `{"enabled":false,"size":"40Gi","storageClass":""}` | Persist the lifecycle cache on a claim of this workload's own instead of an emptyDir. Worth it wherever rebuilding the cache is expensive: on an emptyDir every restart re-downloads the bodies in the window and, for a grouped release, relabels the siblings again - measured at 10 minutes before the pod served a request. A ReadWriteOnce claim pins the pod to one AZ, which is the trade. |
+| processor.persistence | object | `{"enabled":false,"size":"40Gi","storageClass":""}` | Persist the lifecycle cache on a claim of this workload's own instead of an emptyDir. Worth it wherever rebuilding the cache is expensive: on an emptyDir every restart re-downloads every body in the retention window before the pod serves a request. A ReadWriteOnce claim pins the pod to one AZ, which is the trade. |
+| processor.persistence.enabled | bool | `false` | Keep the lifecycle cache across restarts |
 | processor.persistence.enabled | bool | `false` | Keep the lifecycle cache across restarts |
 | processor.persistence.size | string | `"40Gi"` | Size of the cache volume. Needs room for every body in the window: the group's canonical plus one per materialised sibling. |
+| processor.persistence.size | string | `"40Gi"` | Size of the cache volume. Needs room for every body the retention window keeps. |
+| processor.persistence.storageClass | string | `""` | Storage class for the cache volume |
 | processor.persistence.storageClass | string | `""` | Storage class for the cache volume |
 | processor.podAnnotations | object | `{}` | Annotations to add to the pods |
 | processor.pollIntervalMs | string | `""` | How often to poll for new events, in milliseconds. Empty keeps the application default (2000). |

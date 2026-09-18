@@ -359,6 +359,20 @@ api:
     # structured LIFECYCLE_DATA_UNAVAILABLE_ERROR, unlike the processor.
     # Requests for older lifecycles will fail with that error.
     keepLastN: 0
+  # -- Persist the lifecycle cache on a claim of this workload's own instead of
+  # an emptyDir. Worth it wherever rebuilding the cache is expensive: on an
+  # emptyDir every restart re-downloads every body in the retention window
+  # before the pod serves a request. A ReadWriteOnce claim pins the pod to one
+  # AZ, which is the trade.
+  persistence:
+    # -- Keep the lifecycle cache across restarts
+    enabled: false
+    # -- Storage class for the cache volume
+    storageClass: ""
+    # -- Size of the cache volume. Needs room for every body the retention
+    # window keeps.
+    size: 40Gi
+
   # -- Annotations to add to the deployment
   deploymentAnnotations: {}
   # -- Annotations to add to the pods
@@ -527,6 +541,20 @@ processor:
   pollIntervalMs: ""
   # -- Events fetched per batch. Empty keeps the application default (200).
   batchSize: ""
+  # -- Persist the lifecycle cache on a claim of this workload's own instead of
+  # an emptyDir. Worth it wherever rebuilding the cache is expensive: on an
+  # emptyDir every restart re-downloads every body in the retention window
+  # before the pod serves a request. A ReadWriteOnce claim pins the pod to one
+  # AZ, which is the trade.
+  persistence:
+    # -- Keep the lifecycle cache across restarts
+    enabled: false
+    # -- Storage class for the cache volume
+    storageClass: ""
+    # -- Size of the cache volume. Needs room for every body the retention
+    # window keeps.
+    size: 40Gi
+
   # -- Annotations to add to the deployment
   deploymentAnnotations: {}
   # -- Annotations to add to the pods
