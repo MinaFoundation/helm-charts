@@ -367,7 +367,7 @@ helmfile status
 | tallyScheduler.retryBackoffSeconds | int | `1800` | Wait before the first retry, doubled for each later one |
 | tallyScheduler.sender.existingSecret | string | `""` | Existing Secret holding the sender's base58 private key (EK...). Required when enabled. |
 | tallyScheduler.sender.key | string | `"SENDER_PRIVATE_KEY"` | Key inside that Secret |
-| tallyScheduler.sqlite.keepLastN | int | `3` | Number of recent lifecycle bodies to keep; 0 keeps all. The body of the lifecycle being tallied must be in this window. When cooldown opens the next lifecycle is usually built already, so 3 covers the lifecycle in cooldown with one to spare. Raise it to tally an older backlog. |
+| tallyScheduler.sqlite.keepLastN | int | `3` | Number of recent lifecycle bodies to keep; 0 keeps all. The body of the lifecycle being tallied must be in this window. When cooldown opens the next lifecycle is usually built already, so 3 covers the lifecycle in cooldown with one to spare. Raise it to tally an older backlog.  Ignored under lifecycleFanout, where the cache holds the sibling window instead: keep lifecycleFanout.siblingWindowBehind at 1 or more, or a lifecycle leaves the cache as soon as the chain moves past it. |
 | tallyScheduler.sqlite.sizeLimit | string | `""` | Size limit for the cache emptyDir when persistence is off. Empty means no limit. Devnet bodies run ~8GB each. |
 | tallyScheduler.startDelaySlots | int | `20` | Slots to wait after cooldown opens before tallying. The first cooldown slot still accepts votes, and the archive must have indexed every vote before the scheduler reads them. 20 slots is 30 minutes at 90s slots. |
 | tallyScheduler.tolerations | list | `[]` | Tolerations, overriding the chart-wide ones |

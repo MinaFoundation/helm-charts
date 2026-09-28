@@ -52,7 +52,10 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       initContainers:
-        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync-init" "oneshot" true "keepLastN" $values.sqlite.keepLastN) | nindent 8 }}
+        # materialiseSiblings is safe here, and needed: this pod publishes
+        # nothing, and a proposal in a fanned-out lifecycle is reduced against
+        # that lifecycle's own relabelled body.
+        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync-init" "oneshot" true "keepLastN" $values.sqlite.keepLastN "materialiseSiblings" true) | nindent 8 }}
         {{- include "decentralized-treasury.s3SyncPullMirror" (dict "root" $ "name" "s3-sync-proofs-init" "source" (printf "s3://%s/%s" .Values.s3.proofsBucket .Values.network) "target" $values.proofsDirectory "volumeName" "proofs" "oneshot" true) | nindent 8 }}
       containers:
         - name: {{ $component }}
@@ -78,6 +81,13 @@ spec:
               value: {{ .Values.votingLedgerScheduler.periodsPerLifecycle | quote }}
             - name: SQLITE_DATA_DIRECTORY
               value: {{ .Values.sqlite.dataDirectory | quote }}
+            {{- if and .Values.lifecycleFanout.enabled (gt (int .Values.lifecycleFanout.groupSize) 1) }}
+            # Only a group's canonical id is proven, so a sibling lifecycle
+            # waits on, and submits, its canonical's exhausted proof. They
+            # share one staking ledger, which is what that proof commits to.
+            - name: LIFECYCLE_ANCHOR_GROUP_SIZE
+              value: {{ .Values.lifecycleFanout.groupSize | quote }}
+            {{- end }}
             - name: PROOFS_DIRECTORY
               value: {{ $values.proofsDirectory | quote }}
             # Inside the cache volume so that, with persistence on, the record
@@ -165,7 +175,7 @@ spec:
           volumeMounts:
             - name: worker-cache
               mountPath: /app/apps/cli/cache
-        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync" "oneshot" false "keepLastN" $values.sqlite.keepLastN) | nindent 8 }}
+        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync" "oneshot" false "keepLastN" $values.sqlite.keepLastN "materialiseSiblings" true) | nindent 8 }}
         {{- include "decentralized-treasury.s3SyncPullMirror" (dict "root" $ "name" "s3-sync-proofs" "source" (printf "s3://%s/%s" .Values.s3.proofsBucket .Values.network) "target" $values.proofsDirectory "volumeName" "proofs" "oneshot" false) | nindent 8 }}
       volumes:
         {{- include "decentralized-treasury.scriptsVolume" . | nindent 8 }}

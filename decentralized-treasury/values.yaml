@@ -1004,6 +1004,10 @@ tallyScheduler:
     # the lifecycle being tallied must be in this window. When cooldown opens
     # the next lifecycle is usually built already, so 3 covers the lifecycle in
     # cooldown with one to spare. Raise it to tally an older backlog.
+    #
+    # Ignored under lifecycleFanout, where the cache holds the sibling window
+    # instead: keep lifecycleFanout.siblingWindowBehind at 1 or more, or a
+    # lifecycle leaves the cache as soon as the chain moves past it.
     keepLastN: 3
     # -- Size limit for the cache emptyDir when persistence is off. Empty
     # means no limit. Devnet bodies run ~8GB each.
