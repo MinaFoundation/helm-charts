@@ -38,6 +38,13 @@ onto the same root.
 {{- $services = append $services (dict "strip" false "key" "proofs" "host" $artifacts "port" .Values.proving.scheduler.server.port) -}}
 {{- end -}}
 {{/*
+The documentation site. Not stripped: the dt-docs image is built for /docs/
+and serves its pages and assets under that prefix.
+*/}}
+{{- if .Values.docs.enabled -}}
+{{- $services = append $services (dict "strip" false "key" "docs" "host" (include "decentralized-treasury.componentName" (dict "root" . "component" "docs")) "port" .Values.docs.service.port) -}}
+{{- end -}}
+{{/*
 The break-glass console, when it is served under a path rather than its own
 hostname. Not stripped, exactly like /sqlite and /proofs: the console's image is
 built with a Next.js basePath equal to this prefix, so it expects to receive it
