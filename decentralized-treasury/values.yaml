@@ -864,6 +864,98 @@ proving:
     # -- The Resources
     resources: {}
 
+# -- Tallies every proposal whose lifecycle has reached cooldown, so a vote
+# result lands on-chain without an operator running the CLI. Polls the chain's
+# slot and the api's proposal list; for each proposal the api still reports as
+# unknown and unpaused it builds the vote-reducer proof and submits
+# `proposal tally-votes` with the lifecycle's exhausted staking proof.
+#
+# Waits for proving-scheduler: a lifecycle is tallied only once its
+# .sqlite.proven marker and <id>-exhausted.json are in S3. Needs proving
+# redis for its reducer queue.
+tallyScheduler:
+  # -- Whether to deploy the tally scheduler
+  enabled: false
+  image:
+    # -- The image repository. Any dt-* image works, as each carries the whole
+    # monorepo and its CLI; this one is already pulled by proving nodes.
+    repository: minafoundation/dt-proving-scheduler
+    # -- Overrides the chart-wide tag
+    tag: ""
+    # -- Overrides the chart-wide pull policy
+    pullPolicy: ""
+  # -- Mina signature network for the tally transaction: mainnet, devnet or
+  # testnet. A mismatch makes the node reject the sender signature.
+  minaNetworkId: devnet
+  ## The account that signs and pays the fee for every tally transaction. It
+  ## needs no other authority - the contract accepts a tally from any sender -
+  ## so fund it with fees only.
+  sender:
+    # -- Existing Secret holding the sender's base58 private key (EK...).
+    # Required when enabled.
+    existingSecret: ""
+    # -- Key inside that Secret
+    key: SENDER_PRIVATE_KEY
+  # -- Transaction fee in nanomina. Empty keeps the CLI default (1 MINA).
+  fee: ""
+  # -- BullMQ queue between the scheduler and its in-pod reducer worker. Must
+  # differ from proving.queueName: the staking-ledger proving obliterates its
+  # queue before each lifecycle.
+  queueName: vote-reducer-tally
+  # -- How often to look for a proposal to tally, in seconds. A tally never
+  # expires, so this only sets how soon after cooldown the result lands.
+  pollIntervalSeconds: 300
+  # -- Slots to wait after cooldown opens before tallying. The first cooldown
+  # slot still accepts votes, and the archive must have indexed every vote
+  # before the scheduler reads them. 20 slots is 30 minutes at 90s slots.
+  startDelaySlots: 20
+  # -- Attempts before a proposal is left as gave-up for an operator. A
+  # contract assertion that cannot change on retry (participation not met, no
+  # approval votes, already tallied) ends the proposal at the first attempt.
+  maxAttempts: 3
+  # -- Wait before the first retry, doubled for each later one
+  retryBackoffSeconds: 1800
+  # -- Where the exhausted staking proofs are mirrored from s3.proofsBucket
+  proofsDirectory: /data/proofs
+  sqlite:
+    # -- Number of recent lifecycle bodies to keep; 0 keeps all. The body of
+    # the lifecycle being tallied must be in this window. When cooldown opens
+    # the next lifecycle is usually built already, so 3 covers the lifecycle in
+    # cooldown with one to spare. Raise it to tally an older backlog.
+    keepLastN: 3
+    # -- Size limit for the cache emptyDir when persistence is off. Empty
+    # means no limit. Devnet bodies run ~8GB each.
+    sizeLimit: ""
+  # -- Keep the lifecycle cache, and the record of what was already tallied,
+  # on a claim of this workload's own. Without it a restart re-downloads the
+  # bodies and may repeat a tally the api has not indexed yet (which then
+  # fails harmlessly as already tallied).
+  persistence:
+    # -- Mount a PVC at sqlite.dataDirectory instead of an emptyDir
+    enabled: false
+    storageClass: ""
+    # -- Needs room for every body the keepLastN window keeps
+    size: 40Gi
+  worker:
+    # -- Resources for the in-pod vote-reducer worker. It compiles every
+    # proving task at start, the same as a proving-worker.
+    resources: {}
+  # -- Annotations to add to the deployment
+  deploymentAnnotations: {}
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+  # -- Node selector, overriding the chart-wide one
+  nodeSelector: {}
+  # -- Tolerations, overriding the chart-wide ones
+  tolerations: []
+  # -- Affinity, overriding the chart-wide one
+  affinity: {}
+  # -- Additional environment variables for the scheduler container
+  extraEnvVars: []
+  # -- Resources for the scheduler container. tally-votes compiles and proves
+  # the treasury contracts in this process.
+  resources: {}
+
 # -- Next.js frontend (apps/web). Built from the `web` stage of the Dockerfile,
 # so it is a different image from every other service.
 web:

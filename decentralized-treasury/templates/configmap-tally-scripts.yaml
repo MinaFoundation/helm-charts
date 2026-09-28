@@ -1,0 +1,19 @@
+{{- if .Values.tallyScheduler.enabled }}
+{{/*
+Its own ConfigMap rather than a file in the shared -scripts one. Every other
+workload rolls on a checksum of that ConfigMap, so shipping these scripts there
+would restart proving-scheduler on each change to them - and a restart there
+costs a sync cycle of merge progress.
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "decentralized-treasury.fullname" . }}-tally-scripts
+  labels:
+    {{- include "decentralized-treasury.componentLabels" (dict "root" $ "component" "tally-scheduler") | nindent 4 }}
+data:
+  {{- range $path, $_ := .Files.Glob "scripts/tally/*" }}
+  {{ base $path }}: |-
+    {{- $.Files.Get $path | nindent 4 }}
+  {{- end }}
+{{- end }}

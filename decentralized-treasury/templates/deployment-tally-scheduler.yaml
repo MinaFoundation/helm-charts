@@ -1,0 +1,225 @@
+{{- if .Values.tallyScheduler.enabled }}
+{{- $component := "tally-scheduler" }}
+{{- $ctx := dict "root" $ "component" $component }}
+{{- $values := .Values.tallyScheduler }}
+{{- if not (or (and .Values.proving.enabled .Values.proving.redis.enabled) .Values.proving.redis.externalHost) }}
+{{- fail "tallyScheduler needs redis for its vote-reducer queue: enable proving.enabled with proving.redis.enabled, or set proving.redis.externalHost" }}
+{{- end }}
+{{- $sender := required "tallyScheduler.sender.existingSecret is required: the tally transaction is signed and its fee paid by this key" $values.sender.existingSecret }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "decentralized-treasury.componentName" $ctx }}
+  labels:
+    {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
+  {{- with $values.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  # Always one. The vote reducer keeps its state in the lifecycle body, keyed
+  # by lifecycle rather than by proposal, and one sender key submits every
+  # tally, so a second replica would corrupt both the reducer state and the
+  # sender's nonce sequence.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "decentralized-treasury.componentSelectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        # Roll the pods when any mounted script changes.
+        checksum/scripts: {{ include (print $.Template.BasePath "/configmap-scripts.yaml") . | sha256sum }}
+        checksum/tally-scripts: {{ include (print $.Template.BasePath "/configmap-tally-scripts.yaml") . | sha256sum }}
+        {{- with $values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "decentralized-treasury.componentLabels" $ctx | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "decentralized-treasury.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync-init" "oneshot" true "keepLastN" $values.sqlite.keepLastN) | nindent 8 }}
+        {{- include "decentralized-treasury.s3SyncPullMirror" (dict "root" $ "name" "s3-sync-proofs-init" "source" (printf "s3://%s/%s" .Values.s3.proofsBucket .Values.network) "target" $values.proofsDirectory "volumeName" "proofs" "oneshot" true) | nindent 8 }}
+      containers:
+        - name: {{ $component }}
+          image: {{ include "decentralized-treasury.componentImage" (dict "root" $ "image" $values.image) }}
+          imagePullPolicy: {{ include "decentralized-treasury.componentPullPolicy" (dict "root" $ "image" $values.image) }}
+          command: ["node", "/tally-scripts/tally-scheduler.mjs"]
+          env:
+            - name: API_URL
+              value: {{ include "decentralized-treasury.apiUrl" . | quote }}
+            - name: MINA_NODE_URL
+              value: {{ required "config.minaNodeUrl is required by tallyScheduler" .Values.config.minaNodeUrl | quote }}
+            - name: MINA_NETWORK_ID
+              value: {{ $values.minaNetworkId | quote }}
+            - name: ARCHIVE_NODE_URL
+              value: {{ .Values.config.archiveNodeUrl | quote }}
+            - name: TREASURY_OWNER_PUBLIC_KEY
+              value: {{ .Values.config.treasuryOwnerContractAddress | quote }}
+            - name: TREASURY_DEPLOYED_AT_SLOT
+              value: {{ .Values.config.treasuryDeployedAtSlot | quote }}
+            - name: LIFECYCLE_PERIOD_DURATION
+              value: {{ .Values.config.lifecyclePeriodDuration | quote }}
+            - name: PERIODS_PER_LIFECYCLE
+              value: {{ .Values.votingLedgerScheduler.periodsPerLifecycle | quote }}
+            - name: SQLITE_DATA_DIRECTORY
+              value: {{ .Values.sqlite.dataDirectory | quote }}
+            - name: PROOFS_DIRECTORY
+              value: {{ $values.proofsDirectory | quote }}
+            # Inside the cache volume so that, with persistence on, the record
+            # of what was already tallied survives a restart. Hidden, and not a
+            # *.sqlite name, so the cache sync never prunes it.
+            - name: WORK_DIRECTORY
+              value: {{ printf "%s/.tally" .Values.sqlite.dataDirectory | quote }}
+            - name: TALLY_QUEUE_NAME
+              value: {{ $values.queueName | quote }}
+            - name: REDIS_HOST
+              value: {{ include "decentralized-treasury.redisHost" . | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.proving.redis.port | quote }}
+            - name: PROOFS_ENABLED
+              value: "true"
+            - name: TALLY_POLL_INTERVAL_SECONDS
+              value: {{ $values.pollIntervalSeconds | quote }}
+            - name: TALLY_START_DELAY_SLOTS
+              value: {{ $values.startDelaySlots | quote }}
+            - name: TALLY_MAX_ATTEMPTS
+              value: {{ $values.maxAttempts | quote }}
+            - name: TALLY_RETRY_BACKOFF_SECONDS
+              value: {{ $values.retryBackoffSeconds | quote }}
+            {{- with $values.fee }}
+            - name: TX_FEE
+              value: {{ . | quote }}
+            {{- end }}
+            - name: SENDER_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $sender }}
+                  key: {{ $values.sender.key }}
+            {{- with $values.extraEnvVars }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: tally-scripts
+              mountPath: /tally-scripts
+              readOnly: true
+            {{- include "decentralized-treasury.sqliteVolumeMount" . | nindent 12 }}
+            - name: proofs
+              mountPath: {{ $values.proofsDirectory }}
+              readOnly: true
+            - name: cli-cache
+              mountPath: /app/apps/cli/cache
+        # Proves the reducer batches the scheduler queues. Its own worker on its
+        # own queue rather than the proving-worker Deployment: those replicas
+        # take a whole node each and scale to zero between lifecycles, while a
+        # proposal's reducer work is a few hundred small proofs at most.
+        - name: vote-reducer-worker
+          image: {{ include "decentralized-treasury.componentImage" (dict "root" $ "image" $values.image) }}
+          imagePullPolicy: {{ include "decentralized-treasury.componentPullPolicy" (dict "root" $ "image" $values.image) }}
+          command:
+            - pnpm
+            - run
+            - cli
+            - --
+            - worker
+            - start
+            - --queue-name
+            - {{ $values.queueName | quote }}
+            - --redis-host
+            - {{ include "decentralized-treasury.redisHost" . | quote }}
+            - --redis-port
+            - {{ .Values.proving.redis.port | quote }}
+          env:
+            - name: PROOFS_ENABLED
+              value: "true"
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $values.worker.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: worker-cache
+              mountPath: /app/apps/cli/cache
+        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync" "oneshot" false "keepLastN" $values.sqlite.keepLastN) | nindent 8 }}
+        {{- include "decentralized-treasury.s3SyncPullMirror" (dict "root" $ "name" "s3-sync-proofs" "source" (printf "s3://%s/%s" .Values.s3.proofsBucket .Values.network) "target" $values.proofsDirectory "volumeName" "proofs" "oneshot" false) | nindent 8 }}
+      volumes:
+        {{- include "decentralized-treasury.scriptsVolume" . | nindent 8 }}
+        - name: tally-scripts
+          configMap:
+            name: {{ include "decentralized-treasury.fullname" . }}-tally-scripts
+            defaultMode: 0444
+        {{- if $values.persistence.enabled }}
+        - name: sqlite-data
+          persistentVolumeClaim:
+            claimName: {{ include "decentralized-treasury.componentName" $ctx }}-sqlite
+        {{- else }}
+        - name: sqlite-data
+          emptyDir:
+            {{- with $values.sqlite.sizeLimit }}
+            sizeLimit: {{ . }}
+            {{- end }}
+        {{- end }}
+        - name: proofs
+          emptyDir: {}
+        # Compiled circuit caches, one per process that compiles, so the two
+        # never write the same cache files at once.
+        - name: cli-cache
+          emptyDir: {}
+        - name: worker-cache
+          emptyDir: {}
+      {{- with $values.nodeSelector | default .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $values.affinity | default .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $values.tolerations | default .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- if $values.persistence.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "decentralized-treasury.componentName" $ctx }}-sqlite
+  labels:
+    {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- with $values.persistence.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ $values.persistence.size }}
+{{- end }}
+{{- end }}
