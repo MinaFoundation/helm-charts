@@ -896,8 +896,10 @@ tallyScheduler:
     existingSecret: ""
     # -- Key inside that Secret
     key: SENDER_PRIVATE_KEY
-  # -- Transaction fee in nanomina. Empty keeps the CLI default (1 MINA).
-  fee: ""
+  # -- Transaction fee in nanomina, 0.1 MINA. A tally has no deadline, so a
+  # low fee only delays inclusion when blocks are busy. Empty falls back to
+  # the CLI default of 1 MINA.
+  fee: "100000000"
   # -- BullMQ queue between the scheduler and its in-pod reducer worker. Must
   # differ from proving.queueName: the staking-ledger proving obliterates its
   # queue before each lifecycle.
