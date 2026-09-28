@@ -5,7 +5,7 @@
 {{- if not (or (and .Values.proving.enabled .Values.proving.redis.enabled) .Values.proving.redis.externalHost) }}
 {{- fail "tallyScheduler needs redis for its vote-reducer queue: enable proving.enabled with proving.redis.enabled, or set proving.redis.externalHost" }}
 {{- end }}
-{{- $sender := required "tallyScheduler.sender.existingSecret is required: the tally transaction is signed and its fee paid by this key" $values.sender.existingSecret }}
+{{- $sender := include "decentralized-treasury.tallySenderSecretName" . }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -33,6 +33,11 @@ spec:
         # Roll the pods when any mounted script changes.
         checksum/scripts: {{ include (print $.Template.BasePath "/configmap-scripts.yaml") . | sha256sum }}
         checksum/tally-scripts: {{ include (print $.Template.BasePath "/configmap-tally-scripts.yaml") . | sha256sum }}
+        {{- if $values.sender.privateKey }}
+        # Environment variables from a Secret are read once, at start, so a
+        # changed inline key only takes effect through a new pod.
+        checksum/sender: {{ include (print $.Template.BasePath "/secret-tally-sender.yaml") . | sha256sum }}
+        {{- end }}
         {{- with $values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

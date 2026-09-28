@@ -890,11 +890,18 @@ tallyScheduler:
   ## The account that signs and pays the fee for every tally transaction. It
   ## needs no other authority - the contract accepts a tally from any sender -
   ## so fund it with fees only.
+  ##
+  ## Set exactly one of existingSecret and privateKey when enabled; the render
+  ## fails on both or neither.
   sender:
     # -- Existing Secret holding the sender's base58 private key (EK...).
-    # Required when enabled.
+    # Preferred: the key then never appears in values.
     existingSecret: ""
-    # -- Key inside that Secret
+    # -- The sender's base58 private key (EK...), inline. The chart stores it
+    # in a Secret of its own, <release>-tally-scheduler-sender. Plaintext
+    # wherever these values live, so feed it from a secrets manager.
+    privateKey: ""
+    # -- Key inside the Secret, whichever of the two provides it
     key: SENDER_PRIVATE_KEY
   # -- Transaction fee in nanomina, 0.1 MINA. A tally has no deadline, so a
   # low fee only delays inclusion when blocks are busy. Empty falls back to
