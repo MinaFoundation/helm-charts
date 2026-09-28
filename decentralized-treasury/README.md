@@ -1,6 +1,6 @@
 # decentralized-treasury
 
-![Version: 0.8.0-speedrun](https://img.shields.io/badge/Version-0.8.0--speedrun-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
+![Version: 0.9.0-speedrun](https://img.shields.io/badge/Version-0.9.0--speedrun-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
 
 A Helm chart for deploying the Mina Decentralized Treasury stack (API, indexer, processor, schedulers, web, back office and proving services)
 
@@ -240,12 +240,12 @@ helmfile status
 | processor.image.pullPolicy | string | `""` | Overrides the chart-wide pull policy |
 | processor.image.repository | string | `"minafoundation/dt-processor"` | The image repository |
 | processor.image.tag | string | `""` | Overrides the chart-wide tag |
-| processor.persistence | object | `{"enabled":false,"size":"40Gi","storageClass":""}` | Persist the lifecycle cache on a claim of this workload's own instead of an emptyDir. Worth it wherever rebuilding the cache is expensive: on an emptyDir every restart re-downloads every body in the retention window before the pod serves a request. A ReadWriteOnce claim pins the pod to one AZ, which is the trade. |
 | processor.persistence | object | `{"enabled":false,"size":"40Gi","storageClass":""}` | Persist the lifecycle cache on a claim of this workload's own instead of an emptyDir. Worth it wherever rebuilding the cache is expensive: on an emptyDir every restart re-downloads the bodies in the window and, for a grouped release, relabels the siblings again - measured at 10 minutes before the pod served a request. A ReadWriteOnce claim pins the pod to one AZ, which is the trade. |
+| processor.persistence | object | `{"enabled":false,"size":"40Gi","storageClass":""}` | Persist the lifecycle cache on a claim of this workload's own instead of an emptyDir. Worth it wherever rebuilding the cache is expensive: on an emptyDir every restart re-downloads every body in the retention window before the pod serves a request. A ReadWriteOnce claim pins the pod to one AZ, which is the trade. |
 | processor.persistence.enabled | bool | `false` | Keep the lifecycle cache across restarts |
 | processor.persistence.enabled | bool | `false` | Keep the lifecycle cache across restarts |
-| processor.persistence.size | string | `"40Gi"` | Size of the cache volume. Needs room for every body the retention window keeps. |
 | processor.persistence.size | string | `"40Gi"` | Size of the cache volume. Needs room for every body in the window: the group's canonical plus one per materialised sibling. |
+| processor.persistence.size | string | `"40Gi"` | Size of the cache volume. Needs room for every body the retention window keeps. |
 | processor.persistence.storageClass | string | `""` | Storage class for the cache volume |
 | processor.persistence.storageClass | string | `""` | Storage class for the cache volume |
 | processor.podAnnotations | object | `{}` | Annotations to add to the pods |
@@ -359,7 +359,7 @@ helmfile status
 | sqlite.existingClaim | string | `""` | Use an existing PersistentVolumeClaim instead of an emptyDir. Worth it only if re-downloading the cache on every pod start becomes slow. |
 | sqlite.sizeLimit | string | `""` | Size limit for the emptyDir cache. Empty means no limit. |
 | sqlite.syncIntervalSeconds | int | `60` | How often the sidecar re-syncs from S3. Lifecycles are ~15 days apart, so this can be generous. |
-| tallyScheduler | object | `{"affinity":{},"deploymentAnnotations":{},"enabled":false,"extraEnvVars":[],"fee":"100000000","image":{"pullPolicy":"","repository":"minafoundation/dt-proving-scheduler","tag":""},"maxAttempts":3,"minaNetworkId":"devnet","nodeSelector":{},"persistence":{"enabled":false,"size":"40Gi","storageClass":""},"podAnnotations":{},"pollIntervalSeconds":300,"proofsDirectory":"/data/proofs","queueName":"vote-reducer-tally","resources":{},"retryBackoffSeconds":1800,"sender":{"existingSecret":"","key":"SENDER_PRIVATE_KEY"},"sqlite":{"keepLastN":3,"sizeLimit":""},"startDelaySlots":20,"tolerations":[],"worker":{"resources":{}}}` | Tallies every proposal whose lifecycle has reached cooldown, so a vote result lands on-chain without an operator running the CLI. Polls the chain's slot and the api's proposal list; for each proposal the api still reports as unknown and unpaused it builds the vote-reducer proof and submits `proposal tally-votes` with the lifecycle's exhausted staking proof.  Waits for proving-scheduler: a lifecycle is tallied only once its .sqlite.proven marker and <id>-exhausted.json are in S3. Needs proving redis for its reducer queue. |
+| tallyScheduler | object | `{"affinity":{},"deploymentAnnotations":{},"enabled":false,"extraEnvVars":[],"fee":"100000000","image":{"pullPolicy":"","repository":"minafoundation/dt-proving-scheduler","tag":""},"maxAttempts":3,"minaNetworkId":"devnet","nodeSelector":{},"persistence":{"enabled":false,"size":"40Gi","storageClass":""},"podAnnotations":{},"pollIntervalSeconds":300,"proofsDirectory":"/data/proofs","queueName":"vote-reducer-tally","resources":{},"retryBackoffSeconds":1800,"sender":{"existingSecret":"","key":"SENDER_PRIVATE_KEY","privateKey":""},"sqlite":{"keepLastN":3,"sizeLimit":""},"startDelaySlots":20,"tolerations":[],"worker":{"resources":{}}}` | Tallies every proposal whose lifecycle has reached cooldown, so a vote result lands on-chain without an operator running the CLI. Polls the chain's slot and the api's proposal list; for each proposal the api still reports as unknown and unpaused it builds the vote-reducer proof and submits `proposal tally-votes` with the lifecycle's exhausted staking proof.  Waits for proving-scheduler: a lifecycle is tallied only once its .sqlite.proven marker and <id>-exhausted.json are in S3. Needs proving redis for its reducer queue. |
 | tallyScheduler.affinity | object | `{}` | Affinity, overriding the chart-wide one |
 | tallyScheduler.deploymentAnnotations | object | `{}` | Annotations to add to the deployment |
 | tallyScheduler.enabled | bool | `false` | Whether to deploy the tally scheduler |
@@ -380,8 +380,9 @@ helmfile status
 | tallyScheduler.queueName | string | `"vote-reducer-tally"` | BullMQ queue between the scheduler and its in-pod reducer worker. Must differ from proving.queueName: the staking-ledger proving obliterates its queue before each lifecycle. |
 | tallyScheduler.resources | object | `{}` | Resources for the scheduler container. tally-votes compiles and proves the treasury contracts in this process. |
 | tallyScheduler.retryBackoffSeconds | int | `1800` | Wait before the first retry, doubled for each later one |
-| tallyScheduler.sender.existingSecret | string | `""` | Existing Secret holding the sender's base58 private key (EK...). Required when enabled. |
-| tallyScheduler.sender.key | string | `"SENDER_PRIVATE_KEY"` | Key inside that Secret |
+| tallyScheduler.sender.existingSecret | string | `""` | Existing Secret holding the sender's base58 private key (EK...). Preferred: the key then never appears in values. |
+| tallyScheduler.sender.key | string | `"SENDER_PRIVATE_KEY"` | Key inside the Secret, whichever of the two provides it |
+| tallyScheduler.sender.privateKey | string | `""` | The sender's base58 private key (EK...), inline. The chart stores it in a Secret of its own, <release>-tally-scheduler-sender. Plaintext wherever these values live, so feed it from a secrets manager. |
 | tallyScheduler.sqlite.keepLastN | int | `3` | Number of recent lifecycle bodies to keep; 0 keeps all. The body of the lifecycle being tallied must be in this window. When cooldown opens the next lifecycle is usually built already, so 3 covers the lifecycle in cooldown with one to spare. Raise it to tally an older backlog.  Ignored under lifecycleFanout, where the cache holds the sibling window instead: keep lifecycleFanout.siblingWindowBehind at 1 or more, or a lifecycle leaves the cache as soon as the chain moves past it. |
 | tallyScheduler.sqlite.sizeLimit | string | `""` | Size limit for the cache emptyDir when persistence is off. Empty means no limit. Devnet bodies run ~8GB each. |
 | tallyScheduler.startDelaySlots | int | `20` | Slots to wait after cooldown opens before tallying. The first cooldown slot still accepts votes, and the archive must have indexed every vote before the scheduler reads them. 20 slots is 30 minutes at 90s slots. |
