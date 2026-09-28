@@ -45,6 +45,12 @@ data:
         listen {{ .Values.proxy.port }};
         server_name _;
 
+        # Relative Location headers on the /<prefix> -> /<prefix>/ redirects
+        # below. nginx otherwise builds them from its own scheme and listen
+        # port, sending a browser behind an HTTPS load balancer to
+        # http://<host>:{{ .Values.proxy.port }}/<prefix>/.
+        absolute_redirect off;
+
         client_max_body_size {{ .Values.proxy.clientMaxBodySize }};
 
         gzip on;
@@ -116,6 +122,9 @@ data:
     server {
         listen {{ .Values.proxy.port }};
         server_name {{ .Values.ingress.hosts.backoffice | quote }};
+
+        # Relative redirects, for the same reason as the main server block.
+        absolute_redirect off;
 
         client_max_body_size {{ .Values.proxy.clientMaxBodySize }};
 

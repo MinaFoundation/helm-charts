@@ -91,6 +91,21 @@ spec:
                 name: {{ $rootName }}
                 port:
                   number: {{ $rootPort }}
+          {{- if and .Values.docs.enabled (ne .Values.ingress.mode "proxy") }}
+          {{/*
+          Beside web's `/` and on this object, which carries no rewrite: the
+          docs image serves under /docs/ itself, so the prefix must reach it
+          unchanged. The longest prefix wins, so /docs beats web's `/`. In
+          `proxy` mode the proxy routes it instead.
+          */}}
+          - path: /docs
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "decentralized-treasury.componentName" (dict "root" $ "component" "docs") }}
+                port:
+                  number: {{ .Values.docs.service.port }}
+          {{- end }}
           {{- with .Values.ingress.extraPaths }}
           {{- toYaml . | nindent 10 }}
           {{- end }}

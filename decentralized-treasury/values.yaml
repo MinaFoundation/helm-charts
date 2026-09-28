@@ -1111,6 +1111,55 @@ web:
     timeoutSeconds: 5
     failureThreshold: 3
 
+# -- User, operator and developer documentation (apps/docs), served at /docs.
+# The dt-docs image is built for that path and serves it itself, so every
+# route forwards the prefix unchanged: the proxy in `proxy` mode, and a /docs
+# rule on the web Ingress in `path` and `host` modes. It needs no
+# per-deployment values - its nginx rewrites the build's placeholder origin to
+# the host each request arrives on.
+docs:
+  # -- Whether to deploy the documentation site
+  enabled: true
+  # -- Replica count. Stateless.
+  replicaCount: 1
+  image:
+    # -- The image repository
+    repository: minafoundation/dt-docs
+    # -- Overrides the chart-wide tag
+    tag: ""
+    # -- Overrides the chart-wide pull policy
+    pullPolicy: ""
+  # -- Port the container listens on. 8080 because the image runs an
+  # unprivileged nginx, which cannot bind a privileged port.
+  port: 8080
+  service:
+    # -- The service type
+    type: ClusterIP
+    # -- The service port
+    port: 8080
+    # -- Annotations to add to the service
+    annotations: {}
+  # -- Annotations to add to the deployment
+  deploymentAnnotations: {}
+  # -- Annotations to add to the pods
+  podAnnotations: {}
+  # -- The Resources
+  resources: {}
+  # -- Liveness probe
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 20
+  # -- Readiness probe
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 2
+    periodSeconds: 10
+
 # -- Break-glass operator console (apps/backoffice). A separate image from web,
 # and necessarily a separate hostname rather than a path: the app has no Next.js
 # basePath, so its HTML references /_next/* at the root and it cannot be served

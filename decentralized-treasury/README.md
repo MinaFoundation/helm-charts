@@ -1,6 +1,6 @@
 # decentralized-treasury
 
-![Version: 0.7.1-speedrun](https://img.shields.io/badge/Version-0.7.1--speedrun-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
+![Version: 0.8.0-speedrun](https://img.shields.io/badge/Version-0.8.0--speedrun-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
 
 A Helm chart for deploying the Mina Decentralized Treasury stack (API, indexer, processor, schedulers, web, back office and proving services)
 
@@ -137,6 +137,21 @@ helmfile status
 | database.existingSecret | string | `""` | Use an existing Secret holding the connection URL instead of rendering one from the values above. Recommended in production, and required if the password contains characters that do not survive URL assembly. |
 | database.existingSecretUrlKey | string | `"database-url"` | Key within the Secret that holds the full `postgres://` URL |
 | database.schema | string | `"public"` | Postgres schema the api workspace reads and migrates |
+| docs | object | `{"deploymentAnnotations":{},"enabled":true,"image":{"pullPolicy":"","repository":"minafoundation/dt-docs","tag":""},"livenessProbe":{"httpGet":{"path":"/healthz","port":"http"},"initialDelaySeconds":5,"periodSeconds":20},"podAnnotations":{},"port":8080,"readinessProbe":{"httpGet":{"path":"/healthz","port":"http"},"initialDelaySeconds":2,"periodSeconds":10},"replicaCount":1,"resources":{},"service":{"annotations":{},"port":8080,"type":"ClusterIP"}}` | User, operator and developer documentation (apps/docs), served at /docs. The dt-docs image is built for that path and serves it itself, so every route forwards the prefix unchanged: the proxy in `proxy` mode, and a /docs rule on the web Ingress in `path` and `host` modes. It needs no per-deployment values - its nginx rewrites the build's placeholder origin to the host each request arrives on. |
+| docs.deploymentAnnotations | object | `{}` | Annotations to add to the deployment |
+| docs.enabled | bool | `true` | Whether to deploy the documentation site |
+| docs.image.pullPolicy | string | `""` | Overrides the chart-wide pull policy |
+| docs.image.repository | string | `"minafoundation/dt-docs"` | The image repository |
+| docs.image.tag | string | `""` | Overrides the chart-wide tag |
+| docs.livenessProbe | object | `{"httpGet":{"path":"/healthz","port":"http"},"initialDelaySeconds":5,"periodSeconds":20}` | Liveness probe |
+| docs.podAnnotations | object | `{}` | Annotations to add to the pods |
+| docs.port | int | `8080` | Port the container listens on. 8080 because the image runs an unprivileged nginx, which cannot bind a privileged port. |
+| docs.readinessProbe | object | `{"httpGet":{"path":"/healthz","port":"http"},"initialDelaySeconds":2,"periodSeconds":10}` | Readiness probe |
+| docs.replicaCount | int | `1` | Replica count. Stateless. |
+| docs.resources | object | `{}` | The Resources |
+| docs.service.annotations | object | `{}` | Annotations to add to the service |
+| docs.service.port | int | `8080` | The service port |
+| docs.service.type | string | `"ClusterIP"` | The service type |
 | externalDatabase | object | `{"database":"treasury_api","enabled":false,"host":"","password":"","port":5432,"username":"treasury"}` | An already-running Postgres to use instead of the bundled subchart. |
 | externalDatabase.database | string | `"treasury_api"` | Database name for external database connection |
 | externalDatabase.enabled | bool | `false` | Use an existing external database server, ignoring the bundled subchart |
@@ -229,8 +244,8 @@ helmfile status
 | processor.persistence | object | `{"enabled":false,"size":"40Gi","storageClass":""}` | Persist the lifecycle cache on a claim of this workload's own instead of an emptyDir. Worth it wherever rebuilding the cache is expensive: on an emptyDir every restart re-downloads the bodies in the window and, for a grouped release, relabels the siblings again - measured at 10 minutes before the pod served a request. A ReadWriteOnce claim pins the pod to one AZ, which is the trade. |
 | processor.persistence.enabled | bool | `false` | Keep the lifecycle cache across restarts |
 | processor.persistence.enabled | bool | `false` | Keep the lifecycle cache across restarts |
-| processor.persistence.size | string | `"40Gi"` | Size of the cache volume. Needs room for every body in the window: the group's canonical plus one per materialised sibling. |
 | processor.persistence.size | string | `"40Gi"` | Size of the cache volume. Needs room for every body the retention window keeps. |
+| processor.persistence.size | string | `"40Gi"` | Size of the cache volume. Needs room for every body in the window: the group's canonical plus one per materialised sibling. |
 | processor.persistence.storageClass | string | `""` | Storage class for the cache volume |
 | processor.persistence.storageClass | string | `""` | Storage class for the cache volume |
 | processor.podAnnotations | object | `{}` | Annotations to add to the pods |
