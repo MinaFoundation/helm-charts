@@ -12,6 +12,8 @@
 //     and gives up after maxAttempts.
 //   * a pause and unpause (a new contractStatusSourceEventId) makes a proposal
 //     a candidate again, whatever its stored record says.
+//   * the cache holds the bodies of proven lifecycles with an attempt still
+//     ahead, and no others.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
@@ -21,6 +23,7 @@ import {
   isAttemptDue,
   isTallyOpen,
   selectCandidates,
+  wantedLifecycleIds,
 } from "../scripts/tally/tally-selection.mjs";
 
 const CLOCK = {
@@ -136,4 +139,28 @@ test("a new status source event makes a finished proposal a candidate again", ()
   );
   assert.equal(gaveUp.attempts, 1);
   assert.equal(gaveUp.status, "retrying");
+});
+
+test("wants the bodies of proven lifecycles with an attempt still ahead", () => {
+  const candidates = [
+    proposal({ proposalPublicKey: "B62qnew", lifecycleId: 11 }),
+    proposal({ proposalPublicKey: "B62qsame", lifecycleId: 11 }),
+    proposal({ proposalPublicKey: "B62qretrying", lifecycleId: 4 }),
+    proposal({ proposalPublicKey: "B62qtallied", lifecycleId: 2 }),
+    proposal({ proposalPublicKey: "B62qgaveup", lifecycleId: 3 }),
+    proposal({ proposalPublicKey: "B62qunproven", lifecycleId: 13 }),
+  ];
+  const retrying = failureRecord(null, proposal(), "ECONNRESET", NOW, POLICY);
+  const records = new Map([
+    ["B62qretrying", retrying],
+    ["B62qtallied", { status: "tallied", contractStatusSourceEventId: null }],
+    ["B62qgaveup", { status: "gave-up", contractStatusSourceEventId: null }],
+  ]);
+  const isProven = (lifecycleId) => lifecycleId <= 11;
+
+  assert.deepEqual(wantedLifecycleIds(candidates, records, isProven), [4, 11]);
+});
+
+test("wants nothing when no proposal is awaiting a tally", () => {
+  assert.deepEqual(wantedLifecycleIds([], new Map(), () => true), []);
 });

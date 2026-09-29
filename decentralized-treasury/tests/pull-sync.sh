@@ -14,6 +14,8 @@
 #     `aws s3 cp` that 404s and ends the cycle under `set -eu`.
 #   * SQLITE_PULL_BODIES=false fetches markers and no bodies, which is what a
 #     producer wants.
+#   * SQLITE_WANTED_IDS_FILE fetches exactly the listed bodies, old or not, and
+#     prunes the rest. Without the file yet it neither fetches nor prunes.
 set -euo pipefail
 
 CHART="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -94,6 +96,32 @@ SQLITE_DATA_DIRECTORY="$PDATA" SQLITE_PULL_BODIES=false \
 if grep -q "markers only" "$ROOT/producer.log"; then echo "  ok   took the markers-only path"; else echo "  FAIL no markers-only log line"; fail=1; fi
 check "fetched no bodies" "$(find "$PDATA" -maxdepth 1 -name '*.sqlite' | wc -l | tr -d ' ')" 0
 check "fetched the markers" "$(find "$PDATA" -maxdepth 1 -name '*.sqlite.done' | wc -l | tr -d ' ')" 3
+
+echo
+echo "=== wanted list: exactly the named bodies ==="
+WDATA="$ROOT/wanted"; mkdir -p "$WDATA"
+WANTED="$WDATA/.tally/wanted-lifecycles"
+python3 -c "import sys; sys.stdout.write('8' * 20000)" > "$WDATA/8.sqlite"
+SQLITE_DATA_DIRECTORY="$WDATA" SQLITE_WANTED_IDS_FILE="$WANTED" \
+  sh "$CHART/scripts/s3-sync-pull.sh" > "$ROOT/wanted-missing.log" 2>&1
+check "no list yet: nothing fetched" "$([ -f "$WDATA/7.sqlite" ] && echo present || echo absent)" absent
+check "no list yet: nothing pruned" "$([ -f "$WDATA/8.sqlite" ] && echo present || echo absent)" present
+
+mkdir -p "$(dirname "$WANTED")"
+printf '7\n9\n' > "$WANTED"
+SQLITE_DATA_DIRECTORY="$WDATA" SQLITE_WANTED_IDS_FILE="$WANTED" SQLITE_KEEP_LAST_N=1 \
+  sh "$CHART/scripts/s3-sync-pull.sh" > "$ROOT/wanted.log" 2>&1 || {
+  echo "  FAIL the sync exited non-zero:"; sed 's/^/     /' "$ROOT/wanted.log"; fail=1; }
+check "wanted 7 fetched, though outside keep-last-1" "$(wc -c < "$WDATA/7.sqlite" 2>/dev/null | tr -d ' ')" 20000
+check "unwanted 8 pruned" "$([ -f "$WDATA/8.sqlite" ] && echo present || echo absent)" absent
+check "the list itself kept" "$([ -f "$WANTED" ] && echo present || echo absent)" present
+
+: > "$WANTED"
+SQLITE_DATA_DIRECTORY="$WDATA" SQLITE_WANTED_IDS_FILE="$WANTED" \
+  sh "$CHART/scripts/s3-sync-pull.sh" > "$ROOT/wanted-empty.log" 2>&1 || {
+  echo "  FAIL the sync exited non-zero on an empty list:"; sed 's/^/     /' "$ROOT/wanted-empty.log"; fail=1; }
+check "empty list: every body pruned" "$(find "$WDATA" -maxdepth 1 -name '*.sqlite' | wc -l | tr -d ' ')" 0
+check "empty list: markers kept" "$(find "$WDATA" -maxdepth 1 -name '*.sqlite.done' | wc -l | tr -d ' ')" 3
 
 echo
 [ "$fail" = 0 ] && echo "ALL CHECKS PASSED" || echo "SOME CHECKS FAILED"
