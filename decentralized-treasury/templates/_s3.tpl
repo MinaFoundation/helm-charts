@@ -28,6 +28,10 @@ secrets are needed in the chart.
   value: {{ .root.Values.s3.region | quote }}
 - name: SQLITE_KEEP_LAST_N
   value: {{ .keepLastN | quote }}
+{{- with .wantedIdsFile }}
+- name: SQLITE_WANTED_IDS_FILE
+  value: {{ . | quote }}
+{{- end }}
 {{- end -}}
 
 {{/*
@@ -40,6 +44,9 @@ empty cache, and oneshot=false as a sidecar to keep it fresh.
 pullBodies defaults to true when omitted. Pass false on a producer: it needs
 the markers to know what is already built, but writes its own body and reads
 no other lifecycle's, so fetching them is pure startup cost.
+
+wantedIdsFile is optional: a file on the cache volume, written by the
+consumer, that names the exact bodies to hold. It replaces keepLastN.
 */}}
 {{- define "decentralized-treasury.s3SyncPull" -}}
 - name: {{ .name }}

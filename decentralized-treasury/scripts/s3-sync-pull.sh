@@ -12,6 +12,8 @@
 #     a handful of bytes.
 #   * Only .sqlite bodies are subject to SQLITE_KEEP_LAST_N, which retains the
 #     N highest lifecycle ids. Set it to 0 to keep every body.
+#   * SQLITE_WANTED_IDS_FILE replaces that window with the exact ids a
+#     consumer names, for one that needs old lifecycles and not recent ones.
 #
 # Runs one pass and exits when SYNC_ONESHOT=true (init container), otherwise
 # loops forever (sidecar).
@@ -30,6 +32,17 @@ SQLITE_KEEP_LAST_N="${SQLITE_KEEP_LAST_N:-0}"
 # history: measured at 37.6GB and 5.3 minutes on a voting-ledger-scheduler
 # that read none of it.
 SQLITE_PULL_BODIES="${SQLITE_PULL_BODIES:-true}"
+# A file of lifecycle ids, one per line, that the consumer writes. When set,
+# the sync holds exactly those bodies and prunes every other one, and
+# SQLITE_KEEP_LAST_N is ignored.
+#
+# tally-scheduler needs this. It tallies a lifecycle only once it is proven,
+# and proving can run any number of lifecycles behind the chain, so a window
+# of the newest ids never contains the lifecycle it waits for.
+#
+# Until the file exists nothing is fetched and nothing is pruned: the consumer
+# has not said what it wants yet, and a persisted cache is kept as it is.
+SQLITE_WANTED_IDS_FILE="${SQLITE_WANTED_IDS_FILE:-}"
 SYNC_INTERVAL_SECONDS="${SYNC_INTERVAL_SECONDS:-60}"
 SYNC_ONESHOT="${SYNC_ONESHOT:-false}"
 S3_PREFIX="s3://${SQLITE_S3_BUCKET:?Set SQLITE_S3_BUCKET}/${NETWORK:?Set NETWORK}"
@@ -67,25 +80,37 @@ remote_body_size() {
 }
 
 retained_lifecycle_ids() {
-  if [ "$SQLITE_KEEP_LAST_N" -gt 0 ]; then
+  if [ -n "$SQLITE_WANTED_IDS_FILE" ]; then
+    [ -f "$SQLITE_WANTED_IDS_FILE" ] || return 0
+    # grep exits 1 when nothing matches, which is a valid empty answer.
+    remote_lifecycle_ids | { grep -Fxf "$SQLITE_WANTED_IDS_FILE" || true; }
+  elif [ "$SQLITE_KEEP_LAST_N" -gt 0 ]; then
     remote_lifecycle_ids | tail -n "$SQLITE_KEEP_LAST_N"
   else
     remote_lifecycle_ids
   fi
 }
 
-# Drops local bodies outside the retention window. Markers are left untouched.
-# Removing a file the API already has open is safe: the open handle keeps
-# working, and only a fresh lookup for that lifecycle will report it missing.
+# Drops local bodies outside the retention window, or not in the wanted list.
+# Markers are left untouched. Removing a file the API already has open is
+# safe: the open handle keeps working, and only a fresh lookup for that
+# lifecycle will report it missing.
 prune_bodies() {
   retained=$1
-  [ "$SQLITE_KEEP_LAST_N" -gt 0 ] || return 0
+  if [ -n "$SQLITE_WANTED_IDS_FILE" ]; then
+    [ -f "$SQLITE_WANTED_IDS_FILE" ] || return 0
+    reason="not in ${SQLITE_WANTED_IDS_FILE}"
+  elif [ "$SQLITE_KEEP_LAST_N" -gt 0 ]; then
+    reason="outside keep-last-${SQLITE_KEEP_LAST_N}"
+  else
+    return 0
+  fi
 
   for path in "$SQLITE_DATA_DIRECTORY"/*.sqlite; do
     [ -e "$path" ] || continue
     id=$(basename "$path" .sqlite)
     if ! echo "$retained" | grep -qx "$id"; then
-      log "pruning lifecycle ${id} (outside keep-last-${SQLITE_KEEP_LAST_N})"
+      log "pruning lifecycle ${id} (${reason})"
       rm -f "$path" "$path-journal" "$path-wal" "$path-shm"
     fi
   done
@@ -154,7 +179,12 @@ sync_once() {
 }
 
 main() {
-  log "source=${S3_PREFIX} dir=${SQLITE_DATA_DIRECTORY} keepLastN=${SQLITE_KEEP_LAST_N}"
+  if [ -n "$SQLITE_WANTED_IDS_FILE" ]; then
+    retention="wanted=${SQLITE_WANTED_IDS_FILE}"
+  else
+    retention="keepLastN=${SQLITE_KEEP_LAST_N}"
+  fi
+  log "source=${S3_PREFIX} dir=${SQLITE_DATA_DIRECTORY} ${retention}"
 
   if [ "$SYNC_ONESHOT" = "true" ]; then
     # Retried in-process rather than left to Kubernetes' container-level

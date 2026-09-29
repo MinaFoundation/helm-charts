@@ -70,6 +70,15 @@ export function recordApplies(record, proposal) {
 }
 
 /**
+ * Whether a proposal still has an attempt ahead of it: it was never attempted,
+ * or it is waiting out a retry. Tallied, untallyable and gave-up proposals
+ * have none.
+ */
+export function isAwaitingAttempt(record, proposal) {
+  return !recordApplies(record, proposal) || record.status === "retrying";
+}
+
+/**
  * Whether a proposal should be attempted now, given its stored record.
  */
 export function isAttemptDue(record, proposal, nowMs) {
@@ -80,6 +89,27 @@ export function isAttemptDue(record, proposal, nowMs) {
     return false;
   }
   return nowMs >= Date.parse(record.nextAttemptAt);
+}
+
+/**
+ * Lifecycle bodies the cache sync has to hold, ascending and without
+ * duplicates: one per candidate that still has an attempt ahead of it and
+ * whose lifecycle is proven.
+ *
+ * Proven only, because until then proving-scheduler still grows the body in
+ * S3 and the tally waits anyway. A retrying proposal stays in the list between
+ * attempts, so its body is not pruned and fetched again.
+ */
+export function wantedLifecycleIds(candidates, records, isProven) {
+  const ids = new Set();
+  for (const proposal of candidates) {
+    const record = records.get(proposal.proposalPublicKey) ?? null;
+    const lifecycleId = Number(proposal.lifecycleId);
+    if (isAwaitingAttempt(record, proposal) && isProven(lifecycleId)) {
+      ids.add(lifecycleId);
+    }
+  }
+  return [...ids].sort((a, b) => a - b);
 }
 
 /**

@@ -34,6 +34,7 @@ import {
   failureRecord,
   isAttemptDue,
   selectCandidates,
+  wantedLifecycleIds,
 } from "./tally-selection.mjs";
 
 const API_URL = requireEnv("API_URL");
@@ -42,6 +43,7 @@ const SQLITE_DATA_DIRECTORY = requireEnv("SQLITE_DATA_DIRECTORY");
 const PROOFS_DIRECTORY = requireEnv("PROOFS_DIRECTORY");
 const WORK_DIRECTORY = requireEnv("WORK_DIRECTORY");
 const QUEUE_NAME = requireEnv("TALLY_QUEUE_NAME");
+const WANTED_LIFECYCLES_FILE = requireEnv("WANTED_LIFECYCLES_FILE");
 const APP_DIRECTORY = process.env.APP_DIRECTORY ?? "/app";
 const POLL_INTERVAL_SECONDS = Number(
   process.env.TALLY_POLL_INTERVAL_SECONDS ?? 300,
@@ -69,6 +71,7 @@ const OUTPUT_TAIL_BYTES = 64 * 1024;
 const STATE_DIRECTORY = join(WORK_DIRECTORY, "state");
 
 let voteReducerCompiled = false;
+let lastWantedLifecycles = null;
 
 function requireEnv(name) {
   const value = process.env[name];
@@ -142,12 +145,44 @@ async function readRecord(proposalPublicKey) {
 }
 
 // Written to a temporary file and renamed, so a restart mid-write never
-// leaves a record that fails to parse.
+// leaves a file that is only partly written.
+async function writeAtomically(target, content) {
+  await writeFile(`${target}.part`, content);
+  await rename(`${target}.part`, target);
+}
+
 async function writeRecord(record) {
   await mkdir(STATE_DIRECTORY, { recursive: true });
-  const target = statePath(record.proposalPublicKey);
-  await writeFile(`${target}.part`, `${JSON.stringify(record, null, 2)}\n`);
-  await rename(`${target}.part`, target);
+  await writeAtomically(
+    statePath(record.proposalPublicKey),
+    `${JSON.stringify(record, null, 2)}\n`,
+  );
+}
+
+function provenMarkerPath(lifecycleId) {
+  const anchor = anchorLifecycleId(lifecycleId, LIFECYCLE_ANCHOR_GROUP_SIZE);
+  return join(SQLITE_DATA_DIRECTORY, `${anchor}.sqlite.proven`);
+}
+
+/**
+ * Tells the cache sync which lifecycle bodies to hold, one id per line.
+ *
+ * The sync fetches exactly these and prunes every other body. A window of the
+ * newest lifecycles does not work here: a lifecycle is tallied only once it is
+ * proven, and proving can run any number of lifecycles behind the chain.
+ *
+ * Written before any attempt of the cycle and not again until the next one,
+ * so the body of a running tally stays in the list until it ends.
+ */
+async function writeWantedLifecycles(lifecycleIds) {
+  const content = lifecycleIds.map((id) => `${id}\n`).join("");
+  await mkdir(WORK_DIRECTORY, { recursive: true });
+  await writeAtomically(WANTED_LIFECYCLES_FILE, content);
+  if (content !== lastWantedLifecycles) {
+    const list = lifecycleIds.length > 0 ? lifecycleIds.join(", ") : "none";
+    log(`lifecycle bodies wanted: ${list}`);
+    lastWantedLifecycles = content;
+  }
 }
 
 /**
@@ -190,7 +225,7 @@ function runCli(args) {
 function missingInputs(lifecycleId) {
   const anchor = anchorLifecycleId(lifecycleId, LIFECYCLE_ANCHOR_GROUP_SIZE);
   const body = join(SQLITE_DATA_DIRECTORY, `${lifecycleId}.sqlite`);
-  const proven = join(SQLITE_DATA_DIRECTORY, `${anchor}.sqlite.proven`);
+  const proven = provenMarkerPath(lifecycleId);
   const exhaustedProof = join(PROOFS_DIRECTORY, `${anchor}-exhausted.json`);
 
   // The .proven marker comes first because it is what guarantees the body is
@@ -204,7 +239,7 @@ function missingInputs(lifecycleId) {
     return { reason: `${exhaustedProof} has not been mirrored yet` };
   }
   if (!existsSync(body)) {
-    return { reason: `${body} is not in the cache` };
+    return { reason: `${body} is not in the cache yet` };
   }
   return { exhaustedProof };
 }
@@ -317,13 +352,24 @@ async function attempt(proposal, previous) {
 async function cycle() {
   const [slot, proposals] = await Promise.all([currentSlot(), listProposals()]);
   const candidates = selectCandidates(proposals, slot, CLOCK);
+
+  const records = new Map();
+  for (const { proposalPublicKey } of candidates) {
+    records.set(proposalPublicKey, await readRecord(proposalPublicKey));
+  }
+  await writeWantedLifecycles(
+    wantedLifecycleIds(candidates, records, (lifecycleId) =>
+      existsSync(provenMarkerPath(lifecycleId)),
+    ),
+  );
+
   if (candidates.length === 0) {
     log(`slot ${slot}: no proposal is awaiting a tally`);
     return;
   }
 
   for (const proposal of candidates) {
-    const previous = await readRecord(proposal.proposalPublicKey);
+    const previous = records.get(proposal.proposalPublicKey);
     if (!isAttemptDue(previous, proposal, Date.now())) {
       continue;
     }
