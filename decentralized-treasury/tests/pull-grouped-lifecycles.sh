@@ -15,6 +15,8 @@
 #     evict the one the current lifecycle needs)
 #   * .done markers with no body behind them are skipped, not chased
 #   * materialised siblings outside the window are pruned with their pointers
+#   * a wanted list replaces the window: an old sibling it names is
+#     materialised from its canonical, and the chain's window is not
 #   * nothing materialised locally is ever pushed to the bucket
 set -euo pipefail
 
@@ -144,6 +146,27 @@ PY
 )
   check "sibling $id has its own namespace (rows,stale42)" "$got" "50,0"
 done
+
+echo
+echo "=== wanted list: an old sibling, not the chain's window ==="
+WDATA="$ROOT/wanted"; mkdir -p "$WDATA/.tally"
+WANTED="$WDATA/.tally/wanted-lifecycles"
+printf '44\n' > "$WANTED"
+SQLITE_DATA_DIRECTORY="$WDATA" SQLITE_WANTED_IDS_FILE="$WANTED" \
+  sh "$CHART/scripts/s3-sync-pull.sh" > "$ROOT/wanted.log" 2>&1 || {
+  echo "  FAIL the sync exited non-zero:"; sed 's/^/     /' "$ROOT/wanted.log"; fail=1; }
+check "canonical 42 fetched for wanted 44" "$([ -f "$WDATA/42.sqlite" ] && echo yes || echo no)" yes
+check "wanted sibling 44 materialised" "$([ -f "$WDATA/44.sqlite" ] && echo yes || echo no)" yes
+check "window sibling 59 not materialised" "$([ -f "$WDATA/59.sqlite" ] && echo yes || echo no)" no
+check "future canonical 63 not fetched" "$([ -f "$WDATA/63.sqlite" ] && echo yes || echo no)" no
+
+: > "$WANTED"
+SQLITE_DATA_DIRECTORY="$WDATA" SQLITE_WANTED_IDS_FILE="$WANTED" \
+  sh "$CHART/scripts/s3-sync-pull.sh" > "$ROOT/wanted-empty.log" 2>&1 || {
+  echo "  FAIL the sync exited non-zero on an empty list:"; sed 's/^/     /' "$ROOT/wanted-empty.log"; fail=1; }
+check "empty list: canonical 42 pruned" "$([ -f "$WDATA/42.sqlite" ] && echo yes || echo no)" no
+check "empty list: sibling 44 dropped" "$([ -f "$WDATA/44.sqlite" ] && echo yes || echo no)" no
+check "empty list: pointer 44 dropped" "$([ -f "$WDATA/44.sqlite.sibling" ] && echo yes || echo no)" no
 
 echo
 echo "=== push excludes ==="

@@ -12,6 +12,8 @@
 #     a handful of bytes.
 #   * Only .sqlite bodies are subject to SQLITE_KEEP_LAST_N, which retains the
 #     N highest lifecycle ids. Set it to 0 to keep every body.
+#   * SQLITE_WANTED_IDS_FILE replaces that window with the exact ids a
+#     consumer names, for one that needs old lifecycles and not recent ones.
 #
 # Every id this pod serves ends up with its own real body. Bodies cannot be
 # shared between ids - their rows are namespaced with the lifecycle id that
@@ -38,6 +40,19 @@ SQLITE_KEEP_LAST_N="${SQLITE_KEEP_LAST_N:-0}"
 # disk for data it never opens: measured at 37.6GB and 5.3 minutes on a
 # voting-ledger-scheduler that read none of it.
 SQLITE_PULL_BODIES="${SQLITE_PULL_BODIES:-true}"
+# A file of lifecycle ids, one per line, that the consumer writes. When set,
+# the sync holds exactly those bodies and prunes every other one, and
+# SQLITE_KEEP_LAST_N is ignored. Under a grouped release it also replaces the
+# sibling window: the canonical of each listed id is fetched, and each listed
+# sibling is relabelled from it.
+#
+# tally-scheduler needs this. It tallies a lifecycle only once it is proven,
+# and proving can run any number of lifecycles behind the chain, so a window
+# of the newest ids never contains the lifecycle it waits for.
+#
+# Until the file exists nothing is fetched and nothing is pruned: the consumer
+# has not said what it wants yet, and a persisted cache is kept as it is.
+SQLITE_WANTED_IDS_FILE="${SQLITE_WANTED_IDS_FILE:-}"
 SYNC_INTERVAL_SECONDS="${SYNC_INTERVAL_SECONDS:-60}"
 SYNC_ONESHOT="${SYNC_ONESHOT:-false}"
 S3_PREFIX="s3://${SQLITE_S3_BUCKET:?Set SQLITE_S3_BUCKET}/${NETWORK:?Set NETWORK}"
@@ -127,7 +142,23 @@ lifecycle_ids_with_body() {
   done
 }
 
+# The ids in SQLITE_WANTED_IDS_FILE, skipping anything that is not an id.
+wanted_ids() {
+  [ -f "$SQLITE_WANTED_IDS_FILE" ] || return 0
+  grep -x '[0-9][0-9]*' "$SQLITE_WANTED_IDS_FILE" || true
+}
+
 retained_lifecycle_ids() {
+  # The canonicals of the wanted ids that are complete in S3. With groupSize 1
+  # every id is its own canonical.
+  if [ -n "$SQLITE_WANTED_IDS_FILE" ]; then
+    anchors=$(for id in $(wanted_ids); do anchor_of "$id"; done | sort -n -u)
+    [ -n "$anchors" ] || return 0
+    # grep exits 1 when nothing matches, which is a valid empty answer.
+    remote_lifecycle_ids | { grep -Fx "$anchors" || true; }
+    return 0
+  fi
+
   # A grouped consumer needs exactly the canonicals its window relabels from.
   # Keep-last-N is the wrong rule there: it follows the highest id, and the
   # newest canonical can be built a whole group ahead of the chain, so the
@@ -160,20 +191,26 @@ retained_lifecycle_ids() {
 prune_bodies() {
   retained=$1
   siblings=$2
+  if [ -n "$SQLITE_WANTED_IDS_FILE" ]; then
+    [ -f "$SQLITE_WANTED_IDS_FILE" ] || return 0
+    reason="not in ${SQLITE_WANTED_IDS_FILE}"
+  else
+    reason="outside keep-last-${SQLITE_KEEP_LAST_N}"
+  fi
 
   for path in "$SQLITE_DATA_DIRECTORY"/*.sqlite; do
     [ -e "$path" ] || continue
     id=$(basename "$path" .sqlite)
     echo "$siblings" | grep -qx "$id" && continue
     if [ -f "${path}${SIBLING_POINTER_SUFFIX}" ]; then
-      log "dropping materialised sibling ${id} (outside the sibling window)"
+      log "dropping materialised sibling ${id} (no longer needed)"
       rm -f "$path" "$path-journal" "$path-wal" "$path-shm" \
         "${path}${SIBLING_POINTER_SUFFIX}"
       continue
     fi
-    [ "$SQLITE_KEEP_LAST_N" -gt 0 ] || continue
+    [ -n "$SQLITE_WANTED_IDS_FILE" ] || [ "$SQLITE_KEEP_LAST_N" -gt 0 ] || continue
     echo "$retained" | grep -qx "$id" && continue
-    log "pruning lifecycle ${id} (outside keep-last-${SQLITE_KEEP_LAST_N})"
+    log "pruning lifecycle ${id} (${reason})"
     rm -f "$path" "$path-journal" "$path-wal" "$path-shm"
   done
 }
@@ -231,9 +268,16 @@ lifecycle_window() {
 }
 
 # The ids in the window that are not their own group's canonical, i.e. the ones
-# that have to be relabelled locally.
+# that have to be relabelled locally. A wanted list is the window when there is
+# one.
 sibling_window() {
-  for id in $(lifecycle_window); do
+  [ "$MATERIALISE_SIBLINGS" = "true" ] || return 0
+  if [ -n "$SQLITE_WANTED_IDS_FILE" ]; then
+    ids=$(wanted_ids)
+  else
+    ids=$(lifecycle_window)
+  fi
+  for id in $ids; do
     [ "$id" -ne "$(anchor_of "$id")" ] && echo "$id"
   done
 }
@@ -362,7 +406,12 @@ sync_once() {
 }
 
 main() {
-  log "source=${S3_PREFIX} dir=${SQLITE_DATA_DIRECTORY} keepLastN=${SQLITE_KEEP_LAST_N}"
+  if [ -n "$SQLITE_WANTED_IDS_FILE" ]; then
+    retention="wanted=${SQLITE_WANTED_IDS_FILE}"
+  else
+    retention="keepLastN=${SQLITE_KEEP_LAST_N}"
+  fi
+  log "source=${S3_PREFIX} dir=${SQLITE_DATA_DIRECTORY} ${retention}"
 
   if [ "$SYNC_ONESHOT" = "true" ]; then
     # Retried in-process rather than left to Kubernetes' container-level

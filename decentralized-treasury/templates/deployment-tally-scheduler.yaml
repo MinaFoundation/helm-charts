@@ -5,7 +5,12 @@
 {{- if not (or (and .Values.proving.enabled .Values.proving.redis.enabled) .Values.proving.redis.externalHost) }}
 {{- fail "tallyScheduler needs redis for its vote-reducer queue: enable proving.enabled with proving.redis.enabled, or set proving.redis.externalHost" }}
 {{- end }}
+{{- if hasKey $values.sqlite "keepLastN" }}
+{{- fail "tallyScheduler.sqlite.keepLastN is removed: the scheduler now names the lifecycle bodies it needs, and the cache sync fetches exactly those" }}
+{{- end }}
 {{- $sender := include "decentralized-treasury.tallySenderSecretName" . }}
+{{- $workDirectory := printf "%s/.tally" .Values.sqlite.dataDirectory }}
+{{- $wantedLifecycles := printf "%s/wanted-lifecycles" $workDirectory }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -60,7 +65,7 @@ spec:
         # materialiseSiblings is safe here, and needed: this pod publishes
         # nothing, and a proposal in a fanned-out lifecycle is reduced against
         # that lifecycle's own relabelled body.
-        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync-init" "oneshot" true "keepLastN" $values.sqlite.keepLastN "materialiseSiblings" true) | nindent 8 }}
+        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync-init" "oneshot" true "keepLastN" 0 "wantedIdsFile" $wantedLifecycles "materialiseSiblings" true) | nindent 8 }}
         {{- include "decentralized-treasury.s3SyncPullMirror" (dict "root" $ "name" "s3-sync-proofs-init" "source" (printf "s3://%s/%s" .Values.s3.proofsBucket .Values.network) "target" $values.proofsDirectory "volumeName" "proofs" "oneshot" true) | nindent 8 }}
       containers:
         - name: {{ $component }}
@@ -99,7 +104,11 @@ spec:
             # of what was already tallied survives a restart. Hidden, and not a
             # *.sqlite name, so the cache sync never prunes it.
             - name: WORK_DIRECTORY
-              value: {{ printf "%s/.tally" .Values.sqlite.dataDirectory | quote }}
+              value: {{ $workDirectory | quote }}
+            # The lifecycle bodies this scheduler needs, which the cache sync
+            # fetches instead of a window of the newest ones.
+            - name: WANTED_LIFECYCLES_FILE
+              value: {{ $wantedLifecycles | quote }}
             - name: TALLY_QUEUE_NAME
               value: {{ $values.queueName | quote }}
             - name: REDIS_HOST
@@ -180,7 +189,7 @@ spec:
           volumeMounts:
             - name: worker-cache
               mountPath: /app/apps/cli/cache
-        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync" "oneshot" false "keepLastN" $values.sqlite.keepLastN "materialiseSiblings" true) | nindent 8 }}
+        {{- include "decentralized-treasury.s3SyncPull" (dict "root" $ "name" "s3-sync" "oneshot" false "keepLastN" 0 "wantedIdsFile" $wantedLifecycles "materialiseSiblings" true) | nindent 8 }}
         {{- include "decentralized-treasury.s3SyncPullMirror" (dict "root" $ "name" "s3-sync-proofs" "source" (printf "s3://%s/%s" .Values.s3.proofsBucket .Values.network) "target" $values.proofsDirectory "volumeName" "proofs" "oneshot" false) | nindent 8 }}
       volumes:
         {{- include "decentralized-treasury.scriptsVolume" . | nindent 8 }}

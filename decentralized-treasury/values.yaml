@@ -1008,16 +1008,15 @@ tallyScheduler:
   retryBackoffSeconds: 1800
   # -- Where the exhausted staking proofs are mirrored from s3.proofsBucket
   proofsDirectory: /data/proofs
+  # The cache holds only the lifecycle bodies the scheduler asks for: those
+  # of proven lifecycles with a proposal still to tally. It writes them to
+  # <sqlite.dataDirectory>/.tally/wanted-lifecycles, and the cache sync fetches
+  # exactly those and prunes the rest. There is no keepLastN here: proving can
+  # run any number of lifecycles behind the chain, so a window of the newest
+  # bodies never holds the one a tally waits for. Under lifecycleFanout a
+  # listed sibling is relabelled from its canonical, which is fetched in its
+  # place.
   sqlite:
-    # -- Number of recent lifecycle bodies to keep; 0 keeps all. The body of
-    # the lifecycle being tallied must be in this window. When cooldown opens
-    # the next lifecycle is usually built already, so 3 covers the lifecycle in
-    # cooldown with one to spare. Raise it to tally an older backlog.
-    #
-    # Ignored under lifecycleFanout, where the cache holds the sibling window
-    # instead: keep lifecycleFanout.siblingWindowBehind at 1 or more, or a
-    # lifecycle leaves the cache as soon as the chain moves past it.
-    keepLastN: 3
     # -- Size limit for the cache emptyDir when persistence is off. Empty
     # means no limit. Devnet bodies run ~8GB each.
     sizeLimit: ""
@@ -1029,7 +1028,8 @@ tallyScheduler:
     # -- Mount a PVC at sqlite.dataDirectory instead of an emptyDir
     enabled: false
     storageClass: ""
-    # -- Needs room for every body the keepLastN window keeps
+    # -- Needs room for the bodies of every proven lifecycle that still has a
+    # proposal to tally. Usually one or two; more while a backlog is tallied.
     size: 40Gi
   worker:
     # -- Resources for the in-pod vote-reducer worker. It compiles every

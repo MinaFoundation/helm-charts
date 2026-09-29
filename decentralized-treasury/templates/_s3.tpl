@@ -28,6 +28,10 @@ secrets are needed in the chart.
   value: {{ .root.Values.s3.region | quote }}
 - name: SQLITE_KEEP_LAST_N
   value: {{ .keepLastN | quote }}
+{{- with .wantedIdsFile }}
+- name: SQLITE_WANTED_IDS_FILE
+  value: {{ . | quote }}
+{{- end }}
 {{- end -}}
 
 {{/*
@@ -47,6 +51,12 @@ grouped release: those pods have to serve lifecycle ids the producers never
 built, and they relabel a local copy of the group's canonical to do it. Never
 set it on a pod that also pushes - the producers only ever work on canonical
 ids, and a relabelled sibling on a pushing pod's volume would be published.
+
+wantedIdsFile is optional: a file on the cache volume, written by the
+consumer, that names the exact bodies to hold. It replaces keepLastN.
+Under a grouped release with materialiseSiblings it also replaces the sibling
+window: the canonical of each listed id is fetched, and each listed sibling is
+relabelled from it.
 */}}
 {{- define "decentralized-treasury.s3SyncPull" -}}
 - name: {{ .name }}
