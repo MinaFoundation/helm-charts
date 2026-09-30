@@ -1,5 +1,5 @@
 {{/*
-Service for the artefact sidecar on proving-scheduler.
+Stable public Service name; targets the separate read-only artifact workload.
 
 The proxy routes /sqlite and /proofs here, and nginx resolves every upstream at
 startup and refuses to boot on a name that does not resolve - so without this
@@ -26,5 +26,5 @@ spec:
       targetPort: http
       protocol: TCP
   selector:
-    {{- include "decentralized-treasury.componentSelectorLabels" $ctx | nindent 4 }}
+    {{- include "decentralized-treasury.componentSelectorLabels" (dict "root" $ "component" "artifacts") | nindent 4 }}
 {{- end }}

@@ -75,6 +75,8 @@ extraEnvVars: []
 ## Read-only HTTP service over the ledger directory. This is how consumers in
 ## the namespace enumerate and download archives; nothing leaves the cluster.
 server:
+  # -- Distinct existing identity when serviceAccount.create=false; no cloud role
+  serviceAccountName: ""
   image:
     # -- Image for the serving container
     repository: nginxinc/nginx-unprivileged
@@ -111,6 +113,8 @@ persistence:
 serviceAccount:
   # -- Whether to create a service account
   create: true
+  # -- Fetch needs Kubernetes API access. Explicit false is honored.
+  automount: true
   # -- Annotations to add to the service account
   annotations: {}
   # -- Name of the service account to use

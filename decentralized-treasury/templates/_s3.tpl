@@ -24,6 +24,8 @@ secrets are needed in the chart.
   value: {{ required "s3.sqliteBucket is required" .root.Values.s3.sqliteBucket | quote }}
 - name: NETWORK
   value: {{ required "network is required" .root.Values.network | quote }}
+- name: AWS_EC2_METADATA_DISABLED
+  value: "true"
 - name: AWS_REGION
   value: {{ .root.Values.s3.region | quote }}
 - name: SQLITE_KEEP_LAST_N
@@ -110,6 +112,8 @@ active.
       value: {{ .markers | default "" | quote }}
     - name: SYNC_INTERVAL_SECONDS
       value: {{ .intervalSeconds | default .root.Values.sqlite.syncIntervalSeconds | quote }}
+    - name: AWS_EC2_METADATA_DISABLED
+      value: "true"
     - name: AWS_REGION
       value: {{ .root.Values.s3.region | quote }}
     - name: HOME
@@ -151,6 +155,8 @@ retention window, unlike the sqlite cache's s3SyncPull.
       value: {{ .oneshot | quote }}
     - name: SYNC_INTERVAL_SECONDS
       value: {{ .intervalSeconds | default .root.Values.sqlite.syncIntervalSeconds | quote }}
+    - name: AWS_EC2_METADATA_DISABLED
+      value: "true"
     - name: AWS_REGION
       value: {{ .root.Values.s3.region | quote }}
     - name: HOME
@@ -220,6 +226,8 @@ produced-lifecycle check is always AWS, so this container needs IRSA either way.
       value: {{ .root.Values.votingLedgerScheduler.periodsPerLifecycle | quote }}
     - name: NETWORK
       value: {{ required "network is required" .root.Values.network | quote }}
+    - name: AWS_EC2_METADATA_DISABLED
+      value: "true"
     - name: AWS_REGION
       value: {{ .root.Values.s3.region | quote }}
     {{/*

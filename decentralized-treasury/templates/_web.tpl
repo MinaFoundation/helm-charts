@@ -9,6 +9,13 @@ can override individual entries without restating the rest.
 {{- define "decentralized-treasury.webPublicEnv" -}}
 {{- $base := .Values.web.publicBaseUrl | trimSuffix "/" -}}
 {{- $derived := dict -}}
+{{- $network := include "decentralized-treasury.network" . -}}
+{{- $override := index .Values.web.publicEnv "NEXT_PUBLIC_NETWORK_ID" | default "" -}}
+{{- if and $override (ne (lower $override) $network) -}}
+{{- fail "NEXT_PUBLIC_NETWORK_ID must match chart network; remove the override and use network" -}}
+{{- end -}}
+{{- $_ := set $derived "NEXT_PUBLIC_NETWORK_ID" $network -}}
+{{- $_ := set $derived "NEXT_PUBLIC_SLOT_DURATION_MS" (ternary "180000" "90000" (eq $network "mainnet")) -}}
 {{- if $base -}}
 {{- $scheme := $base | splitList "://" | first -}}
 {{- if and .Values.ingress.enabled (eq .Values.ingress.mode "host") -}}
@@ -33,6 +40,7 @@ can override individual entries without restating the rest.
 {{- $_ := set $derived "NEXT_PUBLIC_LIFECYCLE_PERIOD_DURATION" (.Values.config.lifecyclePeriodDuration | toString) -}}
 {{- $_ := set $derived "NEXT_PUBLIC_PROOFS_ENABLED" (.Values.config.proofsEnabled | toString) -}}
 {{- $merged := merge (deepCopy .Values.web.publicEnv) $derived -}}
+{{- $_ := set $merged "NEXT_PUBLIC_NETWORK_ID" $network -}}
 {{- range $key := keys $merged | sortAlpha }}
 {{- $value := index $merged $key }}
 {{- if not (empty ($value | toString)) }}

@@ -14,6 +14,12 @@ restating the rest.
 {{- define "decentralized-treasury.backofficePublicEnv" -}}
 {{- $base := .Values.backoffice.publicBaseUrl | trimSuffix "/" -}}
 {{- $derived := dict -}}
+{{- $network := include "decentralized-treasury.network" . -}}
+{{- $override := index .Values.backoffice.publicEnv "NEXT_PUBLIC_NETWORK_ID" | default "" -}}
+{{- if and $override (ne (lower $override) $network) -}}
+{{- fail "NEXT_PUBLIC_NETWORK_ID must match chart network; remove the override and use network" -}}
+{{- end -}}
+{{- $_ := set $derived "NEXT_PUBLIC_NETWORK_ID" $network -}}
 {{- if $base -}}
 {{- $_ := set $derived "NEXT_PUBLIC_MINA_NODE_URL" (printf "%s/mina/graphql" $base) -}}
 {{- end -}}
@@ -22,6 +28,7 @@ restating the rest.
 {{- $_ := set $derived "NEXT_PUBLIC_LIFECYCLE_PERIOD_DURATION" (.Values.config.lifecyclePeriodDuration | toString) -}}
 {{- $_ := set $derived "NEXT_PUBLIC_PROOFS_ENABLED" (.Values.config.proofsEnabled | toString) -}}
 {{- $merged := merge (deepCopy .Values.backoffice.publicEnv) $derived -}}
+{{- $_ := set $merged "NEXT_PUBLIC_NETWORK_ID" $network -}}
 {{- range $key := keys $merged | sortAlpha }}
 {{- $value := index $merged $key }}
 {{- if not (empty ($value | toString)) }}

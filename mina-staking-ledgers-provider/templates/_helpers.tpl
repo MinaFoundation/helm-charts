@@ -35,8 +35,16 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{- define "mina-staking-ledgers-provider.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "mina-staking-ledgers-provider.fullname" .) .Values.serviceAccount.name }}
+{{- default (printf "%s-fetch" (include "mina-staking-ledgers-provider.fullname" . | trunc 57 | trimSuffix "-")) .Values.serviceAccount.name }}
 {{- else }}
-{{- default "default" .Values.serviceAccount.name }}
+{{- required "serviceAccount.name is required when create=false" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{- define "mina-staking-ledgers-provider.serverServiceAccountName" -}}
+{{- if .Values.serviceAccount.create -}}
+{{- default (printf "%s-serve" (include "mina-staking-ledgers-provider.fullname" . | trunc 57 | trimSuffix "-")) .Values.server.serviceAccountName -}}
+{{- else -}}
+{{- required "server.serviceAccountName is required when serviceAccount.create=false" .Values.server.serviceAccountName -}}
+{{- end -}}
+{{- end -}}
