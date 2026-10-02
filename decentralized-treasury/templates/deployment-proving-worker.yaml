@@ -71,7 +71,7 @@ spec:
             - {{ .Values.proving.redis.port | quote }}
           env:
             - name: NETWORK
-              value: {{ include "decentralized-treasury.network" . | quote }}
+              value: {{ include "decentralized-treasury.minaNetwork" . | quote }}
             - name: PROOFS_ENABLED
               value: {{ .Values.proving.worker.proofsEnabled | quote }}
             {{- with .Values.proving.worker.extraEnvVars }}

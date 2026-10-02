@@ -20,6 +20,17 @@ The chart cannot inspect an IAM role's policy. Configure and verify those polici
 
 With `serviceAccount.create=false`, provide a distinct `serviceAccounts.<component>.name` for each enabled workload. Inspect existing accounts for cloud annotations and external RoleBindings. The chart cannot remove unrelated cluster grants. Duplicate account names are rejected.
 
+### Renamed accounts
+
+An IAM trust policy that names the old account stops matching after the upgrade. Add the new subjects before rolling out. A role may be reused across components while least-privilege roles are prepared; the chart only requires distinct account names.
+
+| Chart | Old account | New account |
+| --- | --- | --- |
+| Treasury | `<fullname>` | `<fullname>-<component>`, e.g. `<fullname>-api`, `<fullname>-proving-scheduler` |
+| Ledger provider | `<fullname>` | unchanged for fetch (cloud role); new `<fullname>-serve` (no role) |
+
+The trust subject is `system:serviceaccount:<namespace>:<account>`.
+
 ## Storage and routing
 
 The artifact nginx container moves out of the proving scheduler into a separate `artifacts` Deployment. The existing `proving-scheduler` Service name now selects that server. Its SQLite and proof claims are read-only in the server. Enabling the server creates dedicated scheduler SQLite and proof PVCs, even if `proving.scheduler.persistence.enabled=false`. Size SQLite with `proving.scheduler.persistence.size` and proofs with `proving.scheduler.server.proofsStorageSize`. Both use the scheduler storage class.
@@ -39,10 +50,10 @@ Host loss or forced termination can still require recovery from the last valid c
 ## Upgrade procedure
 
 1. Back up current values, ledger data, and the scheduler's unuploaded SQLite/proof progress.
-2. Select `network: mainnet` or `network: devnet` explicitly. The new default is mainnet.
-3. Remove `tallyScheduler.minaNetworkId`. CLI/proof workloads now receive `NETWORK` from the chart value.
-4. Remove conflicting browser `NEXT_PUBLIC_NETWORK_ID` overrides. Both browsers derive the same lowercase network. Their verification keys must match it.
-5. Move the old shared cloud annotation to distinct, least-privilege account settings. Update cloud trust subjects before rollout.
+2. Set `network` explicitly; it no longer has a default. It stays the S3 key prefix, so keep the current value. Set `minaNetwork: mainnet` or `minaNetwork: devnet` when `network` is anything else, such as `singlenet` or `mainnet-trace`.
+3. Remove `tallyScheduler.minaNetworkId`. CLI/proof workloads now receive `NETWORK` from `minaNetwork`. The S3 sync containers still receive `NETWORK` as the `network` prefix.
+4. Remove conflicting browser `NEXT_PUBLIC_NETWORK_ID` overrides. Both browsers derive the same lowercase `minaNetwork`. Their verification keys must match it. `testnet` is no longer accepted by the app.
+5. Move the old shared cloud annotation to distinct, least-privilege account settings. Update cloud trust subjects before rollout: the accounts are renamed (see Renamed accounts).
 6. Review storage sizes and provisioner rules. Preserve the existing ledger PVC. Migrate scheduler progress or restore it from verified S3 artifacts.
 7. Stop the old combined ledger-provider Deployment before the split deploys. This prevents overlapping fetch writers during the resource-name change.
 8. Quiesce the old proving scheduler and save unuploaded progress. The new split uses dedicated shared claims instead of its former emptyDir caches.

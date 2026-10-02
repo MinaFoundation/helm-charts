@@ -76,7 +76,7 @@ spec:
             - name: MINA_NODE_URL
               value: {{ required "config.minaNodeUrl is required by tallyScheduler" .Values.config.minaNodeUrl | quote }}
             - name: NETWORK
-              value: {{ include "decentralized-treasury.network" . | quote }}
+              value: {{ include "decentralized-treasury.minaNetwork" . | quote }}
             - name: ARCHIVE_NODE_URL
               value: {{ .Values.config.archiveNodeUrl | quote }}
             - name: TREASURY_OWNER_PUBLIC_KEY

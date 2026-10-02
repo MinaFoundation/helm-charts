@@ -9,7 +9,7 @@ const treasury = 'decentralized-treasury';
 const ledger = 'mina-staking-ledgers-provider';
 function render(chart, values = {}, fail) {
   const defaults = chart === treasury
-    ? { 'config.treasuryOwnerContractAddress': 'TEST', 'config.minaNodeUrl': 'http://mina:3085/graphql' }
+    ? { network: 'mainnet', 'config.treasuryOwnerContractAddress': 'TEST', 'config.minaNodeUrl': 'http://mina:3085/graphql' }
     : { minaNodeLabel: 'queryableNode=true' };
   const args = ['template', 'audit', chart];
   for (const [key, value] of Object.entries({ ...defaults, ...values })) args.push('--set-json', `${key}=${JSON.stringify(value)}`);
@@ -90,10 +90,31 @@ test('Every CLI/proof workload and browser uses the same strict network', () => 
       assert.equal(env.find((e) => e.name === 'NEXT_PUBLIC_NETWORK_ID').value, network);
     }
   }
-  render(treasury, { network: 'testnet' }, /network must be mainnet or devnet/);
-  render(treasury, { network: 'mainnet', 'web.publicEnv.NEXT_PUBLIC_NETWORK_ID': 'devnet' }, /must match chart network/);
+  render(treasury, { network: 'testnet' }, /minaNetwork is required/);
+  render(treasury, { network: 'mainnet', minaNetwork: 'testnet' }, /minaNetwork must be mainnet or devnet/);
+  render(treasury, { network: 'mainnet', 'web.publicEnv.NEXT_PUBLIC_NETWORK_ID': 'devnet' }, /must match minaNetwork/);
   render(treasury, { 'tallyScheduler.minaNetworkId': 'devnet' }, /was removed/);
   render(treasury, { 'proving.worker.extraEnvVars': [{name:'NETWORK',value:'devnet'}] }, /must not override chart NETWORK/);
+});
+test('S3 namespace stays independent of the Mina signing network and has no default', () => {
+  render(treasury, { network: '' }, /network is required/);
+  render(treasury, { network: 'Main_Net', minaNetwork: 'mainnet' }, /network must be lowercase/);
+  render(treasury, { ...all, network: 'singlenet' }, /minaNetwork is required when network \(singlenet\)/);
+  const docs = render(treasury, { ...all, network: 'singlenet', minaNetwork: 'devnet' });
+  for (const name of ['api', 'proving-scheduler', 'voting-ledger-scheduler', 'tally-scheduler']) {
+    const env = deployment(docs, name).spec.template.spec.containers.find((c) => c.name === name).env;
+    assert.equal(env.find((e) => e.name === 'NETWORK').value, 'devnet', name);
+  }
+  for (const name of ['web', 'backoffice']) {
+    const env = deployment(docs, name).spec.template.spec.containers[0].env;
+    assert.equal(env.find((e) => e.name === 'NEXT_PUBLIC_NETWORK_ID').value, 'devnet');
+  }
+  const syncs = workloads(docs).flatMap((d) => [...(d.spec.template.spec.initContainers || []), ...d.spec.template.spec.containers]).filter((c) => c.image.startsWith('amazon/aws-cli'));
+  assert.ok(syncs.length);
+  for (const c of syncs) {
+    const prefix = c.env.find((e) => e.name === 'NETWORK');
+    if (prefix) assert.equal(prefix.value, 'singlenet', c.name);
+  }
 });
 test('External account mode requires explicit distinct names', () => {
   render(treasury, { 'serviceAccount.create': false }, /name is required/);
@@ -112,6 +133,7 @@ test('Ledger fetch and public server are separate; only fetch has exec role and 
   assert.equal(docs.find((d) => d.kind === 'Service').spec.selector['app.kubernetes.io/component'], 'serve');
   assert.equal(serve.spec.template.spec.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchLabels['app.kubernetes.io/component'], 'fetch');
   assert.ok(fetch.spec.template.spec.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution.length);
+  assert.equal(fetch.spec.template.spec.serviceAccountName, 'audit-mina-staking-ledgers-provider');
   const serverAccount = docs.find((d) => d.kind === 'ServiceAccount' && d.metadata.name === serve.spec.template.spec.serviceAccountName); assert.equal(serverAccount.metadata.annotations, undefined);
 });
 test('Ledger honors false, enforces identity separation, and rejects single-pod storage mode', () => {

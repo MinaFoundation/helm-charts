@@ -15,7 +15,7 @@ anchor, but most services ignore most of them.
 - name: AWS_EC2_METADATA_DISABLED
   value: "true"
 - name: NETWORK
-  value: {{ include "decentralized-treasury.network" . | quote }}
+  value: {{ include "decentralized-treasury.minaNetwork" . | quote }}
 - name: ARCHIVE_NODE_URL
   value: {{ required "config.archiveNodeUrl is required" .Values.config.archiveNodeUrl | quote }}
 - name: TREASURY_OWNER_CONTRACT_ADDRESS

@@ -67,7 +67,7 @@ spec:
           command: ["/bin/sh", "devops/docker/voting-ledger-scheduler-entrypoint.sh"]
           env:
             - name: NETWORK
-              value: {{ include "decentralized-treasury.network" . | quote }}
+              value: {{ include "decentralized-treasury.minaNetwork" . | quote }}
             - name: SQLITE_DATA_DIRECTORY
               value: {{ .Values.sqlite.dataDirectory | quote }}
             - name: STAKING_LEDGERS_DIRECTORY

@@ -23,11 +23,17 @@ fullnameOverride: ""
 # the `pg` package and the shipped migration files relative to this.
 apiDirectory: /app/apps/api
 
-# -- Mina network this release targets. Doubles as the S3 key prefix, which is
-# what keeps lifecycle ids from colliding between networks: a lifecycle id is a
-# small integer counted from TREASURY_DEPLOYED_AT_SLOT, so every network starts
-# at 0.
-network: mainnet
+# -- Required. Release namespace for S3 keys, which is what keeps lifecycle
+# ids from colliding between releases: a lifecycle id is a small integer
+# counted from TREASURY_DEPLOYED_AT_SLOT, so every release starts at 0. Any
+# lowercase name (devnet, singlenet, mainnet-trace). No default, so an upgrade
+# can never silently move a release onto another network's prefix.
+network: ""
+
+# -- Mina network the app signs and proves for: mainnet or devnet. Reaches the
+# app containers as NETWORK and the browsers as NEXT_PUBLIC_NETWORK_ID. Defaults
+# to `network` when that is mainnet or devnet; required otherwise.
+minaNetwork: ""
 
 ## S3 backing for the lifecycle SQLite cache.
 ## Credentials use distinct serviceAccounts.<component>.annotations. API and
@@ -902,7 +908,7 @@ tallyScheduler:
     tag: ""
     # -- Overrides the chart-wide pull policy
     pullPolicy: ""
-  # The tally network is the chart-wide network; no separate override.
+  # The tally signs for the chart-wide minaNetwork; no separate override.
   ## The account that signs and pays the fee for every tally transaction. It
   ## needs no other authority - the contract accepts a tally from any sender -
   ## so fund it with fees only.
@@ -1014,7 +1020,7 @@ web:
   # into the image, so one dt-web tag serves any network. Entries set here win
   # over the values derived from publicBaseUrl.
   publicEnv:
-    # Network and default slot duration derive from chart network.
+    # Network and default slot duration derive from minaNetwork.
     # Override slot duration only for a network with different timing.
     NEXT_PUBLIC_VOTE_REDUCER_VERIFICATION_KEY_JSON: ""
     NEXT_PUBLIC_STAKING_LEDGER_TO_VOTING_LEDGER_VERIFICATION_KEY_JSON: ""
@@ -1177,7 +1183,7 @@ backoffice:
   # builds and submits transactions against the Mina node directly, and those
   # URLs would only ever surface in its settings dialog.
   publicEnv:
-    # NEXT_PUBLIC_NETWORK_ID derives from chart network.
+    # NEXT_PUBLIC_NETWORK_ID derives from minaNetwork.
     # Fill from `treasury-owner compile`. Proving refuses to start without all
     # five, naming the first one it finds missing.
     NEXT_PUBLIC_VOTE_REDUCER_VERIFICATION_KEY_JSON: ""

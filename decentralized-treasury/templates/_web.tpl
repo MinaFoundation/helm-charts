@@ -9,10 +9,10 @@ can override individual entries without restating the rest.
 {{- define "decentralized-treasury.webPublicEnv" -}}
 {{- $base := .Values.web.publicBaseUrl | trimSuffix "/" -}}
 {{- $derived := dict -}}
-{{- $network := include "decentralized-treasury.network" . -}}
+{{- $network := include "decentralized-treasury.minaNetwork" . -}}
 {{- $override := index .Values.web.publicEnv "NEXT_PUBLIC_NETWORK_ID" | default "" -}}
 {{- if and $override (ne (lower $override) $network) -}}
-{{- fail "NEXT_PUBLIC_NETWORK_ID must match chart network; remove the override and use network" -}}
+{{- fail "NEXT_PUBLIC_NETWORK_ID must match minaNetwork; remove the override" -}}
 {{- end -}}
 {{- $_ := set $derived "NEXT_PUBLIC_NETWORK_ID" $network -}}
 {{- $_ := set $derived "NEXT_PUBLIC_SLOT_DURATION_MS" (ternary "180000" "90000" (eq $network "mainnet")) -}}

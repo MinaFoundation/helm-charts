@@ -35,7 +35,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{- define "mina-staking-ledgers-provider.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (printf "%s-fetch" (include "mina-staking-ledgers-provider.fullname" . | trunc 57 | trimSuffix "-")) .Values.serviceAccount.name }}
+{{- /* Fetch keeps the pre-split name so an existing IRSA trust subject still matches. */ -}}
+{{- default (include "mina-staking-ledgers-provider.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- required "serviceAccount.name is required when create=false" .Values.serviceAccount.name }}
 {{- end }}
