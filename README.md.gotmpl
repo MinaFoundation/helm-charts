@@ -46,6 +46,16 @@ Verify that the chart is deployed successfully:
 helmfile status
 ```
 
+{{ if eq .Name "decentralized-treasury" }}
+## Security migration
+
+See [SECURITY-MIGRATION.md](SECURITY-MIGRATION.md) before upgrading workload identities or public artifact storage.
+{{ else if eq .Name "mina-staking-ledgers-provider" }}
+## Security migration
+
+See [the security migration](../decentralized-treasury/SECURITY-MIGRATION.md) before splitting the fetch and serve Deployments.
+{{ end }}
+
 {{ template "chart.valuesSection" . }}
 
 {{ template "helm-docs.versionFooter" . }}

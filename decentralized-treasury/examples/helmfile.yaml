@@ -25,7 +25,7 @@ releases:
   - name: decentralized-treasury
     namespace: "{{ .Values.namespace }}"
     chart: ../
-    #chart: git::ssh://git@github.com/MinaFoundation/helm-charts.git@decentralized-treasury?ref=main
+    # For a remote source, pin the reviewed immutable release commit.
     values:
       - network: "{{ .Values.network }}"
 
@@ -34,17 +34,23 @@ releases:
           tag: latest
           pullPolicy: Always
 
-      # IRSA supplies the S3 credentials for the cache sync containers, so no
-      # secrets are needed in the chart. The role needs:
-      #   read/write 673156464838-mina-decentralized-treasury-sqlite/<network>/*
-      #   write      673156464838-mina-decentralized-treasury-proofs/<network>/*
-      #
-      # Staking ledgers come from a public GCS bucket and need no credentials at
-      # all. A release with stakingLedgers.source=s3 additionally needs:
-      #   read       673156464838-mina-staking-ledgers/<network>/*
-      - serviceAccount:
-          annotations:
-            eks.amazonaws.com/role-arn: arn:aws:iam::673156464838:role/decentralized-treasury
+      # Use separate cloud trust subjects and least-privilege policies.
+      # API and processor may read SQLite only. Pipeline identities may write
+      # their own artifact prefixes. See ../SECURITY-MIGRATION.md.
+      - serviceAccounts:
+          api:
+            annotations:
+              eks.amazonaws.com/role-arn: <READ_ONLY_SQLITE_ROLE>
+          processor:
+            annotations:
+              eks.amazonaws.com/role-arn: <READ_ONLY_SQLITE_ROLE>
+          voting-ledger-scheduler:
+            annotations:
+              eks.amazonaws.com/role-arn: <LEDGER_PIPELINE_ROLE>
+          proving-scheduler:
+            automount: true
+            annotations:
+              eks.amazonaws.com/role-arn: <PROVING_PIPELINE_ROLE>
 
       - config:
           # The shared devops archive node. Swap for an in-cluster address
@@ -111,7 +117,6 @@ releases:
       - web:
           publicBaseUrl: "https://{{ .Values.domain }}"
           publicEnv:
-            NEXT_PUBLIC_NETWORK_ID: DEVNET
             NEXT_PUBLIC_SLOT_DURATION_MS: "90000"
 
       # Break-glass console. Enabling it creates a Deployment and a ClusterIP
@@ -160,7 +165,6 @@ releases:
       - backoffice:
           enabled: true
           publicEnv:
-            NEXT_PUBLIC_NETWORK_ID: DEVNET
             # Point the browser straight at the node: with the console off the
             # ingress there is no publicBaseUrl to derive this from.
             NEXT_PUBLIC_MINA_NODE_URL: http://devops.hz.minaprotocol.network:3001/graphql

@@ -37,11 +37,13 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      terminationGracePeriodSeconds: {{ .Values.votingLedgerScheduler.terminationGracePeriodSeconds }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "decentralized-treasury.serviceAccountName" . }}
+      serviceAccountName: {{ include "decentralized-treasury.serviceAccountName" $ctx }}
+      automountServiceAccountToken: {{ include "decentralized-treasury.automount" $ctx }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -64,6 +66,8 @@ spec:
           imagePullPolicy: {{ include "decentralized-treasury.componentPullPolicy" (dict "root" $ "image" .Values.votingLedgerScheduler.image) }}
           command: ["/bin/sh", "devops/docker/voting-ledger-scheduler-entrypoint.sh"]
           env:
+            - name: NETWORK
+              value: {{ include "decentralized-treasury.minaNetwork" . | quote }}
             - name: SQLITE_DATA_DIRECTORY
               value: {{ .Values.sqlite.dataDirectory | quote }}
             - name: STAKING_LEDGERS_DIRECTORY
@@ -83,6 +87,8 @@ spec:
             sidecars in this same pod already pin AWS_REGION to s3.region
             rather than trust whatever the cluster's own region happens to be.
             */}}
+            - name: AWS_EC2_METADATA_DISABLED
+              value: "true"
             - name: AWS_REGION
               value: {{ .Values.s3.region | quote }}
             {{- if gt (.Values.votingLedgerScheduler.checkpoint.intervalIndices | int) 0 }}

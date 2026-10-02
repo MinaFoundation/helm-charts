@@ -8,6 +8,7 @@ spec:
   type: ClusterIP
   selector:
     {{- include "mina-staking-ledgers-provider.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: serve
   ports:
     - name: http
       port: {{ .Values.server.port }}
