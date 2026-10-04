@@ -116,6 +116,13 @@ test('S3 namespace stays independent of the Mina signing network and has no defa
     if (prefix) assert.equal(prefix.value, 'singlenet', c.name);
   }
 });
+test('Proof claim follows the scheduler storage class unless overridden', () => {
+  const claim = (docs) => docs.find((d) => d.kind === 'PersistentVolumeClaim' && d.metadata.name.endsWith('-proving-scheduler-proofs'));
+  assert.equal(claim(render(treasury, { ...all, 'proving.scheduler.persistence.storageClass': 'immediate' })).spec.storageClassName, 'immediate');
+  const docs = render(treasury, { ...all, 'proving.scheduler.persistence.storageClass': 'immediate', 'proving.scheduler.server.proofsStorageClass': 'wffc' });
+  assert.equal(claim(docs).spec.storageClassName, 'wffc');
+  assert.equal(docs.find((d) => d.kind === 'PersistentVolumeClaim' && d.metadata.name.endsWith('-proving-scheduler-sqlite')).spec.storageClassName, 'immediate');
+});
 test('External account mode requires explicit distinct names', () => {
   render(treasury, { 'serviceAccount.create': false }, /name is required/);
   render(treasury, { 'serviceAccounts.api.name': 'shared', 'serviceAccounts.processor.name': 'shared' }, /shared by multiple workloads/);

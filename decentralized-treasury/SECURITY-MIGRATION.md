@@ -33,7 +33,7 @@ The trust subject is `system:serviceaccount:<namespace>:<account>`.
 
 ## Storage and routing
 
-The artifact nginx container moves out of the proving scheduler into a separate `artifacts` Deployment. The existing `proving-scheduler` Service name now selects that server. Its SQLite and proof claims are read-only in the server. Enabling the server creates dedicated scheduler SQLite and proof PVCs, even if `proving.scheduler.persistence.enabled=false`. Size SQLite with `proving.scheduler.persistence.size` and proofs with `proving.scheduler.server.proofsStorageSize`. Both use the scheduler storage class.
+The artifact nginx container moves out of the proving scheduler into a separate `artifacts` Deployment. The existing `proving-scheduler` Service name now selects that server. Its SQLite and proof claims are read-only in the server. Enabling the server creates dedicated scheduler SQLite and proof PVCs, even if `proving.scheduler.persistence.enabled=false`. Size SQLite with `proving.scheduler.persistence.size` and proofs with `proving.scheduler.server.proofsStorageSize`. Both use the scheduler storage class unless `proving.scheduler.server.proofsStorageClass` is set. The scheduler mounts both, so they must land in one zone: with an Immediate-binding class, give the proof claim a WaitForFirstConsumer class.
 
 The ledger provider uses separate `-fetch` and `-serve` Deployments. The public Service and existing ledger PVC names remain unchanged. Only fetch has the namespace-scoped pod list/get/exec Role. Serve has a distinct unannotated account, no API token, and read-only storage. Set `minaNamespace` to the narrow daemon namespace. Kubernetes RBAC does not restrict pod listing or exec by the configured label selector.
 
