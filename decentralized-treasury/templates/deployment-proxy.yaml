@@ -46,7 +46,8 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "decentralized-treasury.serviceAccountName" . }}
+      serviceAccountName: {{ include "decentralized-treasury.serviceAccountName" $ctx }}
+      automountServiceAccountToken: {{ include "decentralized-treasury.automount" $ctx }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}

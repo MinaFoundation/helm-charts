@@ -1,6 +1,6 @@
 # mina-staking-ledgers-provider
 
-![Version: 0.1.1](https://img.shields.io/badge/Version-0.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
 
 Exports Mina staking ledgers from an in-cluster daemon and publishes them to S3, named by ledger hash, for the decentralized treasury's voting ledger scheduler
 
@@ -43,6 +43,10 @@ Verify that the chart is deployed successfully:
 helmfile status
 ```
 
+## Security migration
+
+See [the security migration](../decentralized-treasury/SECURITY-MIGRATION.md) before splitting the fetch and serve Deployments.
+
 ## Values
 
 | Key | Type | Default | Description |
@@ -81,7 +85,9 @@ helmfile status
 | server.port | int | `8080` | Port the ledger directory is served on. 8080 rather than 80 because the unprivileged nginx image cannot bind a privileged port. |
 | server.resources | object | `{}` | Resources for the serving container |
 | server.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"runAsNonRoot":true,"runAsUser":101}` | Security context for the serving container |
+| server.serviceAccountName | string | `""` | Distinct existing identity when serviceAccount.create=false; no cloud role |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
+| serviceAccount.automount | bool | `true` | Fetch needs Kubernetes API access. Explicit false is honored. |
 | serviceAccount.create | bool | `true` | Whether to create a service account |
 | serviceAccount.name | string | `""` | Name of the service account to use |
 | tolerations | list | `[]` | Tolerations |

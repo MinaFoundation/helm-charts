@@ -1,10 +1,13 @@
+{{- if not (has .Values.persistence.accessMode (list "ReadWriteOnce" "ReadWriteMany")) -}}
+{{- fail "split ledger pods require ReadWriteOnce or ReadWriteMany, not ReadWriteOncePod" -}}
+{{- end -}}
 {{- if gt (int .Values.replicaCount) 1 }}
 {{- fail "mina-staking-ledgers-provider.replicaCount must be 1: the ledger volume is ReadWriteOnce and the fetch loop writes into it in place" }}
 {{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "mina-staking-ledgers-provider.fullname" . }}
+  name: {{ include "mina-staking-ledgers-provider.fullname" . }}-fetch
   labels:
     {{- include "mina-staking-ledgers-provider.labels" . | nindent 4 }}
 spec:
@@ -16,6 +19,7 @@ spec:
   selector:
     matchLabels:
       {{- include "mina-staking-ledgers-provider.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: fetch
   template:
     metadata:
       annotations:
@@ -25,11 +29,13 @@ spec:
         {{- end }}
       labels:
         {{- include "mina-staking-ledgers-provider.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: fetch
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
       serviceAccountName: {{ include "mina-staking-ledgers-provider.serviceAccountName" . }}
       {{- with .Values.podSecurityContext }}
       securityContext:
@@ -91,36 +97,6 @@ spec:
               mountPath: /scripts
             - name: ledgers
               mountPath: {{ .Values.ledgersDirectory }}
-        - name: serve
-          image: "{{ .Values.server.image.repository }}:{{ .Values.server.image.tag }}"
-          imagePullPolicy: {{ .Values.server.image.pullPolicy }}
-          command: ["nginx", "-c", "/etc/nginx/nginx.conf", "-g", "daemon off;"]
-          ports:
-            - name: http
-              containerPort: {{ .Values.server.port }}
-          {{- with .Values.server.securityContext }}
-          securityContext:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.server.resources }}
-          resources:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          readinessProbe:
-            httpGet: { path: /healthz, port: http }
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          livenessProbe:
-            httpGet: { path: /healthz, port: http }
-            initialDelaySeconds: 15
-            periodSeconds: 20
-          volumeMounts:
-            - name: scripts
-              mountPath: /etc/nginx/nginx.conf
-              subPath: nginx.conf
-            - name: ledgers
-              mountPath: {{ .Values.ledgersDirectory }}
-              readOnly: true
       volumes:
         - name: scripts
           configMap:
@@ -133,10 +109,14 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.affinity }}
+      {{- $affinity := deepCopy (.Values.affinity | default dict) }}
+      {{- $podAffinity := index $affinity "podAffinity" | default dict }}
+      {{- $labels := include "mina-staking-ledgers-provider.selectorLabels" . | fromYaml }}
+      {{- $term := dict "labelSelector" (dict "matchLabels" $labels) "topologyKey" "kubernetes.io/hostname" }}
+      {{- $_ := set $podAffinity "requiredDuringSchedulingIgnoredDuringExecution" (append (index $podAffinity "requiredDuringSchedulingIgnoredDuringExecution" | default list) $term) }}
+      {{- $_ := set $affinity "podAffinity" $podAffinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- toYaml $affinity | nindent 8 }}
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}

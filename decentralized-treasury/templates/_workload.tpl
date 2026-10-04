@@ -157,3 +157,15 @@ files. Call with:
     {{- include "decentralized-treasury.scriptsVolumeMount" .root | nindent 4 }}
 {{- end -}}
 {{- end -}}
+
+{{/* Preserve configured affinity; the writer can bootstrap on its own label. */}}
+{{- define "decentralized-treasury.artifactWriterAffinity" -}}
+{{- $affinity := deepCopy (.Values.affinity | default dict) -}}
+{{- $podAffinity := index $affinity "podAffinity" | default dict -}}
+{{- $labels := include "decentralized-treasury.selectorLabels" . | fromYaml -}}
+{{- $_ := set $labels "treasury.minaprotocol.com/artifact-store" "true" -}}
+{{- $term := dict "labelSelector" (dict "matchLabels" $labels) "topologyKey" "kubernetes.io/hostname" -}}
+{{- $_ := set $podAffinity "requiredDuringSchedulingIgnoredDuringExecution" (append (index $podAffinity "requiredDuringSchedulingIgnoredDuringExecution" | default list) $term) -}}
+{{- $_ := set $affinity "podAffinity" $podAffinity -}}
+{{- toYaml $affinity -}}
+{{- end -}}
