@@ -27,6 +27,8 @@ spec:
       labels:
         {{- include "decentralized-treasury.componentLabels" $ctx | nindent 8 }}
     spec:
+      serviceAccountName: {{ include "decentralized-treasury.serviceAccountName" $ctx }}
+      automountServiceAccountToken: false
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}

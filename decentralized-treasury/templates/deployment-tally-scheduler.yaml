@@ -23,7 +23,7 @@ metadata:
   {{- end }}
 spec:
   # Always one. The vote reducer keeps its state in the lifecycle body, keyed
-  # by lifecycle rather than by proposal, and one sender key submits every
+  # within lifecycle and Proposal namespaces, and one sender key submits every
   # tally, so a second replica would corrupt both the reducer state and the
   # sender's nonce sequence.
   replicas: 1
@@ -56,7 +56,8 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "decentralized-treasury.serviceAccountName" . }}
+      serviceAccountName: {{ include "decentralized-treasury.serviceAccountName" $ctx }}
+      automountServiceAccountToken: {{ include "decentralized-treasury.automount" $ctx }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -77,8 +78,8 @@ spec:
               value: {{ include "decentralized-treasury.apiUrl" . | quote }}
             - name: MINA_NODE_URL
               value: {{ required "config.minaNodeUrl is required by tallyScheduler" .Values.config.minaNodeUrl | quote }}
-            - name: MINA_NETWORK_ID
-              value: {{ $values.minaNetworkId | quote }}
+            - name: NETWORK
+              value: {{ include "decentralized-treasury.minaNetwork" . | quote }}
             - name: ARCHIVE_NODE_URL
               value: {{ .Values.config.archiveNodeUrl | quote }}
             - name: TREASURY_OWNER_PUBLIC_KEY

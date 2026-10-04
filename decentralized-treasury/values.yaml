@@ -23,15 +23,21 @@ fullnameOverride: ""
 # the `pg` package and the shipped migration files relative to this.
 apiDirectory: /app/apps/api
 
-# -- Mina network this release targets. Doubles as the S3 key prefix, which is
-# what keeps lifecycle ids from colliding between networks: a lifecycle id is a
-# small integer counted from TREASURY_DEPLOYED_AT_SLOT, so every network starts
-# at 0.
-network: devnet
+# -- Required. Release namespace for S3 keys, which is what keeps lifecycle
+# ids from colliding between releases: a lifecycle id is a small integer
+# counted from TREASURY_DEPLOYED_AT_SLOT, so every release starts at 0. Any
+# lowercase name (devnet, singlenet, mainnet-trace). No default, so an upgrade
+# can never silently move a release onto another network's prefix.
+network: ""
+
+# -- Mina network the app signs and proves for: mainnet or devnet. Reaches the
+# app containers as NETWORK and the browsers as NEXT_PUBLIC_NETWORK_ID. Defaults
+# to `network` when that is mainnet or devnet; required otherwise.
+minaNetwork: ""
 
 ## S3 backing for the lifecycle SQLite cache.
-## Credentials come from IRSA: annotate serviceAccount with
-## eks.amazonaws.com/role-arn and nothing secret needs to live in the chart.
+## Credentials use distinct serviceAccounts.<component>.annotations. API and
+## processor roles must be read-only; only pipeline writers may publish objects.
 s3:
   # -- Region the buckets live in
   region: us-east-1
@@ -78,11 +84,25 @@ serviceAccount:
   # -- Specifies whether a service account should be created
   create: true
   # -- Automatically mount a ServiceAccount's API credentials?
-  automount: true
-  # -- Annotations to add to the service account
+  automount: false
+  # -- Legacy shared annotations are rejected; use per-workload annotations.
   annotations: {}
   # -- The name of the service account to use.
   name: ""
+
+# Cloud IAM policies and workload-identity trust are configured outside this chart.
+# API/processor/tally read roles: ListBucket + GetObject only for their prefixes.
+# Voting/proving scheduler write roles: only their pipeline prefixes.
+# Other workloads reject annotations to prevent inherited cloud identity.
+serviceAccounts:
+  api: { annotations: {} }
+  processor: { annotations: {} }
+  tally-scheduler: { annotations: {} }
+  voting-ledger-scheduler: { annotations: {} }
+  proving-scheduler:
+    annotations: {}
+    # Required only by the worker autoscaler. False is preserved when selected.
+    automount: true
 
 # -- Label to add to the pods
 podLabels: {}
@@ -591,6 +611,11 @@ processor:
 votingLedgerScheduler:
   # -- Whether to deploy the voting ledger scheduler
   enabled: true
+  # -- Shutdown grace in seconds. Allows two 10-minute checkpoint uploads plus
+  # one minute for the current batch, local copies, and SQLite close. Increase
+  # for slower disks or batches. Spot interruption deadlines can be shorter
+  # and cannot be extended by this setting.
+  terminationGracePeriodSeconds: 1260
   image:
     # -- The image repository. NOTE: not published yet as of 2026-08-14 — the
     # built images so far are dt-api, dt-api-migrate, dt-indexer, dt-indexer-api,
@@ -908,15 +933,14 @@ proving:
     outputSizeLimit: ""
     # -- How often to look for a lifecycle to prove, in seconds
     pollIntervalSeconds: 30
-    ## Read-only HTTP view of the artefacts this pod already holds: the lifecycle
-    ## SQLite cache it mirrors from S3, and the proofs it writes. S3 remains the
-    ## durable store and is untouched - this only makes the same bytes reachable
-    ## inside the cluster, and through the proxy, without handing anyone S3
-    ## credentials. Served from here because this pod already has both on disk,
-    ## so it costs no extra pod, volume or S3 egress.
+    ## Separate unprivileged HTTP pod. It shares RWO claims on the scheduler's
+    ## node and mounts both read-only. Enabling the server requires dedicated
+    ## SQLite and proof PVCs, even when persistence.enabled is false.
     server:
-      # -- Serve the sqlite cache and proofs over HTTP from this pod
+      # -- Expose the artifact PVCs through a separate read-only pod
       enabled: true
+      # -- Size of the proof PVC; storageClass follows scheduler.persistence
+      proofsStorageSize: 1Gi
       image:
         # -- Image for the serving container
         repository: nginxinc/nginx-unprivileged
@@ -966,9 +990,7 @@ tallyScheduler:
     tag: ""
     # -- Overrides the chart-wide pull policy
     pullPolicy: ""
-  # -- Mina signature network for the tally transaction: mainnet, devnet or
-  # testnet. A mismatch makes the node reject the sender signature.
-  minaNetworkId: devnet
+  # The tally signs for the chart-wide minaNetwork; no separate override.
   ## The account that signs and pays the fee for every tally transaction. It
   ## needs no other authority - the contract accepts a tally from any sender -
   ## so fund it with fees only.
@@ -1082,10 +1104,8 @@ web:
   # into the image, so one dt-web tag serves any network. Entries set here win
   # over the values derived from publicBaseUrl.
   publicEnv:
-    # devnet runs 90s slots (7140 slots = 7d10h30m per epoch). mainnet is
-    # "180000" - override there along with NEXT_PUBLIC_NETWORK_ID.
-    NEXT_PUBLIC_SLOT_DURATION_MS: "90000"
-    NEXT_PUBLIC_NETWORK_ID: DEVNET
+    # Network and default slot duration derive from minaNetwork.
+    # Override slot duration only for a network with different timing.
     NEXT_PUBLIC_VOTE_REDUCER_VERIFICATION_KEY_JSON: ""
     NEXT_PUBLIC_STAKING_LEDGER_TO_VOTING_LEDGER_VERIFICATION_KEY_JSON: ""
     NEXT_PUBLIC_TREASURY_PROPOSAL_VERIFICATION_KEY_JSON: ""
@@ -1247,7 +1267,7 @@ backoffice:
   # builds and submits transactions against the Mina node directly, and those
   # URLs would only ever surface in its settings dialog.
   publicEnv:
-    NEXT_PUBLIC_NETWORK_ID: DEVNET
+    # NEXT_PUBLIC_NETWORK_ID derives from minaNetwork.
     # Fill from `treasury-owner compile`. Proving refuses to start without all
     # five, naming the first one it finds missing.
     NEXT_PUBLIC_VOTE_REDUCER_VERIFICATION_KEY_JSON: ""

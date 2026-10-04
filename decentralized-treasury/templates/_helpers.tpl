@@ -53,10 +53,55 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{/*
 Create the name of the service account to use
 */}}
+{{/* Each workload has a distinct identity. Global cloud annotations are not inherited. */}}
 {{- define "decentralized-treasury.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "decentralized-treasury.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.serviceAccount.name }}
-{{- end }}
-{{- end }}
+{{- $config := index .root.Values.serviceAccounts .component | default dict -}}
+{{- if .root.Values.serviceAccount.create -}}
+{{- $base := .root.Values.serviceAccount.name | default (include "decentralized-treasury.fullname" .root) -}}
+{{- $config.name | default (printf "%s-%s" ($base | trunc 38 | trimSuffix "-") .component) -}}
+{{- else -}}
+{{- required (printf "serviceAccounts.%s.name is required when serviceAccount.create=false" .component) $config.name -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "decentralized-treasury.automount" -}}
+{{- $config := index .root.Values.serviceAccounts .component | default dict -}}
+{{- $value := .root.Values.serviceAccount.automount -}}
+{{- if hasKey $config "automount" -}}{{- $value = $config.automount -}}{{- end -}}
+{{- if or (ne .component "proving-scheduler") (not .root.Values.proving.worker.enabled) (not .root.Values.proving.worker.autoscale.enabled) -}}
+false
+{{- else -}}
+{{- $value -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+The Mina network the app signs and proves for: mainnet or devnet. Kept apart
+from `network`, which only namespaces S3 keys and so may be any release name
+(singlenet, mainnet-trace). Defaults to `network` when that is already a Mina
+network name.
+*/}}
+{{- define "decentralized-treasury.minaNetwork" -}}
+{{- $namespace := required "network is required: it namespaces this release's S3 keys" .Values.network -}}
+{{- if not (regexMatch "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$" $namespace) -}}
+{{- fail "network must be lowercase letters, digits and dashes: it is an S3 key prefix" -}}
+{{- end -}}
+{{- $network := .Values.minaNetwork | default "" -}}
+{{- if and (not $network) (has $namespace (list "mainnet" "devnet")) -}}
+{{- $network = $namespace -}}
+{{- end -}}
+{{- if not $network -}}
+{{- fail (printf "minaNetwork is required when network (%s) is not mainnet or devnet" $namespace) -}}
+{{- end -}}
+{{- if not (has $network (list "mainnet" "devnet")) -}}
+{{- fail "minaNetwork must be mainnet or devnet" -}}
+{{- end -}}
+{{- range $config := list .Values.api .Values.apiMigrate .Values.indexer .Values.indexerApi .Values.processor .Values.processorApi .Values.web .Values.backoffice .Values.votingLedgerScheduler .Values.tallyScheduler .Values.proving.worker .Values.proving.scheduler -}}
+{{- range $env := $config.extraEnvVars -}}
+{{- if or (eq $env.name "MINA_NETWORK_ID") (and (eq $env.name "NETWORK") (ne ($env.value | default "" | toString) $network)) -}}
+{{- fail "extraEnvVars must not override chart NETWORK (set minaNetwork) or use removed MINA_NETWORK_ID" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- $network -}}
+{{- end -}}

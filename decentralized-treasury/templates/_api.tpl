@@ -12,6 +12,10 @@ anchor, but most services ignore most of them.
 */}}
 {{- define "decentralized-treasury.apiEnv" -}}
 {{- include "decentralized-treasury.databaseEnv" . }}
+- name: AWS_EC2_METADATA_DISABLED
+  value: "true"
+- name: NETWORK
+  value: {{ include "decentralized-treasury.minaNetwork" . | quote }}
 - name: ARCHIVE_NODE_URL
   value: {{ required "config.archiveNodeUrl is required" .Values.config.archiveNodeUrl | quote }}
 - name: TREASURY_OWNER_CONTRACT_ADDRESS
