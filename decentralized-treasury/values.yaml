@@ -857,8 +857,15 @@ proving:
     server:
       # -- Expose the artifact PVCs through a separate read-only pod
       enabled: true
-      # -- Size of the proof PVC; storageClass follows scheduler.persistence
+      # -- Size of the proof PVC
       proofsStorageSize: 1Gi
+      # -- Storage class of the proof PVC. Defaults to
+      # scheduler.persistence.storageClass. The scheduler mounts both claims,
+      # so they must share a zone: with an Immediate-binding class the proof
+      # volume can be provisioned in another zone than the sqlite volume and
+      # the pod never schedules. Use a WaitForFirstConsumer class here when
+      # the sqlite class binds immediately.
+      proofsStorageClass: ""
       image:
         # -- Image for the serving container
         repository: nginxinc/nginx-unprivileged
