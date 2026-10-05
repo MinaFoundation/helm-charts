@@ -252,7 +252,7 @@ metadata:
     {{- include "decentralized-treasury.componentLabels" $ctx | nindent 4 }}
 spec:
   accessModes: [ReadWriteOnce]
-  {{- with .Values.proving.scheduler.persistence.storageClass }}
+  {{- with .Values.proving.scheduler.server.proofsStorageClass | default .Values.proving.scheduler.persistence.storageClass }}
   storageClassName: {{ . }}
   {{- end }}
   resources:
