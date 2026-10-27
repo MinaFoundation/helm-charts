@@ -1,6 +1,6 @@
 # mina-daemon
 
-![Version: 2.2.0](https://img.shields.io/badge/Version-2.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.0.0](https://img.shields.io/badge/AppVersion-4.0.0-informational?style=flat-square)
+![Version: 2.3.0](https://img.shields.io/badge/Version-2.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.0.0](https://img.shields.io/badge/AppVersion-4.0.0-informational?style=flat-square)
 
 A Helm chart for Mina Protocol's daemons
 
@@ -68,9 +68,11 @@ helmfile status
 | deployment.uptime.enabled | bool | `false` | Enable uptime monitoring |
 | deployment.uptime.sendNodeCommitSha | string | `nil` | Send Node Commit SHA |
 | deployment.uptime.url | string | `nil` | Uptime monitoring URL |
+| graphqlPublicProxy.allowedMutations | list | `[]` | Mutations the proxy forwards to the daemon, as root field names. Empty hides every mutation. A node that must accept zkApp transactions from its clients sets [sendZkapp]. |
+| graphqlPublicProxy.image.digest | string | `"sha256:ee0f1c5891a3acadd7c725ed43bb032302beaead8f2835fdd099a8d2b300702b"` | The image digest. Pins the tag to the published build; empty uses the tag alone. |
 | graphqlPublicProxy.image.pullPolicy | string | `"IfNotPresent"` | The pull policy |
-| graphqlPublicProxy.image.repository | string | `"673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-graphql-public-proxy"` | The image repository |
-| graphqlPublicProxy.image.tag | string | `"0.0.12"` | The image tag |
+| graphqlPublicProxy.image.repository | string | `"minafoundation/mina-graphql-public-proxy"` | The image repository |
+| graphqlPublicProxy.image.tag | string | `"0.0.14"` | The image tag |
 | graphqlPublicProxy.resources.limits.cpu | string | `"200m"` | The CPU limit |
 | graphqlPublicProxy.resources.limits.memory | string | `"256Mi"` | The memory limit |
 | graphqlPublicProxy.resources.requests.cpu | string | `"100m"` | The CPU request |
@@ -114,6 +116,7 @@ helmfile status
 | node.fullname | string | `"berkeley-node"` | Full name |
 | node.gcStatInterval | string | `nil` | Garbage Collection Stat Interval |
 | node.generateGenesisProof | string | `nil` | Generate genesis proof |
+| node.graphqlListen | string | `"all"` | Who reaches the daemon's full GraphQL API on ports.graphql when exposeGraphql is true. `all` passes --insecure-rest-server: the API listens on every address and the graphql Service publishes it next to the proxy. `localhost` keeps it inside the pod: only the graphql-public-proxy sidecar reaches it, and the Service publishes ports.proxy alone. The full API carries operator mutations, such as setConnectionGatingConfig and archivePrecomputedBlock, that assume a trusted caller. |
 | node.internalTracing | string | `nil` | Internal Tracing |
 | node.isolateNetwork | string | `nil` | Isolate Network |
 | node.itnGraphQLPort | string | `nil` | ITN GraphQL Port |
