@@ -95,10 +95,15 @@ data:
         }
 
         location ~ ^/mina/(?<mina_path>.*)$ {
+            # Refused rather than downgraded, so a WebSocket client gets a
+            # clear answer instead of a GraphQL error.
+            if ($http_upgrade) {
+                return 400;
+            }
             resolver {{ $.Values.proxy.resolver }} valid=30s ipv6=off;
             set $mina_upstream {{ . | trimSuffix "/" | quote }};
             proxy_pass $mina_upstream/$mina_path$is_args$args;
-            {{- include "decentralized-treasury.proxyHeaders" $ | nindent 12 }}
+            {{- include "decentralized-treasury.minaProxyHeaders" $ | nindent 12 }}
         }
         {{- end }}
         {{- if .Values.web.enabled }}
@@ -155,10 +160,15 @@ data:
         }
 
         location ~ ^/mina/(?<mina_path>.*)$ {
+            # Refused rather than downgraded, so a WebSocket client gets a
+            # clear answer instead of a GraphQL error.
+            if ($http_upgrade) {
+                return 400;
+            }
             resolver {{ $.Values.proxy.resolver }} valid=30s ipv6=off;
             set $mina_upstream {{ . | trimSuffix "/" | quote }};
             proxy_pass $mina_upstream/$mina_path$is_args$args;
-            {{- include "decentralized-treasury.proxyHeaders" $ | nindent 12 }}
+            {{- include "decentralized-treasury.minaProxyHeaders" $ | nindent 12 }}
         }
         {{- end }}
 

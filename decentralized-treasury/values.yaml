@@ -252,6 +252,7 @@ config:
   # sync. It supplies slotSinceGenesis, slotsPerEpoch and the authoritative
   # stakingEpochData.ledger.hash, which is what makes ledger selection survive a
   # hardfork. Distinct from proxy.minaNodeUpstream, which is browser-facing.
+  # Reads only, so the graphql-public-proxy (port 3000) is enough.
   minaNodeUrl: ""
   # -- Origins allowed to call the HTTP APIs. Empty keeps the application default.
   corsAllowedOrigins: []
@@ -1336,6 +1337,12 @@ proxy:
   # URL, since the node is not part of this chart: an in-cluster Service or an
   # external host, whichever fronts the daemon's GraphQL endpoint. Empty leaves
   # the route out entirely, and the browser's NEXT_PUBLIC_MINA_NODE_URL 404s.
+  #
+  # Point it at the mina-daemon chart's graphql-public-proxy (port 3000), never
+  # at the daemon's full API (port 3085): this route is public, and the full API
+  # carries operator mutations such as setConnectionGatingConfig. Proposals and
+  # votes need sendZkapp, so the node sets graphqlPublicProxy.allowedMutations
+  # to [sendZkapp]. WebSocket upgrades are refused on this route.
   minaNodeUpstream: ""
   # -- DNS server used to resolve the /mina upstream at request time. Resolving
   # lazily is what keeps an unreachable node from stopping nginx from starting,
