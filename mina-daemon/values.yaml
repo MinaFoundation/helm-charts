@@ -67,6 +67,14 @@ node:
   fullname: "berkeley-node"
   # -- Expose GraphQL
   exposeGraphql: false
+  # -- Who reaches the daemon's full GraphQL API on ports.graphql when
+  # exposeGraphql is true. `all` passes --insecure-rest-server: the API listens
+  # on every address and the graphql Service publishes it next to the proxy.
+  # `localhost` keeps it inside the pod: only the graphql-public-proxy sidecar
+  # reaches it, and the Service publishes ports.proxy alone. The full API
+  # carries operator mutations, such as setConnectionGatingConfig and
+  # archivePrecomputedBlock, that assume a trusted caller.
+  graphqlListen: all
   # -- Log level
   logLevel: Info
   # -- File log level
@@ -370,11 +378,18 @@ s3BlocksUploader:
 graphqlPublicProxy:
   image:
     # -- The image repository
-    repository: 673156464838.dkr.ecr.us-west-2.amazonaws.com/mina-graphql-public-proxy
+    repository: minafoundation/mina-graphql-public-proxy
     # -- The pull policy
     pullPolicy: IfNotPresent
     # -- The image tag
-    tag: "0.0.12"
+    tag: "0.0.14"
+    # -- The image digest. Pins the tag to the published build; empty uses the
+    # tag alone.
+    digest: "sha256:ee0f1c5891a3acadd7c725ed43bb032302beaead8f2835fdd099a8d2b300702b"
+  # -- Mutations the proxy forwards to the daemon, as root field names. Empty
+  # hides every mutation. A node that must accept zkApp transactions from its
+  # clients sets [sendZkapp].
+  allowedMutations: []
   resources:
     limits:
       # -- The CPU limit

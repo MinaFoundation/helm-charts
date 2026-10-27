@@ -154,3 +154,15 @@ test('Voting scheduler allows checkpoint shutdown and honors the configured grac
   assert.equal(deployment(render(treasury), 'voting-ledger-scheduler').spec.template.spec.terminationGracePeriodSeconds, 1260);
   assert.equal(deployment(render(treasury, { 'votingLedgerScheduler.terminationGracePeriodSeconds': 1800 }), 'voting-ledger-scheduler').spec.template.spec.terminationGracePeriodSeconds, 1800);
 });
+test('Treasury proxy never forwards a WebSocket upgrade to the Mina daemon (audit 03)', () => {
+  const docs = render(treasury, { ...all, 'ingress.mode': 'proxy', 'ingress.hosts.backoffice': 'bo.example.org', 'backoffice.auth.mode': 'none', 'proxy.minaNodeUpstream': 'http://mina:3000' });
+  const conf = docs.find((d) => d.kind === 'ConfigMap' && component(d) === 'proxy').data['default.conf'];
+  const routes = conf.match(/location ~ \^\/mina\/[^\n]*\{[\s\S]*?\n {4}\}/g);
+  assert.equal(routes.length, 2);
+  for (const route of routes) {
+    assert.match(route, /if \(\$http_upgrade\) \{\s*return 400;/);
+    assert.match(route, /proxy_set_header Upgrade "";/);
+    assert.match(route, /proxy_set_header Connection "";/);
+    assert.doesNotMatch(route, /\$connection_upgrade|Upgrade \$http_upgrade/);
+  }
+});
