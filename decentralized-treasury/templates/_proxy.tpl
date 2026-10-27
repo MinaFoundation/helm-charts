@@ -67,12 +67,27 @@ hostname, and the forwarded headers are what let it know the original request
 was HTTPS even though the load balancer forwards plain HTTP.
 */}}
 {{- define "decentralized-treasury.proxyHeaders" -}}
+{{ include "decentralized-treasury.forwardedHeaders" . }}
+proxy_set_header Upgrade $http_upgrade;
+proxy_set_header Connection $connection_upgrade;
+{{- end -}}
+
+{{/*
+The same headers without the WebSocket upgrade, for the /mina route. The
+daemon runs GraphQL over WebSocket too, mutations included, so an upgrade
+must never reach it: an empty Upgrade and Connection drop both headers.
+*/}}
+{{- define "decentralized-treasury.minaProxyHeaders" -}}
+{{ include "decentralized-treasury.forwardedHeaders" . }}
+proxy_set_header Upgrade "";
+proxy_set_header Connection "";
+{{- end -}}
+
+{{- define "decentralized-treasury.forwardedHeaders" -}}
 proxy_http_version 1.1;
 proxy_set_header Host $host;
 proxy_set_header X-Real-IP $remote_addr;
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 proxy_set_header X-Forwarded-Proto $forwarded_proto;
-proxy_set_header Upgrade $http_upgrade;
-proxy_set_header Connection $connection_upgrade;
 proxy_read_timeout {{ .Values.proxy.readTimeoutSeconds }}s;
 {{- end -}}
