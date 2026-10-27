@@ -21,10 +21,12 @@ spec:
   selector:
     app: {{ .Release.Name }}
   ports:
+  {{- if include "mina-daemon.graphqlOnAllAddresses" . }}
   - name: graphql
     protocol: TCP
     port: {{ .Values.node.ports.graphql }}
     targetPort: {{ .Values.node.ports.graphql }}
+  {{- end }}
   - name: proxy
     protocol: TCP
     port: {{ .Values.node.ports.proxy }}

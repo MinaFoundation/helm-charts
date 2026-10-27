@@ -165,7 +165,7 @@ spec:
             {{- if .Values.node.metrics.enabled }}
             "--metrics-port", "$(DAEMON_METRICS_PORT)",
             {{- end -}}
-            {{- if .Values.node.exposeGraphql }}
+            {{- if include "mina-daemon.graphqlOnAllAddresses" . }}
             "--insecure-rest-server",
             {{- end -}}
             {{- if .Values.node.maxConnections }}
@@ -432,7 +432,7 @@ spec:
             - name: external-port
               protocol: TCP
               containerPort: {{ .Values.node.ports.p2p }}
-            {{- if .Values.node.exposeGraphql }}
+            {{- if include "mina-daemon.graphqlOnAllAddresses" . }}
             - name: graphql-port
               protocol: TCP
               containerPort: {{ .Values.node.ports.graphql }}
@@ -487,13 +487,17 @@ spec:
 
         {{- if .Values.node.exposeGraphql }}
         - name: graphql-public-proxy
-          image: "{{ .Values.graphqlPublicProxy.image.repository }}:{{ .Values.graphqlPublicProxy.image.tag }}"
-          imagePullPolicy: {{ .Values.graphqlPublicProxy.image.pullPolicy }}
+          {{- with .Values.graphqlPublicProxy.image }}
+          image: "{{ .repository }}:{{ .tag }}{{ with .digest }}@{{ . }}{{ end }}"
+          imagePullPolicy: {{ .pullPolicy }}
+          {{- end }}
           env:
             - name: MINA_GRAPHQL_PORT
               value: {{ .Values.node.ports.graphql | quote }}
             - name: EXTERNAL_PORT
               value: {{ .Values.node.ports.proxy | quote }}
+            - name: ALLOWED_MUTATIONS
+              value: {{ join "," .Values.graphqlPublicProxy.allowedMutations | quote }}
           ports:
             - name: proxy
               protocol: TCP
