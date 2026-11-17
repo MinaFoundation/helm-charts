@@ -238,7 +238,12 @@ with tarfile.open(archive, "r:gz") as tar:
         sys.exit("expected exactly one .json member, found %d" % len(members))
     if members[0].name != "%s.json" % expected:
         sys.exit("member is %s, expected %s.json" % (members[0].name, expected))
-    accounts = json.load(tar.extractfile(members[0]))
+    # The daemon exports some fields (e.g. token_symbol) as raw bytes, which are
+    # not always valid UTF-8 (one mainnet account holds 0xff). surrogateescape
+    # keeps those bytes intact instead of rejecting the whole ledger; the
+    # archive itself is never rewritten, so its bytes stay as exported.
+    raw = tar.extractfile(members[0]).read()
+    accounts = json.loads(raw.decode("utf-8", "surrogateescape"))
 if not isinstance(accounts, list) or not accounts:
     sys.exit("ledger is not a non-empty JSON array")
 if "pk" not in accounts[0]:
