@@ -218,7 +218,11 @@ def run_command_on_pod(pod_name, command):
 
 def validate_json_file(file_path):
     try:
-        with open(file_path, "r") as file:
+        # The daemon exports some fields (e.g. token_symbol) as raw bytes, which
+        # are not always valid UTF-8 (one mainnet account holds 0xff).
+        # surrogateescape keeps those bytes instead of rejecting the ledger;
+        # the file itself is never rewritten.
+        with open(file_path, "r", encoding="utf-8", errors="surrogateescape") as file:
             json.load(file)
     except Exception as e:
         logger.error("Unable to validate the JSON file")
