@@ -171,6 +171,26 @@ have_ledger_hash() {
   ls "${LEDGERS_DIRECTORY}"/*-"$1".json.tar.gz >/dev/null 2>&1
 }
 
+# Exports a ledger to /tmp/<which>.json on the daemon pod. On failure the
+# daemon's own message is logged - the client may print it to stdout, which
+# lands in the export file, so the head of both streams is shown - and the
+# partial export is removed so it does not sit on the daemon's disk.
+export_ledger() {
+  which_ledger=$1
+  out="/tmp/${which_ledger}.json"
+  err="/tmp/${which_ledger}.err"
+
+  if on_pod "/usr/local/bin/mina ledger export ${which_ledger} > ${out} 2> ${err}"; then
+    on_pod "rm -f ${err}" || true
+    return 0
+  fi
+
+  reason=$(on_pod "head -c 500 ${err}; head -c 500 ${out}" 2>/dev/null | tr -s '[:space:]' ' ') || true
+  log_warn "mina ledger export ${which_ledger} failed: ${reason:-no output from the daemon}"
+  on_pod "rm -f ${out} ${err}" || true
+  return 1
+}
+
 publish_ledger() {
   which_ledger=$1
   epoch=$2
@@ -184,7 +204,7 @@ publish_ledger() {
   fi
 
   log "exporting ${which_ledger} (epoch ${epoch})"
-  on_pod "/usr/local/bin/mina ledger export ${which_ledger} > /tmp/${which_ledger}.json" || return 1
+  export_ledger "$which_ledger" || return 1
 
   hash=$(on_pod "/usr/local/bin/mina ledger hash --ledger-file /tmp/${which_ledger}.json" \
     | tr -d '[:space:]' | grep -E "$LEDGER_HASH_PATTERN") \
